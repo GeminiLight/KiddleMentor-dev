@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Target, TrendingUp, Award, ArrowRight, Play, Star, Zap, Trophy, CheckCircle2 } from "lucide-react";
+import { Target, TrendingUp, Play, Star, Zap, Trophy, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
@@ -24,23 +24,7 @@ export default function ProgressPage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="hidden lg:block text-right">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Next Level: 2,450 XP</p>
-            <div className="mt-1.5 h-2 w-48 bg-secondary rounded-full overflow-hidden">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: "65%" }}
-                className="h-full bg-gradient-to-r from-primary-500 to-blue-500" 
-              />
-            </div>
-          </div>
-          <button
-            onClick={() => router.push("/session/2")}
-            className="flex items-center gap-2 bg-primary-500 text-white px-6 py-3 rounded-2xl font-bold hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/25 hover:-translate-y-0.5 active:scale-95"
-          >
-            <Play size={18} fill="currentColor" />
-            Resume Learning
-          </button>
+          {/* Removed top right XP display to avoid duplication with sidebar */}
         </div>
       </div>
 
@@ -48,7 +32,7 @@ export default function ProgressPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
           { label: "Goal Readiness", value: "45%", icon: Target, color: "text-primary-500", bg: "bg-primary-50 dark:bg-primary-950/30" },
-          { label: "XP Earned", value: "12,450", icon: Star, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
+          { label: "Sessions Done", value: "12", icon: Play, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
           { label: "Current Streak", value: "3 Days", icon: TrendingUp, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/30" },
           { label: "Badges", value: "8", icon: Trophy, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/30" },
         ].map((stat, i) => (
@@ -99,52 +83,48 @@ export default function ProgressPage() {
           </div>
 
           {/* Next Best Action */}
-          <div className="bg-gradient-to-br from-primary-600 to-blue-700 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 group-hover:scale-125 transition-transform duration-500" />
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-bold mb-4">
-                <Star size={12} fill="currentColor" />
-                Double XP Active
+          <div className="bg-gradient-to-br from-primary-600 to-blue-700 rounded-[2rem] p-8 md:p-10 text-white shadow-xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 group-hover:scale-125 transition-transform duration-700" />
+            <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center justify-between">
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-bold mb-4">
+                  <Star size={12} fill="currentColor" />
+                  Double XP Active
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black mb-3">Variables and Data Types</h2>
+                <p className="text-primary-100 mb-8 max-w-md font-medium text-lg">
+                  Continue your Python Fundamentals module. Complete this to reach Level 13!
+                </p>
+                <button
+                  onClick={() => router.push("/session/2")}
+                  className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-black hover:bg-slate-100 transition-all flex items-center gap-3 active:scale-95 shadow-lg text-lg"
+                >
+                  <Play size={20} fill="currentColor" />
+                  Resume Learning
+                </button>
               </div>
-              <h2 className="text-2xl font-black mb-2">Variables and Data Types</h2>
-              <p className="text-primary-100 mb-6 max-w-md font-medium">
-                Continue your Python Fundamentals module. Complete this to reach Level 13!
-              </p>
-              <button
-                onClick={() => router.push("/session/2")}
-                className="bg-white text-slate-900 px-8 py-3 rounded-2xl font-black hover:bg-slate-100 transition-all flex items-center gap-2 active:scale-95 shadow-lg"
-              >
-                Start Session
-                <ArrowRight size={18} strokeWidth={3} />
-              </button>
+              <div className="w-full md:w-72 bg-black/20 rounded-2xl p-5 border border-white/10 backdrop-blur-sm shadow-2xl transform group-hover:-translate-y-2 transition-transform duration-500">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                  <div className="w-3 h-3 rounded-full bg-green-500" />
+                </div>
+                <pre className="text-sm font-mono text-primary-100 leading-relaxed">
+                  <code>
+                    <span className="text-pink-400">name</span> = <span className="text-green-400">&quot;Alex&quot;</span><br/>
+                    <span className="text-pink-400">age</span> = <span className="text-purple-400">25</span><br/>
+                    <span className="text-pink-400">is_student</span> = <span className="text-orange-400">True</span><br/>
+                    <br/>
+                    <span className="text-blue-400">print</span>(<span className="text-green-400">f&quot;Hi, I&apos;m </span>&#123;name&#125;<span className="text-green-400">&quot;</span>)
+                  </code>
+                </pre>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-8">
-          {/* Recent Badges */}
-          <div className="bg-card rounded-[2rem] shadow-sm border border-border p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-foreground">Recent Badges</h3>
-              <button className="text-sm font-bold text-primary-500 hover:text-primary-600">View All</button>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { name: "Fast Learner", icon: Zap, color: "text-amber-500", bg: "bg-amber-500/10" },
-                { name: "Quiz Master", icon: Trophy, color: "text-purple-500", bg: "bg-purple-500/10" },
-                { name: "3-Day Streak", icon: Flame, color: "text-orange-500", bg: "bg-orange-500/10" },
-              ].map((badge, i) => (
-                <div key={i} className="flex flex-col items-center gap-2">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${badge.bg} ${badge.color} border border-white/10 shadow-sm`}>
-                    <badge.icon size={24} />
-                  </div>
-                  <span className="text-[10px] font-bold text-muted-foreground text-center uppercase tracking-tighter leading-tight">{badge.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Current Goal Progress */}
           <div className="bg-card rounded-[2rem] shadow-sm border border-border p-8">
             <h3 className="text-xl font-bold text-foreground mb-6">Career Path</h3>
@@ -170,6 +150,28 @@ export default function ProgressPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Recent Badges */}
+          <div className="bg-card rounded-[2rem] shadow-sm border border-border p-8 opacity-80 hover:opacity-100 transition-opacity">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-foreground">Recent Badges</h3>
+              <button className="text-xs font-bold text-primary-500 hover:text-primary-600">View All</button>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { name: "Fast Learner", icon: Zap, color: "text-amber-500", bg: "bg-amber-500/10" },
+                { name: "Quiz Master", icon: Trophy, color: "text-purple-500", bg: "bg-purple-500/10" },
+                { name: "3-Day Streak", icon: Flame, color: "text-orange-500", bg: "bg-orange-500/10" },
+              ].map((badge, i) => (
+                <div key={i} className="flex flex-col items-center gap-2">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${badge.bg} ${badge.color} border border-white/10 shadow-sm`}>
+                    <badge.icon size={20} />
+                  </div>
+                  <span className="text-[9px] font-bold text-muted-foreground text-center uppercase tracking-tighter leading-tight">{badge.name}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

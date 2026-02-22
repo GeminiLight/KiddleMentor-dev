@@ -178,7 +178,7 @@ export const api = {
       skill_requirements: any;
       skill_gaps: any;
       learning_goal: string;
-    }>('/skills/identify-skill-gap-with-info', {
+    }>('/skills/identify-skill-gap', {
       method: 'POST',
       body: JSON.stringify(data),
     }),

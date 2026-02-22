@@ -78,24 +78,32 @@ async def schedule_learning_path(
     learner_id = learner_profile.get("learner_id")
 
     # Load learner profile from memory if not fully provided
-    if learner_id and not learner_profile:
-        learner_profile = memory_service.load_profile_from_memory(learner_id, learner_profile)
+    if learner_id:
+        stored_profile = memory_service.load_profile_from_memory(learner_id, learner_profile)
+        if stored_profile and isinstance(stored_profile, dict):
+            learner_profile.update({k: v for k, v in stored_profile.items() if k not in learner_profile})
 
     # Get memory store for agent
     memory_store = memory_service.get_memory_store(learner_id) if learner_id else None
 
-    # Load existing learning goals for context
-    existing_goals = {}
+    # Enrich learner_profile with active goal and skill gaps from memory
     if memory_store:
-        existing_goals = memory_store.read_learning_goals()
+        active_goal = memory_store.get_active_goal()
+        if active_goal:
+            goal_id = active_goal.get("goal_id")
+            learner_profile["learning_goal"] = active_goal.get("learning_goal", "")
+            learner_profile["refined_goal"] = active_goal.get("refined_goal")
+            if goal_id:
+                skill_gaps_data = memory_store.read_skill_gaps_for_goal(goal_id)
+                if skill_gaps_data:
+                    learner_profile["skill_gaps"] = skill_gaps_data
 
     # Schedule learning path with memory context
     try:
         learning_path = schedule_learning_path_with_llm(
             llm,
             learner_profile,
-            request.session_count,
-            memory_store=memory_store  # Pass memory for context
+            request.session_count
         )
     except Exception as e:
         raise LLMError(
@@ -177,6 +185,19 @@ async def reschedule_learning_path(
     # Extract learner_id
     learner_id = learner_profile.get("learner_id")
 
+    # Enrich learner_profile with active goal and skill gaps from memory
+    memory_store = memory_service.get_memory_store(learner_id) if learner_id else None
+    if memory_store:
+        active_goal = memory_store.get_active_goal()
+        if active_goal:
+            goal_id = active_goal.get("goal_id")
+            learner_profile.setdefault("learning_goal", active_goal.get("learning_goal", ""))
+            learner_profile.setdefault("refined_goal", active_goal.get("refined_goal"))
+            if goal_id:
+                skill_gaps_data = memory_store.read_skill_gaps_for_goal(goal_id)
+                if skill_gaps_data:
+                    learner_profile.setdefault("skill_gaps", skill_gaps_data)
+
     # Reschedule learning path
     try:
         new_learning_path = reschedule_learning_path_with_llm(
@@ -193,7 +214,8 @@ async def reschedule_learning_path(
         )
 
     # Persist rescheduled path (keyed by active goal_id)
-    memory_store = memory_service.get_memory_store(learner_id)
+    if not memory_store:
+        memory_store = memory_service.get_memory_store(learner_id)
     if memory_store:
         goal_id = memory_store.get_active_goal_id()
         if goal_id:

@@ -100,7 +100,7 @@ export const api = {
 
   // Learning Path
   scheduleLearningPath: (learnerId: string, sessionCount: number) =>
-    fetchApi<{ learning_path: any }>('/learning/schedule-learning-path', {
+    fetchApi<{ learning_path: any }>('/schedule-learning-path', {
       method: 'POST',
       body: JSON.stringify({
         learner_profile: JSON.stringify({ learner_id: learnerId }),
@@ -616,7 +616,7 @@ NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
          ▼
          POST /profile/{id}/set-goal
          POST /skills/identify-skill-gap-with-info
-         POST /learning/schedule-learning-path
+         POST /schedule-learning-path
          │
          ▼
 ┌─────────────────┐

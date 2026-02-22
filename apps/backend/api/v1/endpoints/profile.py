@@ -495,8 +495,7 @@ async def update_learner_profile(
             locals()["learner_profile"],
             locals()["learner_interactions"],
             locals()["learner_information"],
-            locals()["session_information"],
-            memory_store=memory_store,  # Pass memory for context
+            locals()["session_information"]
         )
     except Exception as e:
         raise LLMError(

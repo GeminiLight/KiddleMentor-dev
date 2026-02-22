@@ -2,13 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Play, CheckCircle2, Clock, Calendar, MoreVertical, Lock, RefreshCw, Award, Sparkles } from "lucide-react";
+import { Play, CheckCircle2, Clock, Calendar, MoreVertical, Lock, RefreshCw, Award, Sparkles, X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function LearningPathPage() {
   const router = useRouter();
   const [sessions, setSessions] = useState<Record<string, unknown>[]>([]);
   const [isRescheduling, setIsRescheduling] = useState(false);
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
+  const [originalSessions, setOriginalSessions] = useState<Record<string, unknown>[]>([]);
+  const [activeTooltip, setActiveTooltip] = useState<string | number | null>(null);
+
+  // Close tooltip when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setActiveTooltip(null);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const pathData = JSON.parse(localStorage.getItem('learning_path') || '[]');
@@ -39,6 +49,7 @@ export default function LearningPathPage() {
 
   const handleReschedule = () => {
     setIsRescheduling(true);
+    setOriginalSessions([...sessions]);
     // Simulate API call for rescheduling
     setTimeout(() => {
       setSessions(prev => {
@@ -57,7 +68,18 @@ export default function LearningPathPage() {
         return newSessions;
       });
       setIsRescheduling(false);
+      setHasPendingChanges(true);
     }, 1500);
+  };
+
+  const handleAccept = () => {
+    setSessions(prev => prev.map(s => ({ ...s, isNew: false })));
+    setHasPendingChanges(false);
+  };
+
+  const handleReject = () => {
+    setSessions(originalSessions);
+    setHasPendingChanges(false);
   };
 
   const weeks = Array.from(new Set(sessions.map(s => s.week as number))).sort((a, b) => a - b);
@@ -71,22 +93,93 @@ export default function LearningPathPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={handleReschedule}
-            disabled={isRescheduling}
-            className="flex items-center gap-2 bg-muted text-foreground px-4 py-2.5 rounded-full font-medium hover:bg-muted/80 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw size={18} className={isRescheduling ? "animate-spin" : ""} />
-            {isRescheduling ? "Adapting..." : "Reschedule"}
-          </button>
-          <button
             onClick={() => router.push("/session/2")}
             className="flex items-center gap-2 bg-primary-500 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-primary-600 transition-colors shadow-sm"
           >
             <Play size={18} fill="currentColor" />
             Continue Session
           </button>
+          <button
+            onClick={handleReschedule}
+            disabled={isRescheduling}
+            className="flex items-center gap-2 bg-background border border-border text-muted-foreground px-4 py-2.5 rounded-full font-medium hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50 shadow-sm"
+          >
+            <RefreshCw size={16} className={isRescheduling ? "animate-spin" : ""} />
+            {isRescheduling ? "Adapting..." : "Reschedule"}
+          </button>
         </div>
       </div>
+
+      {/* AI Suggestion Card */}
+      <AnimatePresence mode="wait">
+        {!hasPendingChanges ? (
+          <motion.div 
+            key="suggestion"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-primary-500/5 border border-primary-500/20 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative overflow-hidden"
+          >
+            <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="flex items-start gap-4 relative z-10">
+              <div className="bg-primary-500/10 p-2.5 rounded-xl text-primary-600 dark:text-primary-400">
+                <Sparkles size={24} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-primary-700 dark:text-primary-400 text-lg">AI Path Optimization Available</h3>
+                <p className="text-sm text-primary-600/80 dark:text-primary-400/80 mt-1">
+                  Based on your recent progress, I can adjust your upcoming sessions to better align with your goals.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleReschedule}
+              disabled={isRescheduling}
+              className="shrink-0 flex items-center gap-2 bg-primary-500 text-white px-5 py-2.5 rounded-full font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 relative z-10 shadow-sm"
+            >
+              <RefreshCw size={18} className={isRescheduling ? "animate-spin" : ""} />
+              {isRescheduling ? "Adapting..." : "Optimize Path"}
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="review"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative overflow-hidden"
+          >
+            <div className="absolute -right-10 -top-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="flex items-start gap-4 relative z-10">
+              <div className="bg-amber-500/10 p-2.5 rounded-xl text-amber-600 dark:text-amber-400">
+                <Sparkles size={24} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-700 dark:text-amber-400 text-lg">Review Path Changes</h3>
+                <p className="text-sm text-amber-600/80 dark:text-amber-400/80 mt-1">
+                  I&apos;ve added new sessions to fill your skill gaps. Please review and accept the changes.
+                </p>
+              </div>
+            </div>
+            <div className="shrink-0 flex items-center gap-3 relative z-10">
+              <button
+                onClick={handleReject}
+                className="flex items-center gap-2 bg-background border border-border text-foreground px-4 py-2.5 rounded-full font-medium hover:bg-muted transition-colors shadow-sm"
+              >
+                <X size={18} />
+                Reject
+              </button>
+              <button
+                onClick={handleAccept}
+                className="flex items-center gap-2 bg-amber-500 text-white px-5 py-2.5 rounded-full font-medium hover:bg-amber-600 transition-colors shadow-sm"
+              >
+                <Check size={18} />
+                Accept Changes
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="space-y-12">
         {weeks.map((week) => (
@@ -167,9 +260,38 @@ export default function LearningPathPage() {
                               </span>
                             )}
                             {Boolean(session.isNew) && (
-                              <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                                Added for you
-                              </span>
+                              <div className="relative">
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveTooltip(activeTooltip === session.id ? null : session.id as string | number);
+                                  }}
+                                  className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full hover:bg-amber-500/20 transition-colors cursor-pointer flex items-center gap-1"
+                                >
+                                  <Sparkles size={12} />
+                                  Added for you
+                                </button>
+                                
+                                <AnimatePresence>
+                                  {activeTooltip === session.id && (
+                                    <motion.div 
+                                      initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                                      exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                                      className="absolute left-0 top-full mt-2 w-64 p-3 bg-popover border border-border rounded-xl shadow-lg z-50 text-sm text-popover-foreground"
+                                    >
+                                      <div className="font-medium mb-1 flex items-center gap-1.5 text-amber-500">
+                                        <Sparkles size={14} />
+                                        AI Adaptation
+                                      </div>
+                                      <p className="text-muted-foreground text-xs leading-relaxed">
+                                        Detected that you struggled with <strong className="text-foreground font-medium">Python Data Structures</strong> in the last quiz. This session was added to help you master it before moving on.
+                                      </p>
+                                      <div className="absolute -top-1.5 left-4 w-3 h-3 bg-popover border-l border-t border-border rotate-45" />
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
                             )}
                           </div>
                           <button className="text-muted-foreground hover:text-foreground">

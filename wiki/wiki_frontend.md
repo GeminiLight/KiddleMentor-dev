@@ -837,13 +837,13 @@ export const api = {
 
   // Learning Path
   scheduleLearningPath: (data: { learner_profile: string | Record<string, any>; session_count: number; } & BaseRequest) =>
-    fetchApi<{ success: boolean; learning_path: any; session_count: number; }>('/learning/schedule-learning-path', {
+    fetchApi<{ success: boolean; learning_path: any; session_count: number; }>('/schedule-learning-path', {
       method: 'POST',
       body: JSON.stringify({ ...data, learner_profile: typeof data.learner_profile === 'string' ? data.learner_profile : JSON.stringify(data.learner_profile) }),
     }),
 
   rescheduleLearningPath: (data: { learner_profile: string | Record<string, any>; learning_path: string | Record<string, any>; session_count: number; other_feedback?: string | Record<string, any>; } & BaseRequest) =>
-    fetchApi<{ success: boolean; learning_path: any; session_count: number; }>('/learning/reschedule-learning-path', {
+    fetchApi<{ success: boolean; learning_path: any; session_count: number; }>('/reschedule-learning-path', {
       method: 'POST',
       body: JSON.stringify({ ...data }),
     }),
@@ -1381,8 +1381,8 @@ vercel
 | POST | `/dashboard` | Get dashboard data |
 | POST | `/goals/refine-learning-goal` | Refine goal |
 | POST | `/skills/identify-skill-gap-with-info` | Identify skill gaps |
-| POST | `/learning/schedule-learning-path` | Schedule path |
-| POST | `/learning/reschedule-learning-path` | Reschedule path |
+| POST | `/schedule-learning-path` | Schedule path |
+| POST | `/reschedule-learning-path` | Reschedule path |
 | POST | `/learning/explore-knowledge-points` | Explore knowledge |
 | POST | `/learning/tailor-knowledge-content` | Generate content |
 | POST | `/progress/session-complete` | Mark session complete |

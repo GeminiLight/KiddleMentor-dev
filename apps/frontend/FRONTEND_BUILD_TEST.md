@@ -176,7 +176,7 @@ router.push("/dashboard");
 - ✅ `/profile/{id}/set-goal` - Set learning goal
 - ✅ `/dashboard/{id}` - Get dashboard
 - ✅ `/progress/{id}/session-complete` - Track progress
-- ✅ `/learning/schedule-learning-path` - Generate path
+- ✅ `/schedule-learning-path` - Generate path
 - ✅ `/skills/identify-skill-gap-with-info` - Identify gaps
 - ✅ And 20+ more endpoints...
 

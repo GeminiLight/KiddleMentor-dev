@@ -35,8 +35,8 @@ api.generateTailoredContent() // POST /learning/tailor-knowledge-content
 api.exploreKnowledgePoints()  // POST /learning/explore-knowledge-points
 
 // Learning Path
-api.scheduleLearningPath()    // POST /learning/schedule-learning-path
-api.rescheduleLearningPath()  // POST /learning/reschedule-learning-path
+api.scheduleLearningPath()    // POST /schedule-learning-path
+api.rescheduleLearningPath()  // POST /reschedule-learning-path
 
 // And 20+ more endpoints...
 ```
@@ -315,7 +315,7 @@ npm run dev
 | `learner_id` | localStorage | `/profile/initialize-session` |
 | Profile | `workspace/{id}/profile.json` | `/profile/{id}` |
 | Learning Goal | `workspace/{id}/objectives.json` | `/profile/{id}/set-goal` |
-| Learning Path | `workspace/{id}/learning_path.json` | `/learning/schedule-learning-path` |
+| Learning Path | `workspace/{id}/learning_path.json` | `/schedule-learning-path` |
 | Progress | `workspace/{id}/profile.json` | `/dashboard/{id}` |
 | Mastery | `workspace/{id}/mastery.json` | `/dashboard/{id}` |
 | History | `workspace/{id}/history.jsonl` | `/dashboard/{id}` |

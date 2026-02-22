@@ -2,17 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, Loader2, Sparkles, UploadCloud, FileText, X } from "lucide-react";
+import { ArrowRight, Check, Loader2, Sparkles, UploadCloud, FileText, X, Wand2, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { setStoredLearnerId } from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStep, setGenerationStep] = useState(0);
+  const [isParsingBackground, setIsParsingBackground] = useState(false);
+  const [isRefiningGoal, setIsRefiningGoal] = useState(false);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
@@ -23,10 +27,17 @@ export default function OnboardingPage() {
   });
 
   const handleNext = async () => {
-    if (step < 3) {
-      setStep(step + 1);
+    if (step === 1) {
+      setIsParsingBackground(true);
+      setTimeout(() => {
+        setIsParsingBackground(false);
+        setStep(2);
+      }, 1500);
+    } else if (step === 2) {
+      setStep(3);
     } else {
       setIsGenerating(true);
+      setGenerationStep(1); // Skill Identifier scanning target...
       try {
         // Step 1: Initialize session with backend (creates learner_id + workspace)
         const response = await api.initializeSession({
@@ -43,6 +54,8 @@ export default function OnboardingPage() {
         // Step 2: Set learning goal (backend refines it and saves)
         await api.setLearningGoal(learner_id, formData.goal);
         console.log('[Onboarding] Learning goal set');
+        
+        setGenerationStep(2); // Path Scheduler calculating optimal path...
 
         // Step 3: Identify skill gaps (backend saves to workspace)
         await api.identifySkillGap({
@@ -50,6 +63,8 @@ export default function OnboardingPage() {
           learner_information: formData.background || "Information provided via CV",
         });
         console.log('[Onboarding] Skill gaps identified');
+        
+        setGenerationStep(3); // Content Creator retrieving latest materials...
 
         // Step 4: Generate learning path (backend persists to workspace)
         await api.scheduleLearningPath({
@@ -58,16 +73,36 @@ export default function OnboardingPage() {
         });
         console.log('[Onboarding] Learning path scheduled');
 
+        setGenerationStep(4); // Done
         toast.success("Learning path generated successfully!");
 
         // Redirect to dashboard instead of skill-gap
-        router.push("/progress");
+        setTimeout(() => router.push("/progress"), 1000);
       } catch (error) {
         console.error("Failed to generate path:", error);
         toast.error(error instanceof Error ? error.message : "Failed to generate learning path. Please try again.");
         setIsGenerating(false);
+        setGenerationStep(0);
       }
     }
+  };
+
+  const handleRefineGoal = () => {
+    if (!formData.goal.trim()) return;
+    setIsRefiningGoal(true);
+    setTimeout(() => {
+      setFormData(prev => ({
+        ...prev,
+        goal: `I want to become a professional in ${prev.goal}, focusing on core industry skills and practical applications to achieve mastery.`
+      }));
+      setIsRefiningGoal(false);
+    }, 1500);
+  };
+
+  const getEstimatedTime = (commitment: string) => {
+    if (commitment.includes("10+")) return "Estimated time to goal: 3 weeks";
+    if (commitment.includes("5-10")) return "Estimated time to goal: 6 weeks";
+    return "Estimated time to goal: 3 months";
   };
 
   return (
@@ -110,6 +145,12 @@ export default function OnboardingPage() {
               </span>
             </div>
           ))}
+        </div>
+        
+        <div className="text-center mb-8">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            {step === 1 ? "Estimated 1 minute to complete setup" : step === 2 ? "Final step, define your goal" : "Generating your personalized learning path"}
+          </p>
         </div>
 
         {/* Content */}
@@ -197,14 +238,24 @@ export default function OnboardingPage() {
 
           {step === 2 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-primary-500/10 text-primary-500 flex items-center justify-center">
-                  <Sparkles size={24} />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-primary-500/10 text-primary-500 flex items-center justify-center">
+                    <Sparkles size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-900 dark:text-white">What is your learning goal?</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">Be as specific as possible. We&apos;ll use this to build your path.</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white">What is your learning goal?</h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">Be as specific as possible. We&apos;ll use this to build your path.</p>
-                </div>
+                <button
+                  onClick={handleRefineGoal}
+                  disabled={isRefiningGoal || !formData.goal.trim()}
+                  className="flex items-center gap-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-4 py-2 rounded-xl font-bold hover:bg-amber-500/20 transition-colors disabled:opacity-50 text-sm"
+                >
+                  {isRefiningGoal ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
+                  AI Refinement
+                </button>
               </div>
               <textarea
                 value={formData.goal}
@@ -226,6 +277,20 @@ export default function OnboardingPage() {
                   <p className="text-slate-500 dark:text-slate-400 text-sm">We&apos;ll schedule your weekly sessions around your availability.</p>
                 </div>
               </div>
+
+              {/* Result Association Display */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-2xl p-4 flex items-start gap-3">
+                <div className="mt-1 text-blue-500">
+                  <Target size={20} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100 mb-1">AI Suggestion</h4>
+                  <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                    Based on your goal to master <span className="font-bold">{formData.goal.split(' ').slice(0, 3).join(' ')}...</span>, we recommend <span className="font-bold">5-10 hours/week</span> for steady progress without burnout.
+                  </p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 gap-4">
                 {[
                   { time: "2-4 hours/week", desc: "Casual pace" },
@@ -246,13 +311,20 @@ export default function OnboardingPage() {
                       <span className="block font-black text-slate-900 dark:text-white text-lg">{option.time}</span>
                       <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{option.desc}</span>
                     </div>
-                    <div className={cn(
-                      "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
-                      formData.commitment === option.time
-                        ? "border-primary-500 bg-primary-500 text-white"
-                        : "border-slate-200 dark:border-slate-700"
-                    )}>
-                      {formData.commitment === option.time && <Check size={14} strokeWidth={4} />}
+                    <div className="flex items-center gap-4">
+                      {formData.commitment === option.time && (
+                        <span className="text-sm font-bold text-primary-600 dark:text-primary-400 bg-primary-500/10 px-3 py-1 rounded-full animate-in fade-in zoom-in duration-300">
+                          {getEstimatedTime(option.time)}
+                        </span>
+                      )}
+                      <div className={cn(
+                        "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                        formData.commitment === option.time
+                          ? "border-primary-500 bg-primary-500 text-white"
+                          : "border-slate-200 dark:border-slate-700"
+                      )}>
+                        {formData.commitment === option.time && <Check size={14} strokeWidth={4} />}
+                      </div>
                     </div>
                   </button>
                 ))}
@@ -274,13 +346,18 @@ export default function OnboardingPage() {
           </button>
           <button
             onClick={handleNext}
-            disabled={isGenerating || (step === 1 && !formData.background && !resumeFile) || (step === 2 && !formData.goal)}
+            disabled={isGenerating || isParsingBackground || (step === 1 && !formData.background && !resumeFile) || (step === 2 && !formData.goal)}
             className="flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-10 py-4 rounded-2xl font-black hover:opacity-90 transition-all disabled:opacity-30 active:scale-95 shadow-xl"
           >
             {isGenerating ? (
               <>
                 <Loader2 className="animate-spin" size={20} />
                 Crafting Your Path...
+              </>
+            ) : isParsingBackground ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                Parsing your background...
               </>
             ) : step === 3 ? (
               <>
@@ -296,6 +373,79 @@ export default function OnboardingPage() {
           </button>
         </div>
       </div>
+
+      {/* Agent Collaboration Overlay */}
+      <AnimatePresence>
+        {isGenerating && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 dark:bg-slate-950/90 backdrop-blur-md"
+          >
+            <div className="max-w-md w-full p-8 flex flex-col items-center text-center">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                className="relative w-32 h-32 mb-8"
+              >
+                <div className="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-800" />
+                <div className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" style={{ animationDuration: '2s' }} />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Wand2 className="w-10 h-10 text-blue-500 animate-pulse" />
+                </div>
+              </motion.div>
+
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-6">
+                AI Mentor Team is working...
+              </h2>
+
+              <div className="w-full space-y-4">
+                {[
+                  { step: 1, label: "Skill Identifier analyzing your background...", icon: "🧠" },
+                  { step: 2, label: "Path Scheduler mapping your journey...", icon: "🗺️" },
+                  { step: 3, label: "Content Creator gathering resources...", icon: "📚" },
+                  { step: 4, label: "Finalizing your personalized plan...", icon: "✨" }
+                ].map((item) => (
+                  <motion.div
+                    key={item.step}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ 
+                      opacity: generationStep >= item.step ? 1 : 0.3,
+                      x: generationStep >= item.step ? 0 : -20,
+                      scale: generationStep === item.step ? 1.05 : 1
+                    }}
+                    className={`flex items-center gap-4 p-4 rounded-xl border ${
+                      generationStep === item.step 
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' 
+                        : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'
+                    }`}
+                  >
+                    <span className="text-2xl">{item.icon}</span>
+                    <span className={`font-medium ${
+                      generationStep === item.step 
+                        ? 'text-blue-700 dark:text-blue-300' 
+                        : 'text-slate-500 dark:text-slate-400'
+                    }`}>
+                      {item.label}
+                    </span>
+                    {generationStep === item.step && (
+                      <Loader2 className="w-4 h-4 ml-auto animate-spin text-blue-500" />
+                    )}
+                    {generationStep > item.step && (
+                      <div className="w-4 h-4 ml-auto rounded-full bg-green-500 flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

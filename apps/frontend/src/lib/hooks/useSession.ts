@@ -66,7 +66,7 @@ export function useSession(): UseSessionReturn {
             setLearnerId(savedId);
             setProfile(learner_profile);
             console.log('[useSession] Restored session:', savedId);
-          } catch (err) {
+          } catch {
             // Profile not found on backend, clear local storage
             console.warn('[useSession] Saved learner_id not found on backend, clearing local storage');
             clearStoredLearnerId();
