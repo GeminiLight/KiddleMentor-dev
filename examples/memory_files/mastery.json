@@ -1,0 +1,92 @@
+{
+  "overall_progress": 20,
+  "mastered_skills": [
+    {
+      "name": "Communication Skills",
+      "proficiency_level": "advanced",
+      "verified_at": "2025-09-01T08:00:00"
+    },
+    {
+      "name": "Organizational Skills",
+      "proficiency_level": "intermediate",
+      "verified_at": "2025-09-01T08:00:00"
+    }
+  ],
+  "in_progress_skills": [
+    {
+      "name": "HRIS Management",
+      "required_proficiency_level": "intermediate",
+      "current_proficiency_level": "beginner",
+      "started_at": "2025-09-15T09:00:00"
+    },
+    {
+      "name": "Employee Relations",
+      "required_proficiency_level": "advanced",
+      "current_proficiency_level": "beginner",
+      "started_at": "2025-09-18T10:00:00"
+    }
+  ],
+  "last_evaluation": {
+    "session_id": "session_001",
+    "topic": "HRIS Management - Introduction",
+    "score": 75,
+    "max_score": 100,
+    "feedback": "Good understanding of HRIS fundamentals. Needs more practice with hands-on module navigation.",
+    "strengths": [
+      "Clear grasp of HRIS purpose and benefits",
+      "Able to connect payroll concepts to prior experience"
+    ],
+    "areas_for_improvement": [
+      "Hands-on HRIS module navigation",
+      "Report generation from HRIS data"
+    ],
+    "timestamp": "2025-09-15T09:22:00"
+  },
+  "evaluations_history": [
+    {
+      "session_id": "session_001",
+      "topic": "HRIS Management - Introduction",
+      "score": 75,
+      "max_score": 100,
+      "feedback": "Good understanding of HRIS fundamentals. Needs more practice with hands-on module navigation.",
+      "strengths": [
+        "Clear grasp of HRIS purpose and benefits",
+        "Able to connect payroll concepts to prior experience"
+      ],
+      "areas_for_improvement": [
+        "Hands-on HRIS module navigation",
+        "Report generation from HRIS data"
+      ],
+      "timestamp": "2025-09-15T09:22:00"
+    }
+  ],
+  "entries": [
+    {
+      "type": "quiz",
+      "topic": "Understanding HRIS Systems",
+      "score": 4,
+      "max_score": 5,
+      "timestamp": "2025-09-15T09:15:00"
+    },
+    {
+      "type": "quiz",
+      "topic": "Components of HRIS",
+      "score": 3,
+      "max_score": 5,
+      "timestamp": "2025-09-15T09:18:00"
+    },
+    {
+      "type": "reading_completion",
+      "topic": "Benefits of HRIS",
+      "completed": true,
+      "timestamp": "2025-09-15T09:20:00"
+    },
+    {
+      "type": "quiz",
+      "topic": "Conflict Resolution Techniques",
+      "score": 2,
+      "max_score": 5,
+      "timestamp": "2025-09-18T10:15:00"
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+# GenMentor Configuration
+# Configuration file for GenMentor application
+
+# Application settings
+environment: dev  # Options: dev, staging, prod
+debug: true
+log_level: INFO  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+# =============================================================================
+# Agent/LLM Configuration
+# =============================================================================
+
+# Default agent settings
+agent_defaults:
+  model: openai/gpt-5.1  # Format: provider/model-name
+  temperature: 0.0
+  max_tokens: 8192
+  workspace: ~/.gen-mentor/workspace  # Workspace directory for memory and context storage
+
+# LLM Provider configurations
+# API keys are loaded from environment variables by default
+providers:
+  openai:
+    api_key: null  # Set via OPENAI_API_KEY env var
+    api_base: null  # Optional: Custom endpoint URL
+    # extra_headers: {}  # Optional: Additional HTTP headers
+
+  anthropic:
+    api_key: null  # Set via ANTHROPIC_API_KEY env var
+    api_base: null
+    # extra_headers: {}
+
+  deepseek:
+    api_key: null  # Set via DEEPSEEK_API_KEY env var
+    api_base: null  # Optional: https://api.deepseek.com
+    # extra_headers: {}
+
+  together:
+    api_key: null  # Set via TOGETHER_API_KEY env var
+    api_base: null  # Optional: https://api.together.xyz
+    # extra_headers: {}
+
+  groq:
+    api_key: null  # Set via GROQ_API_KEY env var
+    api_base: null  # Optional: https://api.groq.com/openai/v1
+    # extra_headers: {}
+
+  openrouter:
+    api_key: null  # Set via OPENROUTER_API_KEY env var
+    api_base: null  # Optional: https://openrouter.ai/api/v1
+    # extra_headers: {}
+
+  ollama:
+    api_key: null  # Not required for Ollama
+    api_base: http://localhost:11434  # Ollama default endpoint
+    # extra_headers: {}
+
+  custom:
+    api_key: dummy-key  # Some servers don't require real keys
+    api_base: http://localhost:8000/v1  # Your custom OpenAI-compatible endpoint
+    # extra_headers: {}
+
+# =============================================================================
+# Search Configuration
+# =============================================================================
+
+# Default search settings
+search_defaults:
+  provider: duckduckgo  # Options: duckduckgo, tavily, serper, bing, brave, you
+  max_results: 5
+  loader_type: web
+  enable_search: false  # Set to true to enable web search (disabled by default)
+
+# Search provider configurations
+search_providers:
+  duckduckgo:
+    api_key: null  # No API key required
+    max_results: 5
+
+  tavily:
+    api_key: null  # Set via TAVILY_API_KEY env var
+    max_results: 5
+
+  serper:
+    api_key: null  # Set via SERPER_API_KEY env var
+    max_results: 5
+
+  bing:
+    api_key: null  # Set via BING_SUBSCRIPTION_KEY env var
+    max_results: 5
+
+  brave:
+    api_key: null  # Set via BRAVE_API_KEY env var
+    max_results: 5
+
+  you:
+    api_key: null  # Set via YDC_API_KEY env var
+    max_results: 5
+
+# =============================================================================
+# Embedding Configuration
+# =============================================================================
+
+# Default embedding settings
+embedding_defaults:
+  provider: huggingface  # Options: huggingface, openai, cohere, azure, ollama
+  model_name: sentence-transformers/all-mpnet-base-v2
+  dimension: 768  # Embedding vector dimension
+  enable_vectordb: false  # Set to true to enable vector database (requires valid embedding setup)
+
+# Embedding provider configurations
+embedding_providers:
+  huggingface:
+    api_key: null  # No API key required for public models
+    model_name: sentence-transformers/all-mpnet-base-v2
+    api_base: null
+
+  openai:
+    api_key: null  # Set via OPENAI_API_KEY env var
+    model_name: text-embedding-3-small  # Options: text-embedding-3-small, text-embedding-3-large, text-embedding-ada-002
+    api_base: null
+
+  cohere:
+    api_key: null  # Set via COHERE_API_KEY env var
+    model_name: embed-english-v3.0  # Options: embed-english-v3.0, embed-multilingual-v3.0
+    api_base: null
+
+  azure:
+    api_key: null  # Set via AZURE_OPENAI_API_KEY env var
+    model_name: text-embedding-ada-002
+    api_base: null  # Required: Your Azure endpoint (e.g., https://YOUR_RESOURCE.openai.azure.com)
+
+  ollama:
+    api_key: null  # Not required for Ollama
+    model_name: nomic-embed-text  # Options: nomic-embed-text, mxbai-embed-large
+    api_base: http://localhost:11434
+
+# =============================================================================
+# Other Configurations
+# =============================================================================
+
+# Vector store configuration
+vectorstore:
+  persist_directory: data/vectorstore
+  collection_name: genmentor
+
+# RAG (Retrieval-Augmented Generation) configuration
+rag:
+  chunk_size: 1000
+  num_retrieval_results: 5
+  allow_parallel: true
+  max_workers: 3

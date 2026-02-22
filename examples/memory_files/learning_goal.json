@@ -1,0 +1,16 @@
+{
+  "goals": [
+    {
+      "goal_id": "goal_20250901_001",
+      "learning_goal": "Become a Human Resources Manager at Albert Hotel",
+      "refined_goal": {
+        "refined_goal": "To become a Human Resources Manager at Albert Hotel, focusing on HRIS management, employee relations, recruitment, training, compliance, and payroll processing.",
+        "rationale": "This refined goal focuses on the key competencies required for the HR Manager role in a hospitality setting."
+      },
+      "status": "active",
+      "created_at": "2025-09-01T08:00:00",
+      "updated_at": "2025-09-18T10:30:00"
+    }
+  ],
+  "active_goal_id": "goal_20250901_001"
+}

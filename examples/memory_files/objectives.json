@@ -1,0 +1,124 @@
+{
+  "primary_goal": "Become a Human Resources Manager at Albert Hotel",
+  "target_completion_date": "2026-03-01",
+  "objectives": [
+    {
+      "id": "obj_001",
+      "skill": "HRIS Management",
+      "target_level": "intermediate",
+      "current_level": "beginner",
+      "status": "in_progress",
+      "sub_objectives": [
+        {
+          "name": "Understand HRIS system architecture",
+          "completed": true
+        },
+        {
+          "name": "Navigate HRIS modules (payroll, benefits, attendance)",
+          "completed": false
+        },
+        {
+          "name": "Generate reports from HRIS data",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "obj_002",
+      "skill": "Employee Relations",
+      "target_level": "advanced",
+      "current_level": "beginner",
+      "status": "in_progress",
+      "sub_objectives": [
+        {
+          "name": "Master conflict resolution techniques",
+          "completed": false
+        },
+        {
+          "name": "Build frameworks for employee trust",
+          "completed": false
+        },
+        {
+          "name": "Develop effective communication strategies",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "obj_003",
+      "skill": "Recruitment and Hiring",
+      "target_level": "advanced",
+      "current_level": "beginner",
+      "status": "pending",
+      "sub_objectives": [
+        {
+          "name": "Design job descriptions and postings",
+          "completed": false
+        },
+        {
+          "name": "Conduct structured interviews",
+          "completed": false
+        },
+        {
+          "name": "Evaluate candidates with scoring rubrics",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "obj_004",
+      "skill": "Training and Development",
+      "target_level": "intermediate",
+      "current_level": "unlearned",
+      "status": "pending",
+      "sub_objectives": [
+        {
+          "name": "Conduct training needs analysis",
+          "completed": false
+        },
+        {
+          "name": "Design onboarding programs",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "obj_005",
+      "skill": "Compliance Management",
+      "target_level": "advanced",
+      "current_level": "unlearned",
+      "status": "pending",
+      "sub_objectives": [
+        {
+          "name": "Understand labor law fundamentals",
+          "completed": false
+        },
+        {
+          "name": "Implement workplace safety regulations",
+          "completed": false
+        },
+        {
+          "name": "Manage audit and reporting processes",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "obj_006",
+      "skill": "Payroll Processing",
+      "target_level": "intermediate",
+      "current_level": "unlearned",
+      "status": "pending",
+      "sub_objectives": [
+        {
+          "name": "Process salary calculations and deductions",
+          "completed": false
+        },
+        {
+          "name": "Handle benefits administration",
+          "completed": false
+        }
+      ]
+    }
+  ]
+}

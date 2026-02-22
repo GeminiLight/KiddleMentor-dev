@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 150" width="750" height="150">
+  <defs>
+    <!-- Premium Text Gradient -->
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="50%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+
+    <!-- Inner Circle Gradient (Vibrant Purple to Blue) -->
+    <linearGradient id="innerRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#3B82F6" />
+    </linearGradient>
+
+    <!-- Outer Ring Gradient (Vibrant Mint to Cyan) -->
+    <linearGradient id="outerRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6EE7B7" />
+      <stop offset="50%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#2DD4BF" />
+    </linearGradient>
+
+    <!-- Leaf Gradient (Emerald to Teal) -->
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#0D9488" />
+    </linearGradient>
+
+    <!-- Premium Glow Effects -->
+    <filter id="glowOuter" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#34D399" flood-opacity="0.4" />
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.1" />
+    </filter>
+
+    <filter id="glowLeaf" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0F766E" flood-opacity="0.4" />
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.2" />
+    </filter>
+
+    <filter id="textShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#3B82F6" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Icon Group -->
+  <g transform="translate(80, 75)">
+    <!-- Outer Ring with Glow -->
+    <circle cx="0" cy="0" r="48" fill="none" stroke="url(#outerRingGrad)" stroke-width="12" filter="url(#glowOuter)" />
+    
+    <!-- Inner Solid Circle -->
+    <circle cx="0" cy="0" r="32" fill="url(#innerRingGrad)" />
+    
+    <!-- Center G (Custom geometric path to remove the spur and ensure perfect, rounded rendering) -->
+    <path d="M 14.14 -14.14 A 20 20 0 1 0 19.36 5 L 8.66 5 L 8.66 -5 A 10 10 0 1 1 7.07 -7.07 Z" fill="#ffffff" transform="scale(1.2)" />
+    
+    <!-- Leaves with 3D pop (drawn last so they overlap the inner circle) -->
+    <g fill="url(#leafGrad)" filter="url(#glowLeaf)">
+      <path d="M 0 -74 C 12 -58, 12 -46, 0 -36 C -12 -46, -12 -58, 0 -74 Z" />
+      <path d="M 0 -74 C 12 -58, 12 -46, 0 -36 C -12 -46, -12 -58, 0 -74 Z" transform="rotate(90)" />
+      <path d="M 0 -74 C 12 -58, 12 -46, 0 -36 C -12 -46, -12 -58, 0 -74 Z" transform="rotate(180)" />
+      <path d="M 0 -74 C 12 -58, 12 -46, 0 -36 C -12 -46, -12 -58, 0 -74 Z" transform="rotate(270)" />
+    </g>
+  </g>
+
+  <!-- Text -->
+  <text x="170" y="105" font-family="Montserrat, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="95" font-weight="800" fill="url(#textGrad)" letter-spacing="-2" filter="url(#textShadow)">GenMentor</text>
+</svg>

@@ -1,0 +1,129 @@
+{
+  "learner_id": "user_20250901_001",
+  "created_at": "2025-09-01T08:00:00",
+  "updated_at": "2025-09-18T10:30:00",
+  "learning_path": [
+    {
+      "id": "session_001",
+      "title": "Introduction to HRIS Management",
+      "abstract": "This session introduces the basics of HRIS systems, focusing on their role in HR management.",
+      "if_learned": true,
+      "associated_skills": ["HRIS Management"],
+      "knowledge_points": [
+        {
+          "name": "Understanding HRIS Systems",
+          "complexity_level": "beginner"
+        },
+        {
+          "name": "Components of HRIS",
+          "complexity_level": "beginner"
+        },
+        {
+          "name": "Benefits of HRIS",
+          "complexity_level": "beginner"
+        }
+      ]
+    },
+    {
+      "id": "session_002",
+      "title": "Employee Relations Fundamentals",
+      "abstract": "Explore foundational strategies for managing employee relations effectively.",
+      "if_learned": false,
+      "associated_skills": ["Employee Relations"],
+      "knowledge_points": [
+        {
+          "name": "Conflict Resolution Techniques",
+          "complexity_level": "intermediate"
+        },
+        {
+          "name": "Building Employee Trust",
+          "complexity_level": "intermediate"
+        },
+        {
+          "name": "Effective Communication in Employee Relations",
+          "complexity_level": "intermediate"
+        }
+      ]
+    },
+    {
+      "id": "session_003",
+      "title": "HRIS Modules Deep Dive",
+      "abstract": "Hands-on exploration of HRIS modules including payroll, benefits, and attendance tracking.",
+      "if_learned": false,
+      "associated_skills": ["HRIS Management", "Payroll Processing"],
+      "knowledge_points": [
+        {
+          "name": "Payroll Module Operations",
+          "complexity_level": "intermediate"
+        },
+        {
+          "name": "Benefits Administration Module",
+          "complexity_level": "intermediate"
+        },
+        {
+          "name": "Attendance and Time Tracking",
+          "complexity_level": "beginner"
+        }
+      ]
+    },
+    {
+      "id": "session_004",
+      "title": "Recruitment and Hiring Practices",
+      "abstract": "Learn structured approaches to recruitment, from job posting to candidate evaluation.",
+      "if_learned": false,
+      "associated_skills": ["Recruitment and Hiring"],
+      "knowledge_points": [
+        {
+          "name": "Job Description Design",
+          "complexity_level": "beginner"
+        },
+        {
+          "name": "Structured Interview Techniques",
+          "complexity_level": "intermediate"
+        },
+        {
+          "name": "Candidate Evaluation Rubrics",
+          "complexity_level": "intermediate"
+        }
+      ]
+    },
+    {
+      "id": "session_005",
+      "title": "Training and Development Programs",
+      "abstract": "Design effective onboarding and continuous training programs for employees.",
+      "if_learned": false,
+      "associated_skills": ["Training and Development"],
+      "knowledge_points": [
+        {
+          "name": "Training Needs Analysis",
+          "complexity_level": "intermediate"
+        },
+        {
+          "name": "Onboarding Program Design",
+          "complexity_level": "intermediate"
+        }
+      ]
+    },
+    {
+      "id": "session_006",
+      "title": "Compliance and Labor Law",
+      "abstract": "Understand labor regulations, workplace safety, and audit/reporting procedures.",
+      "if_learned": false,
+      "associated_skills": ["Compliance Management"],
+      "knowledge_points": [
+        {
+          "name": "Labor Law Fundamentals",
+          "complexity_level": "intermediate"
+        },
+        {
+          "name": "Workplace Safety Regulations",
+          "complexity_level": "intermediate"
+        },
+        {
+          "name": "Audit and Reporting Processes",
+          "complexity_level": "advanced"
+        }
+      ]
+    }
+  ]
+}

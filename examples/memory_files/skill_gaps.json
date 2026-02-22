@@ -1,0 +1,55 @@
+{
+  "goal_20250901_001": {
+    "skill_gaps": [
+      {
+        "name": "HRIS Management",
+        "is_gap": true,
+        "required_level": "intermediate",
+        "current_level": "beginner",
+        "reason": "Limited hands-on experience with HRIS systems.",
+        "level_confidence": "high"
+      },
+      {
+        "name": "Employee Relations",
+        "is_gap": true,
+        "required_level": "advanced",
+        "current_level": "beginner",
+        "reason": "No direct experience in employee relations management.",
+        "level_confidence": "high"
+      },
+      {
+        "name": "Recruitment and Hiring",
+        "is_gap": true,
+        "required_level": "advanced",
+        "current_level": "beginner",
+        "reason": "No evidence of structured recruitment experience.",
+        "level_confidence": "high"
+      },
+      {
+        "name": "Training and Development",
+        "is_gap": true,
+        "required_level": "intermediate",
+        "current_level": "unlearned",
+        "reason": "No evidence of training program design skills.",
+        "level_confidence": "high"
+      },
+      {
+        "name": "Compliance Management",
+        "is_gap": true,
+        "required_level": "advanced",
+        "current_level": "unlearned",
+        "reason": "No evidence of labor law or compliance knowledge.",
+        "level_confidence": "high"
+      },
+      {
+        "name": "Payroll Processing",
+        "is_gap": true,
+        "required_level": "intermediate",
+        "current_level": "unlearned",
+        "reason": "No evidence of payroll processing skills.",
+        "level_confidence": "high"
+      }
+    ],
+    "updated_at": "2025-09-01T08:30:00"
+  }
+}

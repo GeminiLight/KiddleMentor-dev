@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 150" width="750" height="150">
+  <defs>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9b5de5" />
+      <stop offset="50%" stop-color="#4285f4" />
+      <stop offset="100%" stop-color="#00bbf9" />
+    </linearGradient>
+    <linearGradient id="innerRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9b5de5" />
+      <stop offset="100%" stop-color="#4285f4" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.08" />
+    </filter>
+  </defs>
+
+  <!-- Icon -->
+  <g transform="translate(80, 75)" filter="url(#shadow)">
+    <!-- Outer Ring -->
+    <circle cx="0" cy="0" r="50" fill="none" stroke="#5df5c9" stroke-width="14" />
+    
+    <!-- Inner Ring -->
+    <circle cx="0" cy="0" r="32" fill="none" stroke="url(#innerRingGrad)" stroke-width="14" />
+    
+    <!-- Center G -->
+    <text x="0" y="13" font-family="Montserrat, 'Segoe UI', sans-serif" font-size="38" font-weight="900" fill="url(#innerRingGrad)" text-anchor="middle">G</text>
+    
+    <!-- Leaves -->
+    <g fill="#00c98a">
+      <path d="M 0 -72 C 12 -60, 12 -45, 0 -38 C -12 -45, -12 -60, 0 -72 Z" />
+      <path d="M 0 -72 C 12 -60, 12 -45, 0 -38 C -12 -45, -12 -60, 0 -72 Z" transform="rotate(90)" />
+      <path d="M 0 -72 C 12 -60, 12 -45, 0 -38 C -12 -45, -12 -60, 0 -72 Z" transform="rotate(180)" />
+      <path d="M 0 -72 C 12 -60, 12 -45, 0 -38 C -12 -45, -12 -60, 0 -72 Z" transform="rotate(270)" />
+    </g>
+  </g>
+
+  <!-- Text -->
+  <text x="170" y="105" font-family="Montserrat, 'Segoe UI', sans-serif" font-size="95" font-weight="800" fill="url(#textGrad)" letter-spacing="-1">GenMentor</text>
+</svg>

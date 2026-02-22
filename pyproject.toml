@@ -1,0 +1,173 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gen-mentor"
+version = "1.0.0"
+description = "LLM-powered Multi-agent Framework for Goal-oriented Learning in Intelligent Tutoring System"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Tianfu Wang", email = "tianfuwang@example.com"}
+]
+keywords = ["AI", "LLM", "Education", "Tutoring", "Multi-Agent"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Education",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "langchain>=1.0.0",
+    "langchain-core>=1.0.0",
+    "langchain-community>=0.4.0",
+    "langchain-chroma>=1.0.0",
+    "langchain-huggingface>=0.1.0",
+    "langchain-openai>=1.0.0",
+    "langchain-anthropic>=1.0.0",
+    "langchain-deepseek",
+    "langchain-cohere",
+    "langchain-ollama",
+    "langchain-docling",
+    "questionary",
+    "sentence-transformers",
+    "hydra-core",
+    "python-dotenv",
+    "omegaconf",
+    "pydantic>=2.0.0",
+    "duckduckgo-search",
+    "beautifulsoup4",
+    "pypdf",
+    "PyPDF2",
+    "pdfplumber",
+    "pypinyin",
+    "rich",
+    "rich-argparse",
+    "fastapi",
+    "httpx",
+    "uvicorn",
+    "python-multipart",
+    "markdown",
+    "unidecode",
+    "deprecation>=2.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.10.0",
+    "coverage>=7.0.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "isort>=5.12.0",
+]
+
+frontend = [
+    "streamlit>=1.40.0",
+    "streamlit-card",
+    "streamlit-chat",
+    "streamlit-extras",
+    "streamlit-tags",
+    "st-pages>=0.4.5",
+    "streamlit-float>=0.3.5",
+    "streamlit-option-menu",
+    "streamlit-on-Hover-tabs",
+    "extra-streamlit-components>=0.1.60",
+]
+
+[project.scripts]
+gen-mentor = "gen_mentor.cli.main:main"
+genmentor = "gen_mentor.cli.main:main"
+
+[project.urls]
+Homepage = "https://www.tianfuwang.tech/gen-mentor"
+Documentation = "https://github.com/yourusername/gen-mentor/wiki"
+Repository = "https://github.com/yourusername/gen-mentor"
+"Bug Tracker" = "https://github.com/yourusername/gen-mentor/issues"
+
+[tool.setuptools]
+packages = ["gen_mentor"]
+
+[tool.setuptools.package-data]
+gen_mentor = ["config/*.yaml", "**/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--cov=gen_mentor",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow-running tests",
+    "api: Tests requiring API access",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::FutureWarning",
+]
+
+[tool.coverage.run]
+source = ["gen_mentor"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+skip_gitignore = true
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true

@@ -1,0 +1,43 @@
+{
+  "learner_id": "user_20250901_001",
+  "name": "Alex Chen",
+  "email": "alex.chen@example.com",
+  "created_at": "2025-09-01T08:00:00",
+  "updated_at": "2025-09-18T10:30:00",
+  "background": {
+    "education": [
+      {
+        "degree": "MBA",
+        "institution": "Bharathiar University",
+        "year": 2020
+      },
+      {
+        "degree": "BE",
+        "institution": "PA College of Engineering and Technology",
+        "year": 2017
+      }
+    ],
+    "work_experience": [
+      {
+        "role": "Administration Executive",
+        "industry": "Garment Industry",
+        "years": 3,
+        "skills_used": ["Microsoft Dynamics AX", "MS Office", "Client Service"]
+      }
+    ]
+  },
+  "learning_goal": "To become a Human Resources Manager at Albert Hotel, focusing on HRIS management, employee relations, recruitment, training, compliance, and payroll processing.",
+  "learning_preferences": {
+    "content_style": "Detailed explanations",
+    "activity_type": "Reading-based learning",
+    "pace": "self-paced",
+    "session_duration_preference_minutes": 20,
+    "language": "English"
+  },
+  "behavioral_patterns": {
+    "system_usage_frequency": "Average of 2 logins per week",
+    "session_duration_engagement": "Sessions average 20 minutes; moderate engagement in reading tasks",
+    "motivational_triggers": "Triggered motivational message due to low engagement in interactive tasks",
+    "additional_notes": "Prefers to learn at their own pace"
+  }
+}
