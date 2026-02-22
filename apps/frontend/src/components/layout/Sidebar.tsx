@@ -9,7 +9,6 @@ import {
   Home,
   Map,
   BookOpen,
-  Activity,
   Settings,
   Target,
   ChevronLeft,
@@ -18,103 +17,96 @@ import {
   Star
 } from "lucide-react";
 
+import { useGoal } from "@/components/GoalContext";
+
 const navItems = [
   { name: "Home", href: "/progress", icon: Home },
   { name: "Roadmap", href: "/learning-path", icon: Map },
   { name: "Library", href: "/library", icon: BookOpen },
-  { name: "Skills", href: "/skill-gap", icon: Activity },
   { name: "Settings", href: "/profile", icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
-  const [direction, setDirection] = useState(0);
-
-  const goals = [
-    { id: 1, title: "Senior Data Analyst", progress: 45, color: "from-blue-500 to-cyan-400" },
-    { id: 2, title: "AI Product Manager", progress: 12, color: "from-purple-500 to-pink-400" },
-    { id: 3, title: "Full Stack Developer", progress: 88, color: "from-amber-500 to-orange-400" },
-  ];
-
-  const handleNextGoal = () => {
-    setDirection(1);
-    setCurrentGoalIndex((prev) => (prev + 1) % goals.length);
-  };
-
-  const handlePrevGoal = () => {
-    setDirection(-1);
-    setCurrentGoalIndex((prev) => (prev - 1 + goals.length) % goals.length);
-  };
-
-  const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 50 : -50,
-      opacity: 0,
-      scale: 0.95,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-      scale: 1,
-      transition: { duration: 0.3, type: "spring", bounce: 0.4 }
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? 50 : -50,
-      opacity: 0,
-      scale: 0.95,
-      transition: { duration: 0.2 }
-    })
-  };
+  const { goals, currentGoalIndex, setCurrentGoalIndex } = useGoal();
+  const [isGoalListOpen, setIsGoalListOpen] = useState(false);
 
   return (
     <div className="flex h-full w-64 flex-col border-r border-border bg-card px-4 py-6">
-      {/* Goal Switcher (Card Stack) */}
+      {/* Goal Switcher (Dropdown/Accordion) */}
       <div className="mb-8 relative">
-        <div className="flex items-center justify-between mb-3 px-1">
-          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <Target size={14} />
-            Active Goal
-          </h3>
-          <div className="flex items-center gap-1">
-            <button onClick={handlePrevGoal} className="p-1 hover:bg-muted rounded-md text-muted-foreground transition-colors">
-              <ChevronLeft size={14} />
-            </button>
-            <span className="text-[10px] font-medium text-muted-foreground">{currentGoalIndex + 1}/{goals.length}</span>
-            <button onClick={handleNextGoal} className="p-1 hover:bg-muted rounded-md text-muted-foreground transition-colors">
-              <ChevronRight size={14} />
-            </button>
-          </div>
-        </div>
+        <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-3 px-1">
+          <Target size={14} />
+          Active Goal
+        </h3>
 
-        <div className="relative h-24 w-full perspective-1000">
-          <AnimatePresence initial={false} custom={direction} mode="popLayout">
-            <motion.div
-              key={currentGoalIndex}
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              className={`absolute inset-0 rounded-xl p-4 text-white shadow-md bg-gradient-to-br ${goals[currentGoalIndex].color} flex flex-col justify-between overflow-hidden`}
-            >
-              <div className="absolute -right-4 -top-4 w-16 h-16 bg-white/20 rounded-full blur-xl pointer-events-none" />
-              <h4 className="font-semibold text-sm leading-tight line-clamp-2 relative z-10">
+        <div className="relative">
+          {/* Current Goal Card (Clickable) */}
+          <button 
+            onClick={() => setIsGoalListOpen(!isGoalListOpen)}
+            className={`w-full text-left rounded-xl p-4 text-white shadow-md bg-gradient-to-br ${goals[currentGoalIndex].color} flex flex-col justify-between overflow-hidden relative transition-transform active:scale-95`}
+          >
+            <div className="absolute -right-4 -top-4 w-16 h-16 bg-white/20 rounded-full blur-xl pointer-events-none" />
+            <div className="flex justify-between items-start mb-2 relative z-10">
+              <h4 className="font-semibold text-sm leading-tight line-clamp-2 pr-4">
                 {goals[currentGoalIndex].title}
               </h4>
-              <div className="relative z-10">
-                <div className="flex items-center justify-between text-xs font-medium mb-1.5 text-white/90">
-                  <span>Progress</span>
-                  <span>{goals[currentGoalIndex].progress}%</span>
-                </div>
-                <div className="h-1.5 w-full bg-black/20 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-white rounded-full transition-all duration-1000 ease-out"
-                    style={{ width: `${goals[currentGoalIndex].progress}%` }}
-                  />
-                </div>
+              <ChevronRight size={16} className={cn("transition-transform", isGoalListOpen ? "rotate-90" : "")} />
+            </div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between text-xs font-medium mb-1.5 text-white/90">
+                <span>Progress</span>
+                <span>{goals[currentGoalIndex].progress}%</span>
               </div>
-            </motion.div>
+              <div className="h-1.5 w-full bg-black/20 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-white rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: `${goals[currentGoalIndex].progress}%` }}
+                />
+              </div>
+            </div>
+          </button>
+
+          {/* Goal List Dropdown */}
+          <AnimatePresence>
+            {isGoalListOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, y: -10, height: 0 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-50"
+              >
+                <div className="p-2 space-y-1">
+                  {goals.map((goal, idx) => (
+                    <button
+                      key={goal.id}
+                      onClick={() => {
+                        setCurrentGoalIndex(idx);
+                        setIsGoalListOpen(false);
+                      }}
+                      className={cn(
+                        "w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-between",
+                        idx === currentGoalIndex 
+                          ? "bg-primary-50 dark:bg-primary-900/20 text-primary-600" 
+                          : "hover:bg-muted text-foreground"
+                      )}
+                    >
+                      <span className="truncate pr-2">{goal.title}</span>
+                      <span className="text-xs text-muted-foreground">{goal.progress}%</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="p-2 border-t border-border bg-muted/30">
+                  <Link
+                    href="/goals"
+                    className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors"
+                  >
+                    <Target size={14} />
+                    + Add or Manage Goals
+                  </Link>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </div>
@@ -146,14 +138,6 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto space-y-4">
-        <Link
-          href="/goals"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-        >
-          <Target size={18} className="text-muted-foreground" />
-          Manage My Goals
-        </Link>
-
         {/* Global XP Progress Bar */}
         <div className="rounded-xl bg-gradient-to-b from-muted/50 to-muted p-4 border border-border relative overflow-hidden group">
           <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/20 transition-colors" />

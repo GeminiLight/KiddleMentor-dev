@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Play, CheckCircle2, Clock, Calendar, MoreVertical, Lock, RefreshCw, Award, Sparkles, X, Check } from "lucide-react";
+import { Play, CheckCircle2, Clock, Calendar, MoreVertical, Lock, RefreshCw, Award, Sparkles, X, Check, Target, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 export default function LearningPathPage() {
   const router = useRouter();
@@ -12,6 +13,8 @@ export default function LearningPathPage() {
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [originalSessions, setOriginalSessions] = useState<Record<string, unknown>[]>([]);
   const [activeTooltip, setActiveTooltip] = useState<string | number | null>(null);
+  const [skills, setSkills] = useState<Record<string, unknown>[]>([]);
+  const [showSkillGap, setShowSkillGap] = useState(false);
 
   // Close tooltip when clicking outside
   useEffect(() => {
@@ -45,6 +48,25 @@ export default function LearningPathPage() {
         { id: 3, title: "Control Flow (If/Else)", duration: "45 min", status: "locked", week: 1, isMilestone: true },
       ]);
     }
+
+    const skillGapData = JSON.parse(localStorage.getItem('skill_gap') || '{}');
+    const mappedSkills = Object.entries(skillGapData).map(([name, info]) => {
+      const infoRecord = info as Record<string, unknown>;
+      return {
+        name,
+        current: (infoRecord.current_level as number) || 20,
+        target: (infoRecord.target_level as number) || 80,
+        priority: (infoRecord.priority as string) || "Normal",
+      };
+    });
+
+    setSkills(mappedSkills.length > 0 ? mappedSkills : [
+      { name: "Python Fundamentals", current: 35, target: 80, priority: "Critical" },
+      { name: "SQL & Databases", current: 40, target: 90, priority: "Critical" },
+      { name: "Data Structures", current: 20, target: 75, priority: "Important" },
+      { name: "Algorithms", current: 15, target: 70, priority: "Important" },
+      { name: "System Design", current: 10, target: 60, priority: "Normal" },
+    ]);
   }, []);
 
   const handleReschedule = () => {
@@ -82,6 +104,14 @@ export default function LearningPathPage() {
     setHasPendingChanges(false);
   };
 
+  const radarData = skills.map(s => ({
+    subject: s.name as string,
+    "Initial State S₀": Math.max(0, (s.current as number) - 15),
+    "Current State Sₜ": s.current as number,
+    "Target": s.target as number,
+    fullMark: 100,
+  }));
+
   const weeks = Array.from(new Set(sessions.map(s => s.week as number))).sort((a, b) => a - b);
 
   return (
@@ -92,6 +122,13 @@ export default function LearningPathPage() {
           <p className="mt-2 text-muted-foreground">{sessions.filter(s => s.status === 'completed').length} / {sessions.length} Sessions Complete</p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowSkillGap(!showSkillGap)}
+            className="flex items-center gap-2 bg-background border border-border text-muted-foreground px-4 py-2.5 rounded-full font-medium hover:bg-muted hover:text-foreground transition-colors shadow-sm"
+          >
+            <Target size={16} />
+            {showSkillGap ? "Hide Skills" : "View Skills"}
+          </button>
           <button
             onClick={() => router.push("/session/2")}
             className="flex items-center gap-2 bg-primary-500 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-primary-600 transition-colors shadow-sm"
@@ -109,6 +146,102 @@ export default function LearningPathPage() {
           </button>
         </div>
       </div>
+
+      {/* Skill Gap Panel */}
+      <AnimatePresence>
+        {showSkillGap && (
+          <motion.div
+            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+            animate={{ opacity: 1, height: "auto", marginBottom: 32 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-card rounded-2xl shadow-sm border border-border p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Readiness Radar Chart */}
+              <div>
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                    <Target size={20} />
+                  </div>
+                  Readiness Overview
+                </h2>
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                      <PolarGrid stroke="var(--border)" />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--foreground)', fontSize: 12 }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '0.5rem' }}
+                        itemStyle={{ fontWeight: 'bold' }}
+                      />
+                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                      <Radar name="Initial State S₀" dataKey="Initial State S₀" stroke="#94a3b8" fill="#94a3b8" fillOpacity={0.3} />
+                      <Radar name="Current State Sₜ" dataKey="Current State Sₜ" stroke="#02b899" fill="#02b899" fillOpacity={0.5} />
+                      <Radar name="Target" dataKey="Target" stroke="#3b82f6" fill="transparent" strokeDasharray="5 5" strokeWidth={2} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Skills to Learn */}
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary-500/10 text-primary-500 flex items-center justify-center">
+                    <AlertCircle size={20} />
+                  </div>
+                  Skills to Learn
+                </h2>
+                
+                <div className="grid gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {skills.filter(s => (s.current as number) < (s.target as number)).map((skill, idx) => (
+                    <div key={idx} className="bg-background rounded-xl border border-border p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-foreground">{skill.name as string}</span>
+                            <span
+                              className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest ${
+                                skill.priority === "Critical"
+                                  ? "bg-red-500/10 text-red-500"
+                                  : skill.priority === "Important"
+                                  ? "bg-amber-500/10 text-amber-500"
+                                  : "bg-muted text-muted-foreground"
+                              }`}
+                            >
+                              {skill.priority as string}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest bg-muted px-2 py-0.5 rounded-full">Target: {skill.target as number}%</span>
+                      </div>
+                      
+                      <div className="space-y-1.5">
+                        <div className="relative h-2 w-full bg-secondary rounded-full overflow-hidden">
+                          {/* Target Marker */}
+                          <div
+                            className="absolute top-0 bottom-0 w-0.5 bg-foreground/20 z-10"
+                            style={{ left: `${skill.target as number}%` }}
+                          />
+                          {/* Current Progress */}
+                          <div
+                            className="absolute top-0 bottom-0 bg-gradient-to-r from-primary-500 to-blue-500 rounded-full transition-all duration-1000"
+                            style={{ width: `${skill.current as number}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                          <span>Current: {skill.current as number}%</span>
+                          <span className="text-primary-500">Gap: {(skill.target as number) - (skill.current as number)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* AI Suggestion Card */}
       <AnimatePresence mode="wait">

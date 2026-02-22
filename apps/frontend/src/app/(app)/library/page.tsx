@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, FileText, CheckCircle2, AlertCircle, Archive, Sparkles, ChevronDown, Target, Zap } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { LibraryCard } from "@/components/LibraryCard";
 import { MistakeBook } from "@/components/MistakeBook";
 import { useSession } from "@/lib/hooks/useSession";
@@ -203,7 +204,7 @@ export default function LibraryPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="mt-6 p-5 bg-background/50 backdrop-blur-sm border border-primary-500/20 rounded-xl text-foreground leading-relaxed"
                       >
-                        <ReactMarkdown remarkPlugins={[import("remark-gfm")]}>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {goalSummary}
                         </ReactMarkdown>
                       </motion.div>

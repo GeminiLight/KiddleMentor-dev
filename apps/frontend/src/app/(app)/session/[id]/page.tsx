@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, BookOpen, RefreshCw, ArrowRight, MessageSquarePlus } from "lucide-react";
+import { ArrowLeft, CheckCircle2, BookOpen, RefreshCw, ArrowRight, MessageSquarePlus, Star } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import AITutorChat from "@/components/AITutorChat";
 
@@ -10,6 +11,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("learn");
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showXPAnimation, setShowXPAnimation] = useState(false);
   
   // Text selection state
   const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
@@ -44,8 +46,40 @@ export default function SessionPage({ params }: { params: { id: string } }) {
     }
   };
 
+  const handleMarkComplete = () => {
+    if (!isCompleted) {
+      setIsCompleted(true);
+      setShowXPAnimation(true);
+      setTimeout(() => setShowXPAnimation(false), 2000);
+    }
+  };
+
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col -m-8 relative">
+    <div className="h-[calc(100vh-4rem)] flex flex-col -m-8 relative overflow-hidden">
+      {/* XP Fly-in Animation */}
+      <AnimatePresence>
+        {showXPAnimation && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, y: 0, x: "-50%" }}
+            animate={{ 
+              opacity: [0, 1, 1, 0], 
+              scale: [0.5, 1.2, 1, 0.8], 
+              y: [0, -100, -200, -300],
+              x: "-50%"
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2, ease: "easeOut" }}
+            className="fixed left-1/2 top-1/2 z-50 flex flex-col items-center pointer-events-none"
+          >
+            <div className="bg-amber-500 text-white px-6 py-3 rounded-full font-black text-2xl shadow-2xl shadow-amber-500/50 flex items-center gap-2 border-4 border-white dark:border-slate-900">
+              <Star fill="currentColor" size={28} className="animate-spin-slow" />
+              +50 XP
+            </div>
+            <div className="text-amber-500 font-bold mt-2 text-lg drop-shadow-md">Session Completed!</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Floating Ask Tutor Button */}
       {selection && (
         <button
@@ -102,7 +136,7 @@ export default function SessionPage({ params }: { params: { id: string } }) {
             </button>
           </div>
           <button
-            onClick={() => setIsCompleted(true)}
+            onClick={handleMarkComplete}
             className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold transition-colors ${
               isCompleted
                 ? "bg-green-500 text-white"

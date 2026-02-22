@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { ArrowRight, Loader2, Bot } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+import { api, getStoredLearnerId } from "@/lib/api";
 
 interface Message {
   id: string;
@@ -13,12 +12,11 @@ interface Message {
   content: string;
 }
 
-export default function AITutorChat({ 
-  sessionId, 
-  externalQuery, 
-  onQueryProcessed 
-}: { 
-  sessionId: string;
+export default function AITutorChat({
+  externalQuery,
+  onQueryProcessed
+}: {
+  sessionId?: string;
   externalQuery?: string;
   onQueryProcessed?: () => void;
 }) {
@@ -42,125 +40,24 @@ export default function AITutorChat({
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    if (externalQuery) {
-      setInput(externalQuery);
-      // Optionally auto-submit here, but let's just populate the input for now
-      // or we can auto-submit by calling handleSubmit directly
-      // Let's auto-submit
-      const submitExternal = async () => {
-        if (isLoading) return;
-        
-        const userMessage: Message = {
-          id: Date.now().toString(),
-          role: "user",
-          content: externalQuery,
-        };
-
-        setMessages((prev) => [...prev, userMessage]);
-        setInput("");
-        setIsLoading(true);
-        if (onQueryProcessed) onQueryProcessed();
-
-        try {
-          const response = await fetch(`${API_BASE_URL}/chat/chat-with-tutor`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              session_id: sessionId,
-              message: userMessage.content,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to send message");
-          }
-
-          const data = await response.json();
-          
-          const assistantMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: data.response || "I'm sorry, I couldn't process that.",
-          };
-
-          setMessages((prev) => [...prev, assistantMessage]);
-        } catch (error) {
-          console.error("Chat error:", error);
-          const errorMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: "Sorry, there was an error communicating with the server.",
-          };
-          setMessages((prev) => [...prev, errorMessage]);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      
-      submitExternal();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [externalQuery]);
-
-  // Mock agent state changes during loading
-  useEffect(() => {
-    if (!isLoading) {
-      setAgentState("");
-      return;
-    }
-
-    const states = [
-      "Content Expert is retrieving materials...",
-      "Simulator is evaluating your context...",
-      "Synthesizing response...",
-    ];
-    
-    let currentIndex = 0;
-    setAgentState(states[0]);
-    
-    const interval = setInterval(() => {
-      currentIndex = (currentIndex + 1) % states.length;
-      setAgentState(states[currentIndex]);
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [isLoading]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input.trim(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
+  const sendMessage = useCallback(async (_newUserMessage: Message, allMessages: Message[]) => {
     setIsLoading(true);
 
+    // Build chat history in the format the backend expects
+    const chatHistory = allMessages
+      .map((m) => ({
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: m.content,
+      }));
+
+    const learnerId = getStoredLearnerId();
+
     try {
-      const response = await fetch(`${API_BASE_URL}/chat/chat-with-tutor`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          session_id: sessionId,
-          message: userMessage.content,
-        }),
+      const data = await api.chatWithTutor({
+        messages: chatHistory,
+        learner_profile: learnerId ? { learner_id: learnerId } : undefined,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to send message");
-      }
-
-      const data = await response.json();
-      
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
@@ -179,6 +76,69 @@ export default function AITutorChat({
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    if (externalQuery) {
+      if (isLoading) return;
+
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: "user",
+        content: externalQuery,
+      };
+
+      setMessages((prev) => {
+        const updated = [...prev, userMessage];
+        sendMessage(userMessage, updated);
+        return updated;
+      });
+      setInput("");
+      if (onQueryProcessed) onQueryProcessed();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalQuery]);
+
+  // Animate agent state during loading
+  useEffect(() => {
+    if (!isLoading) {
+      setAgentState("");
+      return;
+    }
+
+    const states = [
+      "Content Expert is retrieving materials...",
+      "Simulator is evaluating your context...",
+      "Synthesizing response...",
+    ];
+
+    let currentIndex = 0;
+    setAgentState(states[0]);
+
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % states.length;
+      setAgentState(states[currentIndex]);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input.trim(),
+    };
+
+    setMessages((prev) => {
+      const updated = [...prev, userMessage];
+      sendMessage(userMessage, updated);
+      return updated;
+    });
+    setInput("");
   };
 
   return (
