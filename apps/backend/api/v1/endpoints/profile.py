@@ -31,6 +31,7 @@ from gen_mentor.agents.learning.learner_profiler import (
     update_learner_profile_with_llm
 )
 from gen_mentor.agents.learning.goal_refiner import refine_learning_goal_with_llm
+from gen_mentor.core.memory.memory_store import LearnerMemoryStore
 from gen_mentor.utils.preprocess import extract_text_from_pdf
 from dependencies import extract_learner_id
 from exceptions import ValidationError, LLMError, StorageError
@@ -229,26 +230,23 @@ async def set_learning_goal(
             details={"error": str(e)}
         )
 
-    # Update profile with goal
-    profile["learning_goal"] = request.learning_goal
-    profile["refined_goal"] = refined_goal
+    # Update profile timestamp (no goal fields in profile)
     profile["updated_at"] = datetime.now().isoformat()
-
     repository.save_profile(learner_id, profile)
 
-    # Save objectives
-    repository.save_objectives(learner_id, {
-        "learning_goal": request.learning_goal,
-        "refined_goal": refined_goal,
-        "set_at": datetime.now().isoformat()
-    })
+    # Save to learning_goal.json via memory store
+    memory_store = LearnerMemoryStore(
+        workspace=str(repository.workspace),
+        learner_id=learner_id
+    )
+    goal_id = memory_store.add_goal(request.learning_goal, refined_goal)
 
     # Log goal setting
     repository.log_interaction(
         learner_id,
         "system",
         f"Learning goal set: {request.learning_goal}",
-        metadata={"refined_goal": refined_goal}
+        metadata={"refined_goal": refined_goal, "goal_id": goal_id}
     )
 
     return RefinedGoalResponse(
@@ -323,10 +321,14 @@ async def create_learner_profile(
     # Persist profile to workspace memory
     learner_id = learner_profile.get("learner_id") if isinstance(learner_profile, dict) else None
     memory_service.save_profile(learner_id, learner_profile)
-    memory_service.save_objectives(learner_id, {
-        "learning_goal": request.learning_goal,
-        "skill_gaps": skill_gaps
-    })
+
+    # Save goal to learning_goal.json and skill_gaps to skill_gaps.json
+    if learner_id:
+        memory_store = memory_service.get_memory_store(learner_id)
+        if memory_store:
+            goal_id = memory_store.add_goal(request.learning_goal)
+            memory_store.write_skill_gaps_for_goal(goal_id, {"skill_gaps": skill_gaps})
+
     memory_service.log_interaction(
         learner_id,
         "system",
@@ -406,10 +408,14 @@ async def create_learner_profile_with_cv_pdf(
     # Persist profile to workspace memory
     learner_id = learner_profile.get("learner_id") if isinstance(learner_profile, dict) else None
     memory_service.save_profile(learner_id, learner_profile)
-    memory_service.save_objectives(learner_id, {
-        "learning_goal": request.learning_goal,
-        "skill_gaps": skill_gaps
-    })
+
+    # Save goal to learning_goal.json and skill_gaps to skill_gaps.json
+    if learner_id:
+        memory_store = memory_service.get_memory_store(learner_id)
+        if memory_store:
+            goal_id = memory_store.add_goal(request.learning_goal)
+            memory_store.write_skill_gaps_for_goal(goal_id, {"skill_gaps": skill_gaps})
+
     memory_service.log_interaction(
         learner_id,
         "system",

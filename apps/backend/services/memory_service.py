@@ -1,7 +1,7 @@
 """
 Memory service for managing learner context and history.
 
-Handles workspace-based memory persistence for learner profiles, objectives, and interactions.
+Handles workspace-based memory persistence for learner profiles, learning goals, and interactions.
 """
 
 from typing import Optional, Dict, Any
@@ -57,7 +57,7 @@ class MemoryService:
             learner_id: Learner identifier
 
         Returns:
-            Dictionary containing profile, objectives, mastery, and history
+            Dictionary containing profile, learning_goals, skill_gaps, mastery, and history
 
         Raises:
             MemoryError: If memory storage is not available or retrieval fails
@@ -76,7 +76,8 @@ class MemoryService:
             return {
                 "learner_id": learner_id,
                 "profile": memory.read_profile(),
-                "objectives": memory.read_objectives(),
+                "learning_goals": memory.read_learning_goals(),
+                "skill_gaps": memory.read_skill_gaps(),
                 "mastery": memory.read_mastery(),
                 "learning_path": memory.read_learning_path(),
                 "context": memory.get_learner_context(),
@@ -167,12 +168,12 @@ class MemoryService:
             # Don't fail the request if save fails
             pass
 
-    def save_objectives(self, learner_id: Optional[str], objectives: Dict[str, Any]) -> None:
-        """Save learning objectives to memory.
+    def save_learning_goals(self, learner_id: Optional[str], learning_goals: Dict[str, Any]) -> None:
+        """Save learning goals to memory.
 
         Args:
             learner_id: Learner identifier (optional)
-            objectives: Objectives data to save
+            learning_goals: Learning goals data to save
         """
         if not self.is_available() or not learner_id:
             return
@@ -180,7 +181,25 @@ class MemoryService:
         try:
             memory = self.get_memory_store(learner_id)
             if memory:
-                memory.write_objectives(objectives)
+                memory.write_learning_goals(learning_goals)
+        except Exception:
+            # Don't fail the request if save fails
+            pass
+
+    def save_skill_gaps(self, learner_id: Optional[str], skill_gaps: Dict[str, Any]) -> None:
+        """Save skill gaps to memory.
+
+        Args:
+            learner_id: Learner identifier (optional)
+            skill_gaps: Skill gaps data to save (keyed by goal_id)
+        """
+        if not self.is_available() or not learner_id:
+            return
+
+        try:
+            memory = self.get_memory_store(learner_id)
+            if memory:
+                memory.write_skill_gaps(skill_gaps)
         except Exception:
             # Don't fail the request if save fails
             pass
@@ -232,7 +251,7 @@ class MemoryService:
             learner_id: Learner identifier
 
         Returns:
-            Dictionary with profile, objectives, mastery, path, context, and history
+            Dictionary with profile, learning_goals, skill_gaps, mastery, path, context, and history
         """
         if not self.is_available() or not learner_id:
             return {}
@@ -244,7 +263,8 @@ class MemoryService:
 
             return {
                 "profile": memory.read_profile(),
-                "objectives": memory.read_objectives(),
+                "learning_goals": memory.read_learning_goals(),
+                "skill_gaps": memory.read_skill_gaps(),
                 "mastery": memory.read_mastery(),
                 "learning_path": memory.read_learning_path(),
                 "context_summary": memory.get_learner_context(),
@@ -285,23 +305,23 @@ class MemoryService:
 
         return {}
 
-    def load_objectives_from_memory(
+    def load_learning_goals_from_memory(
         self,
         learner_id: Optional[str],
-        provided_objectives: Optional[Any] = None
+        provided_learning_goals: Optional[Any] = None
     ) -> Any:
-        """Load learning objectives from memory if not provided.
+        """Load learning goals from memory if not provided.
 
         Args:
             learner_id: Learner identifier
-            provided_objectives: Objectives provided in request (takes precedence)
+            provided_learning_goals: Learning goals provided in request (takes precedence)
 
         Returns:
-            Objectives from request or memory, or empty dict if neither available
+            Learning goals from request or memory, or empty dict if neither available
         """
-        # If objectives provided in request, use them
-        if provided_objectives:
-            return provided_objectives
+        # If learning goals provided in request, use them
+        if provided_learning_goals:
+            return provided_learning_goals
 
         # Try to load from memory
         if not self.is_available() or not learner_id:
@@ -310,8 +330,8 @@ class MemoryService:
         try:
             memory = self.get_memory_store(learner_id)
             if memory:
-                stored_objectives = memory.read_objectives()
-                return stored_objectives if stored_objectives else {}
+                stored_goals = memory.read_learning_goals()
+                return stored_goals if stored_goals else {}
         except Exception:
             pass
 

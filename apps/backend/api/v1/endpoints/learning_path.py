@@ -84,10 +84,10 @@ async def schedule_learning_path(
     # Get memory store for agent
     memory_store = memory_service.get_memory_store(learner_id) if learner_id else None
 
-    # Load existing objectives for context
-    existing_objectives = {}
+    # Load existing learning goals for context
+    existing_goals = {}
     if memory_store:
-        existing_objectives = memory_store.read_objectives()
+        existing_goals = memory_store.read_learning_goals()
 
     # Schedule learning path with memory context
     try:
@@ -103,12 +103,18 @@ async def schedule_learning_path(
             details={"error": str(e)}
         )
 
-    # Persist learning path
-    memory_service.save_learning_path(learner_id, learning_path)
-    memory_service.save_objectives(learner_id, {
-        **existing_objectives,
-        "session_count": request.session_count
-    })
+    # Persist learning path (keyed by active goal_id)
+    if memory_store:
+        goal_id = memory_store.get_active_goal_id()
+        if goal_id:
+            memory_store.write_learning_path_for_goal(goal_id, {
+                "learning_path": learning_path,
+                "session_count": request.session_count,
+            })
+        else:
+            memory_service.save_learning_path(learner_id, learning_path)
+    else:
+        memory_service.save_learning_path(learner_id, learning_path)
     memory_service.log_interaction(
         learner_id,
         "system",
@@ -186,16 +192,24 @@ async def reschedule_learning_path(
             details={"error": str(e)}
         )
 
-    # Persist rescheduled path
-    objectives = {}
+    # Persist rescheduled path (keyed by active goal_id)
     memory_store = memory_service.get_memory_store(learner_id)
     if memory_store:
-        objectives = memory_store.read_objectives()
+        goal_id = memory_store.get_active_goal_id()
+        if goal_id:
+            existing_path_data = memory_store.read_learning_path_for_goal(goal_id)
+            session_count = request.session_count if request.session_count > 0 else existing_path_data.get("session_count", 0)
+            memory_store.write_learning_path_for_goal(goal_id, {
+                "learning_path": new_learning_path,
+                "session_count": session_count,
+            })
+        else:
+            memory_service.save_learning_path(learner_id, new_learning_path)
+            session_count = request.session_count
+    else:
+        memory_service.save_learning_path(learner_id, new_learning_path)
+        session_count = request.session_count
 
-    objectives["learning_path"] = new_learning_path
-    if request.session_count > 0:
-        objectives["session_count"] = request.session_count
-    memory_service.save_objectives(learner_id, objectives)
     memory_service.log_interaction(
         learner_id,
         "system",
@@ -207,7 +221,7 @@ async def reschedule_learning_path(
         success=True,
         message="Learning path rescheduled successfully",
         learning_path=new_learning_path,
-        session_count=request.session_count if request.session_count > 0 else objectives.get("session_count", 0)
+        session_count=session_count
     )
 
 

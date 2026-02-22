@@ -17,7 +17,7 @@ export default function SkillGapPage() {
     const skillGapData = JSON.parse(localStorage.getItem('skill_gap') || '{}');
     const profile = JSON.parse(localStorage.getItem('learner_profile') || '{}');
     
-    setGoal(profile.learning_goal || "Your Goal");
+    setGoal(profile.learning_goal || localStorage.getItem('learning_goal') || "Your Goal");
     
     // Convert backend skill gap data to frontend format
     const mappedSkills = Object.entries(skillGapData).map(([name, info]) => {

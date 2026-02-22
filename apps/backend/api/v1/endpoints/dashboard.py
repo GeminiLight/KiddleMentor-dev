@@ -62,11 +62,26 @@ async def _get_dashboard_internal(
             detail=f"Profile not found for learner {learner_id}"
         )
 
-    # Get objectives
-    objectives = repository.get_objectives(learner_id) or {}
+    # Get learning goals
+    learning_goals = repository.get_learning_goals(learner_id) or {}
 
-    # Get learning path
+    # Get active goal info
+    active_goal_id = learning_goals.get("active_goal_id")
+    active_goal = None
+    for g in learning_goals.get("goals", []):
+        if g.get("goal_id") == active_goal_id:
+            active_goal = g
+            break
+
+    # Get learning path (try goal-scoped first, fall back to flat)
     learning_path = repository.get_learning_path(learner_id) or {}
+    if active_goal_id and active_goal_id in learning_path:
+        goal_path_data = learning_path[active_goal_id]
+        # Use the goal-scoped learning path sessions
+        sessions_list = goal_path_data.get("learning_path", [])
+        learning_path_for_display = {"sessions": sessions_list}
+    else:
+        learning_path_for_display = learning_path
 
     # Get mastery data
     mastery = repository.get_mastery(learner_id) or {}
@@ -75,12 +90,12 @@ async def _get_dashboard_internal(
     recent_history = repository.get_history(learner_id, limit=20)
 
     # Calculate progress
-    total_sessions = len(learning_path.get("sessions", [])) if learning_path else 0
+    total_sessions = len(learning_path_for_display.get("sessions", [])) if learning_path_for_display else 0
     completed_sessions = 0
     current_session = None
 
-    if learning_path and "sessions" in learning_path:
-        for session in learning_path["sessions"]:
+    if learning_path_for_display and "sessions" in learning_path_for_display:
+        for session in learning_path_for_display["sessions"]:
             if session.get("completed"):
                 completed_sessions += 1
             elif not current_session and not session.get("completed"):
@@ -92,8 +107,8 @@ async def _get_dashboard_internal(
     learner_info = {
         "learner_id": learner_id,
         "name": profile.get("name", "Anonymous Learner"),
-        "learning_goal": profile.get("learning_goal") or objectives.get("learning_goal"),
-        "refined_goal": profile.get("refined_goal") or objectives.get("refined_goal"),
+        "learning_goal": active_goal.get("learning_goal") if active_goal else None,
+        "refined_goal": active_goal.get("refined_goal") if active_goal else None,
         "progress": round(progress_percent, 1),
         "total_sessions": total_sessions,
         "completed_sessions": completed_sessions,
@@ -117,7 +132,7 @@ async def _get_dashboard_internal(
         message="Dashboard data retrieved successfully",
         learner=learner_info,
         current_session=current_session,
-        learning_path=learning_path,
+        learning_path=learning_path_for_display,
         recent_activity=recent_activity,
         mastery=mastery
     )

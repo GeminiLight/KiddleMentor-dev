@@ -5,10 +5,6 @@
 - Professional experience in administration and client service in the garment industry
 - Proficient in Microsoft Dynamics AX and MS Office
 
-## Learning Goal
-- Transition to Human Resources Manager role at Albert Hotel
-- Key focus areas: HRIS management, employee relations, recruitment, training, compliance, payroll
-
 ## Cognitive Profile
 - Strong foundation in communication (advanced) and organizational skills (intermediate)
 - Prefers detailed explanations and reading-based learning

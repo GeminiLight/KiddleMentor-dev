@@ -1,7 +1,7 @@
 """
 Learner repository for learner data persistence.
 
-Provides clean CRUD interface for learner profiles, objectives, learning paths,
+Provides clean CRUD interface for learner profiles, learning goals, skill gaps, learning paths,
 and interaction history using local file storage.
 """
 
@@ -115,33 +115,109 @@ class LearnerRepository(BaseRepository):
         memory_store = self._get_memory_store(learner_id)
         memory_store.write_profile(profile)
 
-    # Objectives operations
+    # Learning goals operations
 
-    def get_objectives(self, learner_id: str) -> Optional[dict[str, Any]]:
-        """Get learning objectives.
+    def get_learning_goals(self, learner_id: str) -> Optional[dict[str, Any]]:
+        """Get learning goals.
 
         Args:
             learner_id: Learner identifier
 
         Returns:
-            Learning objectives or None if not found
+            Learning goals or None if not found
         """
         try:
             memory_store = self._get_memory_store(learner_id)
-            objectives = memory_store.read_objectives()
-            return objectives if objectives else None
+            goals = memory_store.read_learning_goals()
+            return goals if goals else None
         except Exception:
             return None
 
-    def save_objectives(self, learner_id: str, objectives: dict[str, Any]) -> None:
-        """Save learning objectives.
+    def save_learning_goals(self, learner_id: str, learning_goals: dict[str, Any]) -> None:
+        """Save learning goals.
 
         Args:
             learner_id: Learner identifier
-            objectives: Objectives data to save
+            learning_goals: Learning goals data to save
         """
         memory_store = self._get_memory_store(learner_id)
-        memory_store.write_objectives(objectives)
+        memory_store.write_learning_goals(learning_goals)
+
+    # Skill gaps operations
+
+    def get_skill_gaps(self, learner_id: str) -> Optional[dict[str, Any]]:
+        """Get all skill gaps.
+
+        Args:
+            learner_id: Learner identifier
+
+        Returns:
+            All skill gaps (keyed by goal_id) or None if not found
+        """
+        try:
+            memory_store = self._get_memory_store(learner_id)
+            gaps = memory_store.read_skill_gaps()
+            return gaps if gaps else None
+        except Exception:
+            return None
+
+    def save_skill_gaps(self, learner_id: str, skill_gaps: dict[str, Any]) -> None:
+        """Save all skill gaps.
+
+        Args:
+            learner_id: Learner identifier
+            skill_gaps: Skill gaps data to save
+        """
+        memory_store = self._get_memory_store(learner_id)
+        memory_store.write_skill_gaps(skill_gaps)
+
+    def get_skill_gaps_for_goal(self, learner_id: str, goal_id: str) -> dict[str, Any]:
+        """Get skill gaps for a specific goal.
+
+        Args:
+            learner_id: Learner identifier
+            goal_id: Goal identifier
+
+        Returns:
+            Skill gaps for the goal
+        """
+        memory_store = self._get_memory_store(learner_id)
+        return memory_store.read_skill_gaps_for_goal(goal_id)
+
+    def save_skill_gaps_for_goal(self, learner_id: str, goal_id: str, data: dict[str, Any]) -> None:
+        """Save skill gaps for a specific goal.
+
+        Args:
+            learner_id: Learner identifier
+            goal_id: Goal identifier
+            data: Skill gaps data for the goal
+        """
+        memory_store = self._get_memory_store(learner_id)
+        memory_store.write_skill_gaps_for_goal(goal_id, data)
+
+    def get_learning_path_for_goal(self, learner_id: str, goal_id: str) -> dict[str, Any]:
+        """Get learning path for a specific goal.
+
+        Args:
+            learner_id: Learner identifier
+            goal_id: Goal identifier
+
+        Returns:
+            Learning path for the goal
+        """
+        memory_store = self._get_memory_store(learner_id)
+        return memory_store.read_learning_path_for_goal(goal_id)
+
+    def save_learning_path_for_goal(self, learner_id: str, goal_id: str, data: dict[str, Any]) -> None:
+        """Save learning path for a specific goal.
+
+        Args:
+            learner_id: Learner identifier
+            goal_id: Goal identifier
+            data: Learning path data for the goal
+        """
+        memory_store = self._get_memory_store(learner_id)
+        memory_store.write_learning_path_for_goal(goal_id, data)
 
     # Learning path operations
 
@@ -288,12 +364,13 @@ class LearnerRepository(BaseRepository):
             learner_id: Learner identifier
 
         Returns:
-            Dictionary with profile, objectives, mastery, path, and history
+            Dictionary with profile, learning_goals, skill_gaps, mastery, path, and history
         """
         return {
             "learner_id": learner_id,
             "profile": self.get_profile(learner_id) or {},
-            "objectives": self.get_objectives(learner_id) or {},
+            "learning_goals": self.get_learning_goals(learner_id) or {},
+            "skill_gaps": self.get_skill_gaps(learner_id) or {},
             "mastery": self.get_mastery(learner_id) or {},
             "learning_path": self.get_learning_path(learner_id) or {},
             "recent_history": self.get_history(learner_id, limit=10)

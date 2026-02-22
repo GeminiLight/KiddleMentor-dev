@@ -8,7 +8,7 @@ At runtime these files live under a learner-specific workspace directory (e.g. `
 
 ### `user_facts.md`
 
-Long-term memory — free-form Markdown notes extracted from interactions. Contains background info, learning preferences, and tutor observations that persist across sessions.
+Long-term memory — free-form Markdown notes extracted from interactions. Contains background info, learning preferences, and tutor observations that persist across sessions. Goal-agnostic; does not contain goal-specific data.
 
 | Store class | Key methods |
 |---|---|
@@ -24,19 +24,27 @@ Structured interaction log. Each entry has `role` (`learner` / `tutor` / `system
 
 ### `profile.json`
 
-Learner identity and preferences — education, work experience, learning style, and behavioral patterns.
+Learner identity and preferences — education, work experience, learning style, and behavioral patterns. Does **not** contain goal or refined goal fields (those live in `learning_goal.json`).
 
 | Store class | Key methods |
 |---|---|
 | `LearnerMemoryStore` | `read_profile()`, `write_profile()` |
 
-### `objectives.json`
+### `learning_goal.json`
 
-Goal-oriented learning objectives broken down by skill, with target/current proficiency levels and sub-objective checklists.
+Multi-goal learning goals with an active goal pointer. Each goal has a `goal_id`, `learning_goal` text, `refined_goal` data, `status`, and timestamps. Replaces the old `objectives.json`.
 
 | Store class | Key methods |
 |---|---|
-| `LearnerMemoryStore` | `read_objectives()`, `write_objectives()` |
+| `LearnerMemoryStore` | `read_learning_goals()`, `write_learning_goals()`, `get_active_goal()`, `get_active_goal_id()`, `add_goal()` |
+
+### `skill_gaps.json`
+
+Skill gap data keyed by `goal_id`. Each goal entry contains a `skill_gaps` list with gap details (name, required/current level, reason, confidence) and an `updated_at` timestamp.
+
+| Store class | Key methods |
+|---|---|
+| `LearnerMemoryStore` | `read_skill_gaps()`, `write_skill_gaps()`, `read_skill_gaps_for_goal()`, `write_skill_gaps_for_goal()` |
 
 ### `mastery.json`
 
@@ -52,11 +60,11 @@ Skill mastery tracking and evaluation history. Contains:
 
 ### `learning_path.json`
 
-Ordered sequence of learning sessions, each with a title, abstract, associated skills, knowledge points, and a completion flag (`if_learned`).
+Learning paths keyed by `goal_id`. Each goal entry contains a `learning_path` list of sessions (title, abstract, associated skills, knowledge points, completion flag) and timestamps.
 
 | Store class | Key methods |
 |---|---|
-| `LearnerMemoryStore` | `read_learning_path()`, `write_learning_path()` |
+| `LearnerMemoryStore` | `read_learning_path()`, `write_learning_path()`, `read_learning_path_for_goal()`, `write_learning_path_for_goal()` |
 
 ## Directory Layout at Runtime
 
@@ -68,8 +76,9 @@ Ordered sequence of learning sessions, each with a title, abstract, associated s
     <learner_id>/
       user_facts.md        # per-learner long-term memory
       chat_history.json    # per-learner chat log
-      profile.json         # learner profile
-      objectives.json      # learning objectives
+      profile.json         # learner profile (no goal fields)
+      learning_goal.json   # multi-goal learning goals
+      skill_gaps.json      # skill gaps keyed by goal_id
       mastery.json         # mastery & evaluations
-      learning_path.json   # learning path sessions
+      learning_path.json   # learning paths keyed by goal_id
 ```

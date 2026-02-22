@@ -28,8 +28,6 @@ export interface LearnerProfile {
   learner_id: string;
   name: string;
   email?: string;
-  learning_goal?: string;
-  refined_goal?: any;
   progress_percent?: number;
   last_session_completed?: number;
   created_at: string;
@@ -41,6 +39,8 @@ export interface DashboardData {
   success: boolean;
   message: string;
   learner: LearnerProfile & {
+    learning_goal?: string;
+    refined_goal?: any;
     progress: number;
     total_sessions: number;
     completed_sessions: number;

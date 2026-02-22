@@ -126,8 +126,10 @@ class LearnerMemoryResponse(BaseResponse):
 
     learner_id: str = Field(..., description="Learner identifier")
     profile: Dict[str, Any] = Field(..., description="Learner profile")
-    goals: Dict[str, Any] = Field(..., description="Learning goals and paths")
-    progress: Dict[str, Any] = Field(..., description="Learning progress")
+    learning_goals: Dict[str, Any] = Field(default_factory=dict, description="Learning goals")
+    skill_gaps: Dict[str, Any] = Field(default_factory=dict, description="Skill gaps keyed by goal_id")
+    mastery: Dict[str, Any] = Field(default_factory=dict, description="Learning mastery and progress")
+    learning_path: Dict[str, Any] = Field(default_factory=dict, description="Learning paths keyed by goal_id")
     context: str = Field(..., description="Formatted context for prompts")
     recent_history: str = Field(..., description="Recent interaction history")
 
