@@ -19,6 +19,7 @@ class IntegratedDocPayload(BaseModel):
     learning_session: Any
     knowledge_points: Any
     knowledge_drafts: Any
+    learning_goal: str = ""
 
     @field_validator("learner_profile", "learning_path", "learning_session", "knowledge_points", "knowledge_drafts")
     @classmethod
@@ -45,14 +46,15 @@ class LearningDocumentIntegrator(BaseAgent):
         return validated_output.model_dump()
 
 
-def integrate_learning_document_with_llm(llm, learner_profile, learning_path, learning_session, knowledge_points, knowledge_drafts, output_markdown=True):
+def integrate_learning_document_with_llm(llm, learner_profile, learning_path, learning_session, knowledge_points, knowledge_drafts, output_markdown=True, learning_goal=""):
     logger.info(f'Integrating learning document with {len(knowledge_points)} knowledge points and {len(knowledge_drafts)} drafts...')
     input_dict = {
         'learner_profile': learner_profile,
         'learning_path': learning_path,
         'learning_session': learning_session,
         'knowledge_points': knowledge_points,
-        'knowledge_drafts': knowledge_drafts
+        'knowledge_drafts': knowledge_drafts,
+        'learning_goal': learning_goal,
     }
     learning_document_integrator = LearningDocumentIntegrator(llm)
     document_structure = learning_document_integrator.integrate(input_dict)
@@ -70,21 +72,31 @@ def prepare_markdown_document(document_structure, knowledge_points, knowledge_dr
     knowledge_drafts: list aligned with knowledge_points, each with 'title' and 'content'.
     """
     import ast as _ast
+    import json as _json
     if isinstance(knowledge_points, str):
         try:
-            knowledge_points = _ast.literal_eval(knowledge_points)
+            knowledge_points = _json.loads(knowledge_points)
         except Exception:
-            pass
+            try:
+                knowledge_points = _ast.literal_eval(knowledge_points)
+            except Exception:
+                pass
     if isinstance(knowledge_drafts, str):
         try:
-            knowledge_drafts = _ast.literal_eval(knowledge_drafts)
+            knowledge_drafts = _json.loads(knowledge_drafts)
         except Exception:
-            pass
+            try:
+                knowledge_drafts = _ast.literal_eval(knowledge_drafts)
+            except Exception:
+                pass
     if isinstance(document_structure, str):
         try:
-            document_structure = _ast.literal_eval(document_structure)
+            document_structure = _json.loads(document_structure)
         except Exception:
-            pass
+            try:
+                document_structure = _ast.literal_eval(document_structure)
+            except Exception:
+                pass
 
     if not isinstance(document_structure, dict):
         document_structure = {}

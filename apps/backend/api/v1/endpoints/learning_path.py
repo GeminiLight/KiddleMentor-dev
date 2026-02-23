@@ -31,7 +31,7 @@ from gen_mentor.agents.content.knowledge_explorer import explore_knowledge_point
 from gen_mentor.agents.content.knowledge_drafter import draft_knowledge_point_with_llm
 from gen_mentor.agents.content.document_integrator import integrate_learning_document_with_llm
 from gen_mentor.agents.content.content_creator import create_learning_content_with_llm
-from dependencies import extract_learner_id
+from dependencies import extract_learner_id, resolve_learning_goal
 from exceptions import ValidationError, LLMError
 
 router = APIRouter()
@@ -91,19 +91,22 @@ async def schedule_learning_path(
         active_goal = memory_store.get_active_goal()
         if active_goal:
             goal_id = active_goal.get("goal_id")
-            learner_profile["learning_goal"] = active_goal.get("learning_goal", "")
             learner_profile["refined_goal"] = active_goal.get("refined_goal")
             if goal_id:
                 skill_gaps_data = memory_store.read_skill_gaps_for_goal(goal_id)
                 if skill_gaps_data:
                     learner_profile["skill_gaps"] = skill_gaps_data
 
+    # Resolve learning goal separately
+    learning_goal = resolve_learning_goal(memory_service, learner_id, request.goal_id)
+
     # Schedule learning path with memory context
     try:
         learning_path = schedule_learning_path_with_llm(
             llm,
             learner_profile,
-            request.session_count
+            request.session_count,
+            learning_goal=learning_goal,
         )
     except Exception as e:
         raise LLMError(
@@ -176,6 +179,10 @@ async def reschedule_learning_path(
     if isinstance(learning_path, str) and learning_path.strip():
         learning_path = json.loads(learning_path)
 
+    # Unwrap nested learning_path structure: {learning_path: [...]} -> [...]
+    if isinstance(learning_path, dict) and "learning_path" in learning_path:
+        learning_path = learning_path["learning_path"]
+
     if isinstance(other_feedback, str) and other_feedback.strip():
         try:
             other_feedback = json.loads(other_feedback)
@@ -191,12 +198,14 @@ async def reschedule_learning_path(
         active_goal = memory_store.get_active_goal()
         if active_goal:
             goal_id = active_goal.get("goal_id")
-            learner_profile.setdefault("learning_goal", active_goal.get("learning_goal", ""))
             learner_profile.setdefault("refined_goal", active_goal.get("refined_goal"))
             if goal_id:
                 skill_gaps_data = memory_store.read_skill_gaps_for_goal(goal_id)
                 if skill_gaps_data:
                     learner_profile.setdefault("skill_gaps", skill_gaps_data)
+
+    # Resolve learning goal separately
+    learning_goal = resolve_learning_goal(memory_service, learner_id, request.goal_id)
 
     # Reschedule learning path
     try:
@@ -205,7 +214,8 @@ async def reschedule_learning_path(
             learning_path,
             learner_profile,
             request.session_count,
-            other_feedback
+            other_feedback,
+            learning_goal=learning_goal,
         )
     except Exception as e:
         raise LLMError(
@@ -254,7 +264,8 @@ async def reschedule_learning_path(
 @router.post("/explore-knowledge-points", response_model=KnowledgePointsResponse, tags=["Content"])
 async def explore_knowledge_points(
     request: KnowledgePointExplorationRequest,
-    llm_service: LLMService = Depends(get_llm_service)
+    llm_service: LLMService = Depends(get_llm_service),
+    memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Explore knowledge points.
 
@@ -263,6 +274,7 @@ async def explore_knowledge_points(
     Args:
         request: Knowledge point exploration request
         llm_service: LLM service dependency
+        memory_service: Memory service dependency
 
     Returns:
         Explored knowledge points
@@ -279,13 +291,18 @@ async def explore_knowledge_points(
     learning_path = json.loads(request.learning_path) if isinstance(request.learning_path, str) else request.learning_path
     learning_session = json.loads(request.learning_session) if isinstance(request.learning_session, str) else request.learning_session
 
+    # Resolve learning goal
+    learner_id = extract_learner_id(request.learner_profile)
+    learning_goal = resolve_learning_goal(memory_service, learner_id, request.goal_id)
+
     # Explore knowledge points
     try:
         knowledge_points = explore_knowledge_points_with_llm(
             llm,
             learner_profile,
             learning_path,
-            learning_session
+            learning_session,
+            learning_goal=learning_goal,
         )
     except Exception as e:
         raise LLMError(
@@ -303,7 +320,8 @@ async def explore_knowledge_points(
 @router.post("/draft-knowledge-point", response_model=KnowledgeDraftResponse, tags=["Content"])
 async def draft_knowledge_point(
     request: KnowledgePointDraftingRequest,
-    llm_service: LLMService = Depends(get_llm_service)
+    llm_service: LLMService = Depends(get_llm_service),
+    memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Draft a single knowledge point.
 
@@ -312,6 +330,7 @@ async def draft_knowledge_point(
     Args:
         request: Knowledge point drafting request
         llm_service: LLM service dependency
+        memory_service: Memory service dependency
 
     Returns:
         Drafted knowledge point
@@ -323,6 +342,10 @@ async def draft_knowledge_point(
     # Get LLM
     llm = llm_service.get_llm()
 
+    # Resolve learning goal
+    learner_id = extract_learner_id(request.learner_profile)
+    learning_goal = resolve_learning_goal(memory_service, learner_id, request.goal_id)
+
     # Draft knowledge point
     try:
         knowledge_draft = draft_knowledge_point_with_llm(
@@ -332,7 +355,8 @@ async def draft_knowledge_point(
             request.learning_session,
             request.knowledge_points,
             request.knowledge_point,
-            request.use_search
+            request.use_search,
+            learning_goal=learning_goal,
         )
     except Exception as e:
         raise LLMError(
@@ -350,7 +374,8 @@ async def draft_knowledge_point(
 @router.post("/draft-knowledge-points", response_model=KnowledgeDraftsResponse, tags=["Content"])
 async def draft_knowledge_points(
     request: KnowledgePointsDraftingRequest,
-    llm_service: LLMService = Depends(get_llm_service)
+    llm_service: LLMService = Depends(get_llm_service),
+    memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Draft multiple knowledge points.
 
@@ -359,6 +384,7 @@ async def draft_knowledge_points(
     Args:
         request: Knowledge points drafting request
         llm_service: LLM service dependency
+        memory_service: Memory service dependency
 
     Returns:
         Drafted knowledge points
@@ -373,6 +399,10 @@ async def draft_knowledge_points(
     # Parse knowledge points
     knowledge_points = json.loads(request.knowledge_points) if isinstance(request.knowledge_points, str) else request.knowledge_points
 
+    # Resolve learning goal
+    learner_id = extract_learner_id(request.learner_profile)
+    learning_goal = resolve_learning_goal(memory_service, learner_id, request.goal_id)
+
     # Draft all knowledge points
     try:
         knowledge_drafts = []
@@ -384,7 +414,8 @@ async def draft_knowledge_points(
                 request.learning_session,
                 knowledge_points,
                 kp,
-                request.use_search
+                request.use_search,
+                learning_goal=learning_goal,
             )
             knowledge_drafts.append(draft)
     except Exception as e:
@@ -403,7 +434,8 @@ async def draft_knowledge_points(
 @router.post("/integrate-learning-document", response_model=LearningDocumentResponse, tags=["Content"])
 async def integrate_learning_document(
     request: LearningDocumentIntegrationRequest,
-    llm_service: LLMService = Depends(get_llm_service)
+    llm_service: LLMService = Depends(get_llm_service),
+    memory_service: MemoryService = Depends(get_memory_service)
 ):
     """Integrate learning document.
 
@@ -412,6 +444,7 @@ async def integrate_learning_document(
     Args:
         request: Learning document integration request
         llm_service: LLM service dependency
+        memory_service: Memory service dependency
 
     Returns:
         Integrated learning document
@@ -423,6 +456,10 @@ async def integrate_learning_document(
     # Get LLM
     llm = llm_service.get_llm()
 
+    # Resolve learning goal
+    learner_id = extract_learner_id(request.learner_profile)
+    learning_goal = resolve_learning_goal(memory_service, learner_id, request.goal_id)
+
     # Integrate learning document
     try:
         learning_document = integrate_learning_document_with_llm(
@@ -432,7 +469,8 @@ async def integrate_learning_document(
             request.learning_session,
             request.knowledge_points,
             request.knowledge_drafts,
-            request.output_markdown
+            request.output_markdown,
+            learning_goal=learning_goal,
         )
     except Exception as e:
         raise LLMError(
@@ -475,16 +513,31 @@ async def tailor_knowledge_content(
     # Extract learner_id
     learner_id = extract_learner_id(request.learner_profile)
 
+    # Parse string inputs to dicts/lists for the agent
+    learner_profile = request.learner_profile
+    learning_path = request.learning_path
+    learning_session = request.learning_session
+    if isinstance(learner_profile, str) and learner_profile.strip():
+        learner_profile = json.loads(learner_profile)
+    if isinstance(learning_path, str) and learning_path.strip():
+        learning_path = json.loads(learning_path)
+    if isinstance(learning_session, str) and learning_session.strip():
+        learning_session = json.loads(learning_session)
+
+    # Resolve learning goal
+    learning_goal = resolve_learning_goal(memory_service, learner_id, request.goal_id)
+
     # Generate tailored content
     try:
         tailored_content = create_learning_content_with_llm(
             llm,
-            request.learner_profile,
-            request.learning_path,
-            request.learning_session,
+            learner_profile,
+            learning_path,
+            learning_session,
             allow_parallel=request.allow_parallel,
             with_quiz=request.with_quiz,
-            use_search=request.use_search
+            use_search=request.use_search,
+            learning_goal=learning_goal,
         )
     except Exception as e:
         raise LLMError(
@@ -493,7 +546,7 @@ async def tailor_knowledge_content(
         )
 
     # Log content generation
-    session_info = request.learning_session if isinstance(request.learning_session, dict) else {}
+    session_info = learning_session if isinstance(learning_session, dict) else {}
     session_title = session_info.get("title", "Unknown Session")
 
     memory_service.append_mastery_entry(learner_id, {

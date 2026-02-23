@@ -60,6 +60,7 @@ learning_path_scheduler_task_prompt_session = """
 Create a new, structured learning path based on the learner's profile.
 The number of sessions should be within [1, 10].
 
+* **Learning Goal**: {learning_goal}
 * **Learner Profile**: {learner_profile}
 """
 
@@ -77,6 +78,7 @@ learning_path_scheduler_task_prompt_reschedule = """
 
 Update the learning path based on the learner's updated profile, preserving all learned sessions.
 
+* **Learning Goal**: {learning_goal}
 * **Original Learning Path**: {learning_path}
 * **Updated Learner Profile**: {learner_profile}
 * **Desired Session Count**: {session_count}

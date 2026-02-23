@@ -44,6 +44,9 @@ integrated_document_generator_task_prompt = """
 Generate an integrated document by synthesizing the provided drafts.
 Ensure the final document is aligned with the learner's profile and session goal.
 
+**Learning Goal**:
+{learning_goal}
+
 **Learner Profile**:
 {learner_profile}
 

@@ -57,8 +57,9 @@ export default function OnboardingPage() {
         
         setGenerationStep(2); // Path Scheduler calculating optimal path...
 
-        // Step 3: Identify skill gaps (backend saves to workspace)
-        await api.identifySkillGap({
+        // Step 3: Identify skill gaps and save to memory (keyed by active goal)
+        await api.identifyAndSaveSkillGap({
+          learner_id: learner_id,
           learning_goal: formData.goal,
           learner_information: formData.background || "Information provided via CV",
         });

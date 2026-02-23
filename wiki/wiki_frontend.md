@@ -8,14 +8,15 @@
 4. [Tech Stack](#4-tech-stack)
 5. [Core Components](#5-core-components)
 6. [Pages & Routes](#6-pages--routes)
-7. [API Client](#7-api-client)
-8. [State Management](#8-state-management)
-9. [Styling & Theming](#9-styling--theming)
-10. [Hooks](#10-hooks)
-11. [Utilities](#11-utilities)
-12. [User Flow](#12-user-flow)
-13. [Development Guide](#13-development-guide)
-14. [Deployment](#14-deployment)
+7. [Page Feature Design](#7-page-feature-design)
+8. [API Client](#8-api-client)
+9. [State Management](#9-state-management)
+10. [Styling & Theming](#10-styling--theming)
+11. [Hooks](#11-hooks)
+12. [Utilities](#12-utilities)
+13. [User Flow](#13-user-flow)
+14. [Development Guide](#14-development-guide)
+15. [Deployment](#15-deployment)
 
 ---
 
@@ -28,17 +29,19 @@ The GenMentor Frontend is a modern Next.js application that provides an interact
 - **Progress Tracking**: Visual dashboards showing learning progress
 - **Goal-Oriented Paths**: Personalized curriculum based on user goals
 - **Real-time Interaction**: Live chat with AI tutor during sessions
+- **Multi-Goal Support**: Manage multiple learning goals per learner
 
 ### Key Features
 
 | Feature | Description |
 |---------|-------------|
-| 🎯 Goal Setting | Define and track long-term career objectives |
+| 🎯 Goal Setting | Define and track multiple long-term career objectives |
 | 📊 Skill Gap Analysis | Visual representation of current vs. target skills |
 | 📚 Learning Path | Structured sessions with progress tracking |
 | 🤖 AI Tutor Chat | Context-aware conversational learning assistant |
 | 📈 Progress Dashboard | XP system, streaks, badges, and achievements |
 | 🌙 Dark Mode | System-aware theme with manual toggle |
+| 👥 User Management | List, login, and delete user accounts |
 
 ---
 
@@ -709,14 +712,979 @@ export default function SessionPage({ params }: { params: { id: string } }) {
 
 ---
 
-## 7. API Client
+## 7. Page Feature Design
 
-### 7.1 Configuration
+This section provides detailed documentation of each page's functionality, user interactions, and key features.
+
+### 7.1 Landing Page (`/`)
+
+**File**: `app/page.tsx`
+
+The landing page serves as the marketing entry point for GenMentor, showcasing the product's value proposition and guiding users to start their learning journey.
+
+#### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| Hero Section | Bold headline with AI mentor team visualization |
+| Interactive Goal Input | Users can input career goals directly from landing page |
+| AI Agent Animation | Visual representation of Skill Identifier + Path Scheduler working |
+| Gap Map Visualization | Radar chart showing skill gap analysis preview |
+| Feature Highlights | Cards explaining Goal-Oriented Paths, Interactive Sessions, Skill Gap Analysis |
+| CTA Section | Primary call-to-action for user registration |
+
+#### Interactive Elements
+
+```tsx
+// Goal input with real-time animation
+<input 
+  type="text"
+  value={goalInput}
+  onChange={(e) => setGoalInput(e.target.value)}
+  onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
+  placeholder="Enter your career goal (e.g., Become a Tencent AI Intern)"
+/>
+
+// Animation showing AI agents collaboration
+<AnimatePresence mode="wait">
+  {isGenerating && (
+    <motion.div>
+      {/* Skill Identifier */}
+      <Target className="text-blue-500" /> // Scanning JD...
+      {/* Path Scheduler */}
+      <Map className="text-emerald-500" /> // Drawing map...
+    </motion.div>
+  )}
+</AnimatePresence>
+```
+
+#### AI Mentor Team Display
+
+The page showcases the AI mentor team:
+
+1. **Content Creator** (`Globe` icon): Real-time web search for latest tech content
+2. **Learner Simulator** (`BrainCircuit` icon): Understands learner bottlenecks
+
+#### Radar Chart (Gap Map)
+
+```tsx
+const radarData = [
+  { subject: 'Machine Learning', A: 40, B: 90, fullMark: 100 },
+  { subject: 'Python', A: 60, B: 85, fullMark: 100 },
+  { subject: 'Data Structures', A: 30, B: 80, fullMark: 100 },
+  // ... more skills
+];
+
+// A = Current State (S₀)
+// B = Target Mastery
+```
+
+---
+
+### 7.2 Login Page (`/login`)
+
+**File**: `app/login/page.tsx`
+
+The login page provides a simple user selection interface, listing all registered users and allowing quick account switching.
+
+#### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| User List | Displays all registered users from backend |
+| Quick Login | One-click login without password |
+| Create Account | Link to onboarding for new users |
+| Loading States | Visual feedback during data fetch and login |
+
+#### User Selection Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    
+    User->>Frontend: Open /login
+    Frontend->>Backend: GET /users/list
+    Backend-->>Frontend: { users: [...] }
+    Frontend->>User: Display user list
+    User->>Frontend: Select user
+    Frontend->>Backend: POST /users/login
+    Backend-->>Frontend: { learner_id, name }
+    Frontend->>Frontend: setStoredLearnerId()
+    Frontend->>User: Redirect to /progress
+```
+
+#### API Integration
+
+```tsx
+// Fetch users on mount
+useEffect(() => {
+  api.listUsers()
+    .then((res) => setUsers(res.users || []))
+    .catch((err) => setError(err.message));
+}, []);
+
+// Handle login
+const handleLogin = async (learnerId: string) => {
+  await api.loginUser(learnerId);
+  setStoredLearnerId(learnerId);
+  router.push("/progress");
+};
+```
+
+---
+
+### 7.3 Onboarding Page (`/onboarding`)
+
+**File**: `app/onboarding/page.tsx`
+
+The onboarding page provides a multi-step wizard for new users to set up their profile and learning goals.
+
+#### Step-by-Step Flow
+
+```mermaid
+flowchart TD
+    A[Step 1: Profile] --> B[Step 2: Goal]
+    B --> C[Step 3: Commitment]
+    C --> D[AI Generation]
+    D --> E[Redirect to Dashboard]
+```
+
+#### Step 1: Profile Setup
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| Name | Text | No | User's display name |
+| Background | Textarea | No | Free-text description of experience |
+| CV Upload | File (PDF) | No | Resume upload for background parsing |
+
+```tsx
+// CV Upload with drag & drop
+<label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed">
+  <UploadCloud className="w-8 h-8 text-slate-400" />
+  <p>Click to upload or drag and drop</p>
+  <p className="text-xs">PDF (MAX. 5MB)</p>
+  <input type="file" accept=".pdf" onChange={handleFileUpload} />
+</label>
+```
+
+#### Step 2: Goal Definition
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Learning Goal | Textarea | User's career learning objective |
+| AI Refinement | Button | AI-powered goal enhancement |
+
+```tsx
+// AI Goal Refinement
+const handleRefineGoal = () => {
+  setFormData(prev => ({
+    ...prev,
+    goal: `I want to become a professional in ${prev.goal}, focusing on core industry skills...`
+  }));
+};
+```
+
+#### Step 3: Time Commitment
+
+| Option | Description | Estimated Time |
+|--------|-------------|----------------|
+| 2-4 hours/week | Casual pace | 3 months |
+| 5-10 hours/week | Steady progress | 6 weeks |
+| 10+ hours/week | Intensive immersion | 3 weeks |
+
+#### AI Generation Process
+
+```tsx
+const handleNext = async () => {
+  // Step 1: Initialize session
+  const response = await api.initializeSession({
+    name: formData.name,
+    cv: resumeFile,
+  });
+  setStoredLearnerId(response.learner_id);
+  
+  // Step 2: Set learning goal
+  await api.setLearningGoal(learner_id, formData.goal);
+  
+  // Step 3: Identify skill gaps
+  await api.identifyAndSaveSkillGap({
+    learner_id,
+    learning_goal: formData.goal,
+    learner_information: formData.background,
+  });
+  
+  // Step 4: Generate learning path
+  await api.scheduleLearningPath({
+    learner_profile: { learner_id },
+    session_count: 12,
+  });
+  
+  router.push("/progress");
+};
+```
+
+#### Generation Overlay
+
+The page shows a full-screen overlay during path generation:
+
+```tsx
+{[
+  { step: 1, label: "Skill Identifier analyzing your background...", icon: "🧠" },
+  { step: 2, label: "Path Scheduler mapping your journey...", icon: "🗺️" },
+  { step: 3, label: "Content Creator gathering resources...", icon: "📚" },
+  { step: 4, label: "Finalizing your personalized plan...", icon: "✨" }
+].map((item) => (
+  <motion.div animate={{ opacity: generationStep >= item.step ? 1 : 0.3 }}>
+    {item.label}
+  </motion.div>
+))}
+```
+
+---
+
+### 7.4 Progress Dashboard (`/progress`)
+
+**File**: `app/(app)/progress/page.tsx`
+
+The main dashboard showing learner's overall progress, daily quests, and next actions.
+
+#### Key Components
+
+| Component | Description |
+|-----------|-------------|
+| Stats Cards | Goal Readiness, Sessions Done, Streak, Badges |
+| Daily Quests | Gamified daily tasks with XP rewards |
+| Next Best Action | AI-recommended next session with Double XP |
+| Goals Arena | Multi-goal selector with progress bars |
+| Recent Badges | Achievement showcase |
+
+#### Stats Display
+
+```tsx
+const stats = [
+  { label: "Goal Readiness", value: `${currentGoal.readiness}%`, icon: Target },
+  { label: "Sessions Done", value: `${completedSessions}/${totalSessions}`, icon: Play },
+  { label: "Current Streak", value: "3 Days", icon: TrendingUp },
+  { label: "Badges", value: "8", icon: Trophy },
+];
+```
+
+#### Daily Quests System
+
+```tsx
+const quests = [
+  { task: "Complete 1 session", xp: "+500 XP", done: true },
+  { task: "Pass a quiz with 100%", xp: "+800 XP", done: true },
+  { task: "Ask AI Tutor 3 questions", xp: "+300 XP", done: false },
+];
+```
+
+#### Goals Arena (Multi-Goal Support)
+
+```tsx
+{goals.map((goal, idx) => (
+  <button onClick={() => setCurrentGoalIndex(idx)}>
+    <span>{goal.title}</span>
+    <span>Readiness: {goal.readiness}%</span>
+    <span>Skill Gap: {goal.skillGap}%</span>
+  </button>
+))}
+```
+
+#### Next Best Action Card
+
+```tsx
+<div className="bg-gradient-to-br from-primary-600 to-blue-700">
+  <h2>Variables and Data Types</h2>
+  <p>Continue your Python Fundamentals module</p>
+  <button onClick={() => router.push("/session/2")}>
+    Start Session Now
+  </button>
+</div>
+```
+
+---
+
+### 7.5 Learning Path Page (`/learning-path`)
+
+**File**: `app/(app)/learning-path/page.tsx`
+
+Displays the complete learning journey with timeline visualization, skill gap analysis, and AI-powered path optimization.
+
+#### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| Session Timeline | Weekly view with session cards |
+| Skill Gap Radar | Visual comparison of current vs target skills |
+| AI Reschedule | Automatic path adaptation based on progress |
+| Session Generation | On-demand content generation |
+| New Session Indicators | Visual markers for AI-added sessions |
+
+#### Skill Gap Visualization
+
+```tsx
+// Radar chart data structure
+const radarData = skills.map(s => ({
+  subject: s.name,          // Skill name
+  "Initial State S₀": s.current - 15,  // Starting level
+  "Current State Sₜ": s.current,       // Current progress
+  "Target": s.target,                  // Required level
+  fullMark: 100,
+}));
+```
+
+#### Session Card States
+
+| Status | Icon | Color | Description |
+|--------|------|-------|-------------|
+| `completed` | CheckCircle2 | Green | Session finished |
+| `in-progress` | Play | Primary | Current session |
+| `locked` | Lock | Muted | Not yet available |
+| `isNew` | Sparkles | Amber | AI-added session |
+
+#### AI Reschedule Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    
+    User->>Frontend: Click "Reschedule"
+    Frontend->>Backend: POST /learning/reschedule-learning-path
+    Backend-->>Frontend: { learning_path: [...] }
+    Frontend->>User: Show changes preview
+    User->>Frontend: Accept/Reject
+    Frontend->>Backend: (Changes already persisted)
+    Frontend->>User: Updated path view
+```
+
+#### Reschedule Implementation
+
+```tsx
+const handleReschedule = async () => {
+  const result = await api.rescheduleLearningPath({
+    learner_profile: { learner_id: learnerId },
+    learning_path: sessionsArray,
+    session_count: -1,
+    goal_id: currentGoal.goal_id,
+  });
+  
+  // Build "isNew" detection
+  const oldIds = new Set(sessions.map(s => s.id));
+  const newSessions = result.learning_path.map(s => ({
+    ...s,
+    isNew: !oldIds.has(s.id),
+  }));
+  
+  setSessions(newSessions);
+  setHasPendingChanges(true);
+};
+```
+
+#### Session Start Flow
+
+```tsx
+const handleStartSession = async (session) => {
+  const result = await api.generateTailoredContent({
+    learner_profile: { learner_id: learnerId },
+    learning_path: sessionsArray,
+    learning_session: session.data,
+    with_quiz: true,
+    use_search: true,
+    allow_parallel: true,
+    goal_id: currentGoal.goal_id,
+  });
+  
+  localStorage.setItem("current_session", JSON.stringify(session.data));
+  localStorage.setItem("current_session_content", JSON.stringify(result.tailored_content));
+  
+  router.push(`/session/${sessionId}`);
+};
+```
+
+---
+
+### 7.6 Goals Page (`/goals`)
+
+**File**: `app/(app)/goals/page.tsx`
+
+Multi-goal management interface allowing users to create, view, and switch between different career objectives.
+
+#### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| Goal List | All goals with progress indicators |
+| Goal Details Sidebar | Skill gaps and sessions for selected goal |
+| Add New Goal Modal | Form for creating new goals |
+| Goal Status Badge | Active/Inactive indicators |
+| Generation Progress | Visual feedback during goal creation |
+
+#### Goal Card Display
+
+```tsx
+<div className={cn(
+  "p-6 rounded-2xl border transition-all cursor-pointer",
+  currentGoal.goal_id === goal.goal_id
+    ? "border-primary-500 ring-1 ring-primary-500"
+    : "hover:border-primary-500/30"
+)}>
+  <h3>{goal.title}</h3>
+  <span className={goal.status === "active" ? "bg-green-50 text-green-700" : "bg-muted"}>
+    {goal.status === "active" ? "Active" : "Inactive"}
+  </span>
+  <div className="h-2 bg-secondary rounded-full">
+    <div style={{ width: `${goal.readiness}%` }} className="bg-primary-500" />
+  </div>
+</div>
+```
+
+#### Create Goal Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    
+    User->>Frontend: Click "Add New Goal"
+    Frontend->>User: Show modal
+    User->>Frontend: Enter goal & background
+    Frontend->>Backend: POST /profile/set-goal
+    Backend-->>Frontend: { refined_goal }
+    Frontend->>Backend: POST /skills/identify-and-save-skill-gap
+    Backend-->>Frontend: { skill_gaps }
+    Frontend->>Backend: POST /learning/schedule-learning-path
+    Backend-->>Frontend: { learning_path }
+    Frontend->>User: Refresh goals list
+```
+
+#### Create Goal Implementation
+
+```tsx
+const handleCreateGoal = async () => {
+  // Step 1: Set and refine the learning goal
+  await api.setLearningGoal(learnerId, formData.goal);
+  setGenerationStep(2);
+  
+  // Step 2: Identify skill gaps
+  await api.identifyAndSaveSkillGap({
+    learner_id: learnerId,
+    learning_goal: formData.goal,
+    learner_information: formData.background,
+  });
+  setGenerationStep(3);
+  
+  // Step 3: Schedule learning path
+  await api.scheduleLearningPath({
+    learner_profile: { learner_id: learnerId },
+    session_count: 12,
+  });
+  setGenerationStep(4);
+  
+  await refresh(); // Refresh GoalContext
+};
+```
+
+---
+
+### 7.7 Session Page (`/session/[id]`)
+
+**File**: `app/(app)/session/[id]/page.tsx`
+
+The interactive learning session page with content display, quiz functionality, and AI tutor integration.
+
+#### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| Learn/Quiz Tabs | Switch between content and assessment |
+| AI Tutor Chat | Real-time conversation with AI tutor |
+| Text Selection | Select text to ask AI tutor questions |
+| XP Animation | Visual feedback on session completion |
+| Mark Complete | Track session progress |
+
+#### Layout Structure
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Header: Session Title, Tabs, Mark Complete                 │
+├────────────────────────────────────┬────────────────────────┤
+│                                    │                        │
+│     Document/Quiz Panel           │    AI Tutor Sidebar    │
+│     (scrollable)                  │    (fixed width)       │
+│                                    │                        │
+│     - Content sections            │    - Chat messages     │
+│     - Code examples               │    - Input form        │
+│     - Quiz questions              │    - Agent state       │
+│                                    │                        │
+└────────────────────────────────────┴────────────────────────┘
+```
+
+#### Text Selection Feature
+
+```tsx
+// Listen for text selection
+useEffect(() => {
+  const handleSelection = () => {
+    const sel = window.getSelection();
+    if (sel && sel.toString().trim().length > 0) {
+      const rect = sel.getRangeAt(0).getBoundingClientRect();
+      setSelection({
+        text: sel.toString().trim(),
+        x: rect.left + rect.width / 2,
+        y: rect.top - 10,
+      });
+    }
+  };
+  
+  document.addEventListener("mouseup", handleSelection);
+  return () => document.removeEventListener("mouseup", handleSelection);
+}, []);
+
+// Floating "Ask AI Tutor" button
+{selection && (
+  <button
+    onClick={handleAskTutor}
+    style={{ position: "fixed", left: selection.x, top: selection.y }}
+  >
+    <MessageSquarePlus size={16} />
+    Ask AI Tutor
+  </button>
+)}
+```
+
+#### XP Animation
+
+```tsx
+// XP fly-in animation on completion
+{showXPAnimation && (
+  <motion.div
+    animate={{
+      opacity: [0, 1, 1, 0],
+      scale: [0.5, 1.2, 1, 0.8],
+      y: [0, -100, -200, -300],
+    }}
+  >
+    <div className="bg-amber-500 text-white px-6 py-3 rounded-full">
+      <Star fill="currentColor" />
+      +50 XP
+    </div>
+  </motion.div>
+)}
+```
+
+#### AI Tutor Chat Integration
+
+```tsx
+<AITutorChat
+  sessionId={params.id}
+  externalQuery={externalQuery}
+  onQueryProcessed={() => setExternalQuery("")}
+  goalId={currentGoal.goal_id}
+/>
+```
+
+---
+
+### 7.8 Library Page (`/library`)
+
+**File**: `app/(app)/library/page.tsx`
+
+Knowledge repository for study materials, assessments, and archived content.
+
+#### Tabs Structure
+
+| Tab | Icon | Content |
+|-----|------|---------|
+| Overview | BookOpen | Goal summary, latest materials |
+| Study Materials | FileText | All documents & resources |
+| Assessments | AlertCircle | Mistake book, quiz history |
+| Archives | Archive | Past tutor conversations |
+
+#### Goal Summary Feature
+
+```tsx
+// AI-generated goal summary
+const handleGenerateSummary = () => {
+  setIsGeneratingSummary(true);
+  // Simulated AI generation
+  setTimeout(() => {
+    setGoalSummary(
+      "You have made significant progress in **SQL** and **Python Data Manipulation**. Your mastery of Window Functions is strong (85%), but you need more practice with Data Visualization (40%)..."
+    );
+    setIsGeneratingSummary(false);
+  }, 2000);
+};
+```
+
+#### Document Cards
+
+```tsx
+const mockDocuments = [
+  {
+    id: "doc-1",
+    title: "Advanced SQL Window Functions",
+    type: "document", // document | interactive | video
+    mastery: 85,
+    skills: ["SQL", "Data Analysis"],
+    date: "2 days ago",
+    duration: "15 min read",
+  },
+  // ... more documents
+];
+```
+
+#### Goal Progress Widget
+
+```tsx
+// Circular progress indicator
+<svg className="w-32 h-32 transform -rotate-90">
+  <circle cx="64" cy="64" r="56" className="text-muted" />
+  <circle 
+    cx="64" cy="64" r="56"
+    className="text-primary-500"
+    strokeDasharray={351.85}
+    strokeDashoffset={351.85 - (351.85 * 65) / 100}
+  />
+</svg>
+// Display: 65% Readiness
+```
+
+---
+
+### 7.9 Profile Page (`/profile`)
+
+**File**: `app/(app)/profile/page.tsx`
+
+User settings and account management interface.
+
+#### Tabs Structure
+
+| Tab | Icon | Content |
+|-----|------|---------|
+| Information | User | Profile details, avatar, bio, CV upload |
+| Preferences | Sliders | Theme, AI voice, notifications |
+| Settings | Settings | Language, email, password, danger zone |
+
+#### Information Tab
+
+- **Avatar**: Display and change profile picture
+- **Name Fields**: First and last name inputs
+- **Bio**: Free-text personal description
+- **Context Connector**: CV/document upload for background updates
+
+```tsx
+// Context Connector (CV upload)
+<div className="border-2 border-dashed rounded-2xl p-8 text-center">
+  <FileText size={32} className="mx-auto text-muted-foreground" />
+  <p>Click to upload or drag and drop</p>
+  <p className="text-sm">PDF, DOCX up to 5MB</p>
+</div>
+```
+
+#### Preferences Tab
+
+| Setting | Options |
+|---------|---------|
+| Theme Style | System Default, Light Mode, Dark Mode |
+| AI Tutor Voice | Professional & Encouraging, Strict & Direct, Socratic |
+| Daily Learning Reminders | Checkbox toggle |
+| Weekly Progress Reports | Checkbox toggle |
+| Auto-play next session | Checkbox toggle |
+
+#### Settings Tab - Danger Zone
+
+```tsx
+// Account deletion with confirmation
+const handleDelete = async () => {
+  await api.deleteUser(learnerId);
+  resetLearner();
+  router.push("/login");
+};
+
+// Two-step confirmation
+{!showConfirm ? (
+  <button onClick={() => setShowConfirm(true)}>
+    Delete Account
+  </button>
+) : (
+  <div>
+    <button onClick={handleDelete}>Yes, delete my account</button>
+    <button onClick={() => setShowConfirm(false)}>Cancel</button>
+  </div>
+)}
+```
+
+---
+
+### 7.10 Core Components
+
+#### 7.10.1 Sidebar Component
+
+**File**: `components/layout/Sidebar.tsx`
+
+The main navigation sidebar with goal switcher and XP progress.
+
+##### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| Goal Switcher | Dropdown for selecting active goal |
+| Navigation Links | Home, Roadmap, Library, Profile |
+| XP Progress Bar | Level progress with animation |
+| Goal Progress | Visual progress per goal |
+
+```tsx
+const navItems = [
+  { name: "Home", href: "/progress", icon: Home },
+  { name: "Roadmap", href: "/learning-path", icon: Map },
+  { name: "Library", href: "/library", icon: BookOpen },
+  { name: "Profile", href: "/profile", icon: User },
+];
+```
+
+##### Goal Switcher
+
+```tsx
+// Current goal card (clickable to expand)
+<button onClick={() => setIsGoalListOpen(!isGoalListOpen)}>
+  <h4>{goals[currentGoalIndex].title}</h4>
+  <div className="h-1.5 w-full bg-black/20 rounded-full">
+    <div style={{ width: `${goal.progress}%` }} className="bg-white" />
+  </div>
+</button>
+
+// Goal list dropdown
+{isGoalListOpen && (
+  <motion.div>
+    {goals.map((goal, idx) => (
+      <button onClick={() => setCurrentGoalIndex(idx)}>
+        {goal.title}
+        <span>{goal.progress}%</span>
+      </button>
+    ))}
+    <Link href="/goals">+ Add or Manage Goals</Link>
+  </motion.div>
+)}
+```
+
+##### XP Progress Widget
+
+```tsx
+<div className="bg-gradient-to-b from-muted/50 to-muted p-4">
+  <div className="flex items-center gap-2">
+    <Trophy size={16} />
+    <div>
+      <h4>Level 4</h4>
+      <p>AI Apprentice</p>
+    </div>
+    <div className="text-right">
+      <span>1,250 XP</span>
+      <p>/ 2,000 XP</p>
+    </div>
+  </div>
+  
+  <div className="h-2 bg-background rounded-full">
+    <div 
+      className="h-full bg-gradient-to-r from-amber-400 to-orange-500"
+      style={{ width: "62.5%" }}
+    />
+  </div>
+</div>
+```
+
+#### 7.10.2 AI Tutor Chat Component
+
+**File**: `components/AITutorChat.tsx`
+
+Real-time chat interface for interacting with the AI tutor.
+
+##### Props Interface
+
+```tsx
+interface AITutorChatProps {
+  sessionId?: string;       // Current session identifier
+  externalQuery?: string;   // Pre-filled question (from text selection)
+  onQueryProcessed?: () => void;  // Callback after query sent
+  goalId?: string;          // Current goal context
+}
+```
+
+##### Message Structure
+
+```tsx
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+}
+```
+
+##### Agent State Animation
+
+```tsx
+// Animated agent states during response generation
+useEffect(() => {
+  if (!isLoading) return;
+  
+  const states = [
+    "Content Expert is retrieving materials...",
+    "Simulator is evaluating your context...",
+    "Synthesizing response...",
+  ];
+  
+  let currentIndex = 0;
+  const interval = setInterval(() => {
+    currentIndex = (currentIndex + 1) % states.length;
+    setAgentState(states[currentIndex]);
+  }, 2000);
+  
+  return () => clearInterval(interval);
+}, [isLoading]);
+```
+
+##### Chat API Integration
+
+```tsx
+const sendMessage = async (userMessage: Message, allMessages: Message[]) => {
+  const chatHistory = allMessages.map(m => ({
+    role: m.role,
+    content: m.content,
+  }));
+  
+  const data = await api.chatWithTutor({
+    messages: chatHistory,
+    learner_profile: { learner_id: learnerId },
+    goal_id: goalId,
+  });
+  
+  setMessages(prev => [...prev, {
+    id: Date.now().toString(),
+    role: "assistant",
+    content: data.response,
+  }]);
+};
+```
+
+##### Markdown Rendering
+
+```tsx
+// Render assistant messages with markdown support
+{msg.role === "assistant" ? (
+  <div className="prose prose-sm dark:prose-invert">
+    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+      {msg.content}
+    </ReactMarkdown>
+  </div>
+) : (
+  msg.content
+)}
+```
+
+#### 7.10.3 GoalContext Component
+
+**File**: `components/GoalContext.tsx`
+
+React Context provider for multi-goal state management.
+
+##### Types
+
+```tsx
+export interface Goal {
+  id: number;
+  goal_id: string;
+  title: string;
+  progress: number;
+  color: string;         // Gradient class for styling
+  readiness: number;     // 0-100
+  skillGap: number;      // 0-100
+  refined_goal?: any;
+  status?: string;       // "active" | "inactive"
+}
+
+export interface LearnerData {
+  learnerId: string | null;
+  profile: Record<string, any>;
+  learningGoals: Record<string, any>;   // Keyed by goal_id
+  skillGaps: Record<string, any>;       // Keyed by goal_id
+  learningPath: Record<string, any>;    // Keyed by goal_id
+  mastery: Record<string, any>;
+}
+```
+
+##### Context Interface
+
+```tsx
+interface GoalContextType {
+  goals: Goal[];                      // Parsed goal list
+  currentGoalIndex: number;           // Selected goal index
+  setCurrentGoalIndex: (index: number) => void;
+  currentGoal: Goal;                  // Currently selected goal
+  learner: LearnerData;               // Full backend data
+  isLoading: boolean;
+  refresh: () => Promise<void>;       // Re-fetch from backend
+  resetLearner: () => void;           // Clear state (logout)
+}
+```
+
+##### Goal Building Logic
+
+```tsx
+function buildGoals(learningGoals, learningPath): Goal[] {
+  const goalsArr = learningGoals.goals || [];
+  if (goalsArr.length === 0) return [FALLBACK_GOAL];
+  
+  return goalsArr.map((g, idx) => {
+    const goalId = g.goal_id || "";
+    const pathData = learningPath[goalId];
+    
+    // Compute progress from sessions
+    const sessions = pathData?.learning_path || [];
+    const completed = sessions.filter(s => s.completed).length;
+    const progress = sessions.length > 0 
+      ? Math.round((completed / sessions.length) * 100) 
+      : 0;
+    
+    return {
+      id: idx + 1,
+      goal_id: goalId,
+      title: g.learning_goal || "Untitled goal",
+      progress,
+      color: GOAL_COLORS[idx % GOAL_COLORS.length],
+      readiness: progress,
+      skillGap: Math.max(0, 100 - progress),
+    };
+  });
+}
+```
+
+##### Auto-fetch on Mount
+
+```tsx
+useEffect(() => {
+  const learnerId = getStoredLearnerId();
+  if (!learnerId) return;
+  
+  refresh(); // Fetch learner data from backend
+}, [refresh]);
+```
+
+---
+
+## 8. API Client
+
+### 8.1 Configuration
 
 **File**: `lib/api.ts`
 
 ```ts
 // Use Next.js API proxy for client-side requests to avoid CORS issues
+// The Next.js rewrites will forward /api/* to the backend at http://127.0.0.1:5000/api/v1/*
 const API_BASE_URL = typeof window !== 'undefined' 
   ? '/api'  // Client-side: use proxy
   : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1');  // Server-side
@@ -739,15 +1707,13 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
 }
 ```
 
-### 7.2 Type Definitions
+### 8.2 Type Definitions
 
 ```ts
 export interface LearnerProfile {
   learner_id: string;
   name: string;
   email?: string;
-  learning_goal?: string;
-  refined_goal?: any;
   progress_percent?: number;
   last_session_completed?: number;
   created_at: string;
@@ -759,6 +1725,8 @@ export interface DashboardData {
   success: boolean;
   message: string;
   learner: LearnerProfile & {
+    learning_goal?: string;
+    refined_goal?: any;
     progress: number;
     total_sessions: number;
     completed_sessions: number;
@@ -786,115 +1754,358 @@ export interface DashboardData {
   mastery: Record<string, number>;
 }
 
+/**
+ * Base request interface - all requests extend this.
+ * Uses unified model parameter in "provider/model" format.
+ * Examples: "openai/gpt-4", "anthropic/claude-3-5-sonnet", "deepseek/deepseek-chat"
+ */
 export interface BaseRequest {
-  model_provider?: string;
-  model_name?: string;
+  model?: string;
 }
 ```
 
-### 7.3 API Methods
+### 8.3 API Methods
+
+#### Session Management
+
+| Method | Parameters | Response | Description |
+|--------|-----------|----------|-------------|
+| `initializeSession` | `{ name?, email?, metadata?, cv? }` | `{ learner_id, profile }` | Initialize new learner session |
+| `getProfile` | `learnerId: string` | `{ success, learner_profile }` | Get learner profile |
+| `setLearningGoal` | `learnerId, learningGoal, model?` | `{ success, refined_goal, rationale? }` | Set and refine learning goal |
 
 ```ts
-export const api = {
-  // Session Management
-  initializeSession: (data: { name?: string; email?: string; metadata?: Record<string, any> }) =>
-    fetchApi<{ success: boolean; learner_id: string; profile: LearnerProfile }>('/profile/initialize-session', {
-      method: 'POST',
-      body: JSON.stringify(data),
+// Initialize session (supports FormData for file upload)
+initializeSession: (data: { name?: string; email?: string; metadata?: Record<string, any>; cv?: File }) => {
+  const formData = new FormData();
+  if (data.name) formData.append('name', data.name);
+  if (data.email) formData.append('email', data.email);
+  if (data.metadata) formData.append('metadata', JSON.stringify(data.metadata));
+  if (data.cv) formData.append('cv', data.cv);
+
+  return fetch(`${API_BASE_URL}/profile/initialize-session`, {
+    method: 'POST',
+    body: formData,
+  }).then(res => {
+    if (!res.ok) throw new Error(res.statusText);
+    return res.json();
+  });
+}
+
+// Get profile
+getProfile: (learnerId: string) =>
+  fetchApi<{ success: boolean; learner_profile: LearnerProfile }>(`/profile/get-profile`, {
+    method: 'POST',
+    body: JSON.stringify({ learner_id: learnerId }),
+  })
+
+// Set learning goal (defaults to openai/gpt-5.1)
+setLearningGoal: (
+  learnerId: string,
+  learningGoal: string,
+  model: string = 'openai/gpt-5.1'
+) =>
+  fetchApi<{ success: boolean; refined_goal: any; rationale?: string }>(`/profile/set-goal`, {
+    method: 'POST',
+    body: JSON.stringify({
+      learner_id: learnerId,
+      learning_goal: learningGoal,
+      model: model,
     }),
-
-  getProfile: (learnerId: string) =>
-    fetchApi<{ success: boolean; learner_profile: LearnerProfile }>(`/profile/get-profile`, {
-      method: 'POST',
-      body: JSON.stringify({ learner_id: learnerId }),
-    }),
-
-  setLearningGoal: (learnerId: string, learningGoal: string, modelProvider?: string, modelName?: string) =>
-    fetchApi<{ success: boolean; refined_goal: any; rationale?: string; }>(`/profile/set-goal`, {
-      method: 'POST',
-      body: JSON.stringify({ learner_id: learnerId, learning_goal: learningGoal, model_provider: modelProvider, model_name: modelName }),
-    }),
-
-  // Dashboard
-  getDashboard: (learnerId: string) =>
-    fetchApi<DashboardData>(`/dashboard`, {
-      method: 'POST',
-      body: JSON.stringify({ learner_id: learnerId }),
-    }),
-
-  // Goals & Skills
-  refineGoal: (data: { learning_goal: string; learner_information?: string } & BaseRequest) =>
-    fetchApi<{ success: boolean; refined_goal: any; rationale: string; }>('/goals/refine-learning-goal', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  identifySkillGap: (data: { learning_goal: string; learner_information: string; skill_requirements?: string; } & BaseRequest) =>
-    fetchApi<{ success: boolean; skill_requirements: any; skill_gaps: any; learning_goal: string; }>('/skills/identify-skill-gap-with-info', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  // Learning Path
-  scheduleLearningPath: (data: { learner_profile: string | Record<string, any>; session_count: number; } & BaseRequest) =>
-    fetchApi<{ success: boolean; learning_path: any; session_count: number; }>('/schedule-learning-path', {
-      method: 'POST',
-      body: JSON.stringify({ ...data, learner_profile: typeof data.learner_profile === 'string' ? data.learner_profile : JSON.stringify(data.learner_profile) }),
-    }),
-
-  rescheduleLearningPath: (data: { learner_profile: string | Record<string, any>; learning_path: string | Record<string, any>; session_count: number; other_feedback?: string | Record<string, any>; } & BaseRequest) =>
-    fetchApi<{ success: boolean; learning_path: any; session_count: number; }>('/reschedule-learning-path', {
-      method: 'POST',
-      body: JSON.stringify({ ...data }),
-    }),
-
-  // Content Generation
-  exploreKnowledgePoints: (data: { learner_profile: string | Record<string, any>; learning_path: string | Record<string, any>; learning_session: string | Record<string, any>; } & BaseRequest) =>
-    fetchApi<{ success: boolean; knowledge_points: any; }>('/learning/explore-knowledge-points', {
-      method: 'POST',
-      body: JSON.stringify({ ...data }),
-    }),
-
-  generateTailoredContent: (data: { learner_profile: string | Record<string, any>; learning_path: string | Record<string, any>; learning_session: string | Record<string, any>; with_quiz?: boolean; use_search?: boolean; allow_parallel?: boolean; } & BaseRequest) =>
-    fetchApi<{ success: boolean; tailored_content: any; }>('/learning/tailor-knowledge-content', {
-      method: 'POST',
-      body: JSON.stringify({ ...data }),
-    }),
-
-  // Progress Tracking
-  completeSession: (learnerId: string, sessionNumber: number, quizScore?: number, durationMinutes?: number) =>
-    fetchApi<{ success: boolean; message: string; session_number: number; next_session?: any; progress_percent: number; }>(`/progress/session-complete`, {
-      method: 'POST',
-      body: JSON.stringify({ learner_id: learnerId, session_number: sessionNumber, quiz_score: quizScore, duration_minutes: durationMinutes }),
-    }),
-
-  // Chat
-  chatWithTutor: (data: { messages: string | Array<{ role: string; content: string }>; learner_profile?: string | Record<string, any>; } & BaseRequest) =>
-    fetchApi<{ success: boolean; response: string }>('/chat/chat-with-tutor', {
-      method: 'POST',
-      body: JSON.stringify({ ...data, messages: typeof data.messages === 'string' ? data.messages : JSON.stringify(data.messages) }),
-    }),
-
-  // Assessment
-  generateDocumentQuizzes: (data: { learning_document: string | Record<string, any>; quiz_count?: number; } & BaseRequest) =>
-    fetchApi<{ success: boolean; quizzes: any; }>('/assessment/generate-document-quizzes', {
-      method: 'POST',
-      body: JSON.stringify({ ...data }),
-    }),
-
-  // Models & Config
-  listModels: () =>
-    fetchApi<{ models: Array<{ model_name: string; model_provider: string }> }>('/list-llm-models'),
-
-  getStorageInfo: () =>
-    fetchApi<{ workspace_dir: string; memory_available: boolean; learner_count: number; }>('/storage-info'),
-
-  healthCheck: () =>
-    fetchApi<{ status: string; version: string; memory_enabled: boolean; }>('/health'),
-};
+  })
 ```
 
-### 7.4 Helper Functions
+#### Dashboard
+
+```ts
+getDashboard: (learnerId: string) =>
+  fetchApi<DashboardData>(`/dashboard`, {
+    method: 'POST',
+    body: JSON.stringify({ learner_id: learnerId }),
+  })
+```
+
+#### Goals & Skills
+
+| Method | Parameters | goal_id | Description |
+|--------|-----------|---------|-------------|
+| `refineGoal` | `{ learning_goal, learner_information?, model? }` | ❌ | Refine learning goal (standalone) |
+| `identifySkillGap` | `{ learning_goal, learner_information, skill_requirements?, model? }` | ❌ | Identify skill gaps |
+| `identifyAndSaveSkillGap` | `{ learner_id, learning_goal, learner_information?, model? }` | ❌ | Identify and persist skill gaps |
+
+```ts
+// Refine goal
+refineGoal: (data: { learning_goal: string; learner_information?: string } & BaseRequest) =>
+  fetchApi<{ success: boolean; refined_goal: any; rationale: string }>('/goals/refine-learning-goal', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+
+// Identify skill gaps
+identifySkillGap: (data: {
+  learning_goal: string;
+  learner_information: string;
+  skill_requirements?: string;
+} & BaseRequest) =>
+  fetchApi<{ success: boolean; skill_requirements: any; skill_gaps: any; learning_goal: string }>('/skills/identify-skill-gap', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+
+// Identify and save skill gaps (persists to memory)
+identifyAndSaveSkillGap: (data: {
+  learner_id: string;
+  learning_goal: string;
+  learner_information?: string;
+} & BaseRequest) =>
+  fetchApi<{ success: boolean; skill_requirements: any; skill_gaps: any; learning_goal: string }>('/skills/identify-and-save-skill-gap', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+```
+
+#### Learning Path
+
+| Method | goal_id | Description |
+|--------|---------|-------------|
+| `scheduleLearningPath` | ✅ | Schedule learning path with sessions |
+| `rescheduleLearningPath` | ✅ | Reschedule based on feedback |
+
+```ts
+// Schedule learning path
+scheduleLearningPath: (data: {
+  learner_profile: string | Record<string, any>;
+  session_count: number;
+  goal_id?: string;
+} & BaseRequest) =>
+  fetchApi<{ success: boolean; learning_path: any; session_count: number }>('/learning/schedule-learning-path', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...data,
+      learner_profile: typeof data.learner_profile === 'string' ? data.learner_profile : JSON.stringify(data.learner_profile),
+    }),
+  })
+
+// Reschedule learning path
+rescheduleLearningPath: (data: {
+  learner_profile: string | Record<string, any>;
+  learning_path: string | Record<string, any>;
+  session_count: number;
+  other_feedback?: string | Record<string, any>;
+  goal_id?: string;
+} & BaseRequest) =>
+  fetchApi<{ success: boolean; learning_path: any; session_count: number }>('/learning/reschedule-learning-path', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...data,
+      learner_profile: typeof data.learner_profile === 'string' ? data.learner_profile : JSON.stringify(data.learner_profile),
+      learning_path: typeof data.learning_path === 'string' ? data.learning_path : JSON.stringify(data.learning_path),
+    }),
+  })
+```
+
+#### Content Generation
+
+| Method | goal_id | Description |
+|--------|---------|-------------|
+| `exploreKnowledgePoints` | ✅ | Explore knowledge points for session |
+| `generateTailoredContent` | ✅ | Generate tailored content with optional quiz |
+
+```ts
+// Explore knowledge points
+exploreKnowledgePoints: (data: {
+  learner_profile: string | Record<string, any>;
+  learning_path: string | Record<string, any>;
+  learning_session: string | Record<string, any>;
+  goal_id?: string;
+} & BaseRequest) =>
+  fetchApi<{ success: boolean; knowledge_points: any }>('/learning/explore-knowledge-points', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...data,
+      learner_profile: typeof data.learner_profile === 'string' ? data.learner_profile : JSON.stringify(data.learner_profile),
+      learning_path: typeof data.learning_path === 'string' ? data.learning_path : JSON.stringify(data.learning_path),
+      learning_session: typeof data.learning_session === 'string' ? data.learning_session : JSON.stringify(data.learning_session),
+    }),
+  })
+
+// Generate tailored content
+generateTailoredContent: (data: {
+  learner_profile: string | Record<string, any>;
+  learning_path: string | Record<string, any>;
+  learning_session: string | Record<string, any>;
+  with_quiz?: boolean;
+  use_search?: boolean;
+  allow_parallel?: boolean;
+  goal_id?: string;
+} & BaseRequest) =>
+  fetchApi<{ success: boolean; tailored_content: any }>('/learning/tailor-knowledge-content', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...data,
+      learner_profile: typeof data.learner_profile === 'string' ? data.learner_profile : JSON.stringify(data.learner_profile),
+      learning_path: typeof data.learning_path === 'string' ? data.learning_path : JSON.stringify(data.learning_path),
+      learning_session: typeof data.learning_session === 'string' ? data.learning_session : JSON.stringify(data.learning_session),
+    }),
+  })
+```
+
+#### Progress Tracking
+
+```ts
+completeSession: (
+  learnerId: string,
+  sessionNumber: number,
+  quizScore?: number,
+  durationMinutes?: number
+) =>
+  fetchApi<{
+    success: boolean;
+    message: string;
+    session_number: number;
+    next_session?: any;
+    progress_percent: number;
+  }>(`/progress/session-complete`, {
+    method: 'POST',
+    body: JSON.stringify({
+      learner_id: learnerId,
+      session_number: sessionNumber,
+      quiz_score: quizScore,
+      duration_minutes: durationMinutes,
+    }),
+  })
+```
+
+#### Chat
+
+| Method | goal_id | Description |
+|--------|---------|-------------|
+| `chatWithTutor` | ✅ | Chat with AI tutor using memory context |
+
+```ts
+chatWithTutor: (data: {
+  messages: string | Array<{ role: string; content: string }>;
+  learner_profile?: string | Record<string, any>;
+  goal_id?: string;
+} & BaseRequest) =>
+  fetchApi<{ success: boolean; response: string }>('/chat/chat-with-tutor', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...data,
+      messages: typeof data.messages === 'string' ? data.messages : JSON.stringify(data.messages),
+      learner_profile: data.learner_profile
+        ? typeof data.learner_profile === 'string'
+          ? data.learner_profile
+          : JSON.stringify(data.learner_profile)
+        : undefined,
+    }),
+  })
+```
+
+#### Assessment
+
+| Method | goal_id | Description |
+|--------|---------|-------------|
+| `generateDocumentQuizzes` | ✅ | Generate quizzes for document |
+
+```ts
+generateDocumentQuizzes: (data: {
+  learning_document: string | Record<string, any>;
+  quiz_count?: number;
+  goal_id?: string;
+} & BaseRequest) =>
+  fetchApi<{ success: boolean; quizzes: any }>('/assessment/generate-document-quizzes', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...data,
+      learning_document: typeof data.learning_document === 'string' ? data.learning_document : JSON.stringify(data.learning_document),
+    }),
+  })
+```
+
+#### User Management
+
+| Method | Description |
+|--------|-------------|
+| `listUsers` | List all registered users |
+| `loginUser` | Login as existing user |
+| `deleteUser` | Delete user account |
+
+```ts
+// List all users
+listUsers: () =>
+  fetchApi<{
+    success: boolean;
+    users: Array<{ learner_id: string; name: string; email?: string; created_at?: string }>;
+    count: number;
+  }>('/users/list')
+
+// Login existing user
+loginUser: (learnerId: string) =>
+  fetchApi<{
+    success: boolean;
+    learner_id: string;
+    name: string;
+    email?: string;
+  }>('/users/login', {
+    method: 'POST',
+    body: JSON.stringify({ learner_id: learnerId }),
+  })
+
+// Delete user
+deleteUser: (learnerId: string) =>
+  fetchApi<{ success: boolean; message: string }>('/users/delete', {
+    method: 'POST',
+    body: JSON.stringify({ learner_id: learnerId }),
+  })
+```
+
+#### Memory
+
+```ts
+// Get full learner memory (multi-goal support)
+getLearnerMemory: (learnerId: string) =>
+  fetchApi<{
+    success: boolean;
+    learner_id: string;
+    profile: Record<string, any>;
+    learning_goals: Record<string, any>;   // Keyed by goal_id
+    skill_gaps: Record<string, any>;       // Keyed by goal_id
+    mastery: Record<string, any>;
+    learning_path: Record<string, any>;    // Keyed by goal_id
+    context: string;
+    recent_history: string;
+  }>('/memory/learner-memory', {
+    method: 'POST',
+    body: JSON.stringify({ learner_id: learnerId }),
+  })
+```
+
+#### Models & Config
+
+```ts
+// List available LLM models
+listModels: () =>
+  fetchApi<{ models: Array<{ model_name: string; model_provider: string }> }>('/list-llm-models')
+
+// Get storage info
+getStorageInfo: () =>
+  fetchApi<{
+    workspace_dir: string;
+    memory_available: boolean;
+    learner_count: number;
+  }>('/storage-info')
+
+// Health check
+healthCheck: () =>
+  fetchApi<{
+    status: string;
+    version: string;
+    memory_enabled: boolean;
+  }>('/health')
+```
+
+### 8.4 Helper Functions
 
 ```ts
 /**
@@ -924,9 +2135,9 @@ export function clearStoredLearnerId(): void {
 
 ---
 
-## 8. State Management
+## 9. State Management
 
-### 8.1 Local Storage Keys
+### 9.1 Local Storage Keys
 
 | Key | Type | Description |
 |-----|------|-------------|
@@ -936,7 +2147,7 @@ export function clearStoredLearnerId(): void {
 | `skill_gap` | `JSON` | Skill gap analysis results |
 | `current_session` | `JSON` | Current session data |
 
-### 8.2 Session Hook
+### 9.2 Session Hook
 
 **File**: `lib/hooks/useSession.ts`
 
@@ -1039,9 +2250,9 @@ function MyComponent() {
 
 ---
 
-## 9. Styling & Theming
+## 10. Styling & Theming
 
-### 9.1 Tailwind Configuration
+### 10.1 Tailwind Configuration
 
 **File**: `app/globals.css`
 
@@ -1078,7 +2289,7 @@ function MyComponent() {
 }
 ```
 
-### 9.2 Light Mode Variables
+### 10.2 Light Mode Variables
 
 ```css
 :root {
@@ -1094,7 +2305,7 @@ function MyComponent() {
 }
 ```
 
-### 9.3 Dark Mode Variables
+### 10.3 Dark Mode Variables
 
 ```css
 .dark {
@@ -1110,7 +2321,7 @@ function MyComponent() {
 }
 ```
 
-### 9.4 Utility Functions
+### 10.4 Utility Functions
 
 **File**: `lib/utils.ts`
 
@@ -1132,7 +2343,7 @@ export function cn(...inputs: ClassValue[]) {
 )}>
 ```
 
-### 9.5 Animation Classes
+### 10.5 Animation Classes
 
 Using `framer-motion`:
 ```tsx
@@ -1150,9 +2361,9 @@ Using Tailwind:
 
 ---
 
-## 10. Hooks
+## 11. Hooks
 
-### 10.1 useSession
+### 11.1 useSession
 
 **Purpose**: Manage learner session state with backend synchronization
 
@@ -1170,9 +2381,9 @@ Using Tailwind:
 
 ---
 
-## 11. Utilities
+## 12. Utilities
 
-### 11.1 cn (Classname Utility)
+### 12.1 cn (Classname Utility)
 
 ```ts
 import { clsx, type ClassValue } from "clsx";
@@ -1187,9 +2398,9 @@ export function cn(...inputs: ClassValue[]) {
 
 ---
 
-## 12. User Flow
+## 13. User Flow
 
-### 12.1 Onboarding Flow
+### 13.1 Onboarding Flow
 
 ```mermaid
 graph TD
@@ -1205,7 +2416,7 @@ graph TD
     J --> K[Progress Dashboard]
 ```
 
-### 12.2 Learning Session Flow
+### 13.2 Learning Session Flow
 
 ```mermaid
 graph TD
@@ -1223,9 +2434,9 @@ graph TD
 
 ---
 
-## 13. Development Guide
+## 14. Development Guide
 
-### 13.1 Getting Started
+### 14.1 Getting Started
 
 ```bash
 # Install dependencies
@@ -1238,14 +2449,14 @@ npm run dev
 # Open http://localhost:3000
 ```
 
-### 13.2 Environment Variables
+### 14.2 Environment Variables
 
 Create `.env` file:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
 ```
 
-### 13.3 Adding a New Page
+### 14.3 Adding a New Page
 
 1. **Create Page File**:
 ```tsx
@@ -1270,7 +2481,7 @@ const navItems = [
 ];
 ```
 
-### 13.4 Adding a New API Method
+### 14.4 Adding a New API Method
 
 ```tsx
 // src/lib/api.ts
@@ -1285,7 +2496,7 @@ export const api = {
 };
 ```
 
-### 13.5 Code Style
+### 14.5 Code Style
 
 - **"use client"**: Add to client components
 - **TypeScript**: Use strict typing for all props and data
@@ -1295,9 +2506,9 @@ export const api = {
 
 ---
 
-## 14. Deployment
+## 15. Deployment
 
-### 14.1 Build for Production
+### 15.1 Build for Production
 
 ```bash
 # Build the application
@@ -1307,7 +2518,7 @@ npm run build
 npm run start
 ```
 
-### 14.2 Docker Deployment
+### 15.2 Docker Deployment
 
 ```dockerfile
 FROM node:20-alpine
@@ -1325,7 +2536,7 @@ EXPOSE 3000
 CMD ["npm", "run", "start"]
 ```
 
-### 14.3 Vercel Deployment
+### 15.3 Vercel Deployment
 
 ```bash
 # Install Vercel CLI
@@ -1335,7 +2546,7 @@ npm i -g vercel
 vercel
 ```
 
-### 14.4 Environment Configuration
+### 15.4 Environment Configuration
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -1373,24 +2584,29 @@ vercel
 
 ## Appendix C: API Endpoint Reference
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/profile/initialize-session` | Initialize new session |
-| POST | `/profile/get-profile` | Get learner profile |
-| POST | `/profile/set-goal` | Set learning goal |
-| POST | `/dashboard` | Get dashboard data |
-| POST | `/goals/refine-learning-goal` | Refine goal |
-| POST | `/skills/identify-skill-gap-with-info` | Identify skill gaps |
-| POST | `/schedule-learning-path` | Schedule path |
-| POST | `/reschedule-learning-path` | Reschedule path |
-| POST | `/learning/explore-knowledge-points` | Explore knowledge |
-| POST | `/learning/tailor-knowledge-content` | Generate content |
-| POST | `/progress/session-complete` | Mark session complete |
-| POST | `/chat/chat-with-tutor` | Chat with AI tutor |
-| POST | `/assessment/generate-document-quizzes` | Generate quizzes |
-| GET | `/list-llm-models` | List LLM models |
-| GET | `/storage-info` | Storage info |
-| GET | `/health` | Health check |
+| Method | Endpoint | goal_id | Description |
+|--------|----------|---------|-------------|
+| POST | `/profile/initialize-session` | ❌ | Initialize new session |
+| POST | `/profile/get-profile` | ❌ | Get learner profile |
+| POST | `/profile/set-goal` | ❌ | Set learning goal |
+| POST | `/dashboard` | ❌ | Get dashboard data |
+| POST | `/goals/refine-learning-goal` | ❌ | Refine goal |
+| POST | `/skills/identify-skill-gap` | ❌ | Identify skill gaps |
+| POST | `/skills/identify-and-save-skill-gap` | ❌ | Identify and persist skill gaps |
+| POST | `/learning/schedule-learning-path` | ✅ | Schedule learning path |
+| POST | `/learning/reschedule-learning-path` | ✅ | Reschedule learning path |
+| POST | `/learning/explore-knowledge-points` | ✅ | Explore knowledge points |
+| POST | `/learning/tailor-knowledge-content` | ✅ | Generate tailored content |
+| POST | `/progress/session-complete` | ❌ | Mark session complete |
+| POST | `/chat/chat-with-tutor` | ✅ | Chat with AI tutor |
+| POST | `/assessment/generate-document-quizzes` | ✅ | Generate quizzes |
+| GET | `/users/list` | ❌ | List all users |
+| POST | `/users/login` | ❌ | Login user |
+| POST | `/users/delete` | ❌ | Delete user |
+| POST | `/memory/learner-memory` | ❌ | Get learner memory |
+| GET | `/list-llm-models` | ❌ | List LLM models |
+| GET | `/storage-info` | ❌ | Storage info |
+| GET | `/health` | ❌ | Health check |
 
 ---
 

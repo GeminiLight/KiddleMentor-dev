@@ -19,6 +19,7 @@ class SessionSchedulePayload(BaseModel):
 
     learner_profile: Union[str, Dict[str, Any], Mapping[str, Any]]
     session_count: int = 0
+    learning_goal: str = ""
 
 
 class LearningPathRefinementPayload(BaseModel):
@@ -35,6 +36,7 @@ class LearningPathReschedulePayload(BaseModel):
     learning_path: Sequence[Any]
     session_count: Optional[Union[int, str]] = None
     other_feedback: Optional[Union[str, Dict[str, Any], Mapping[str, Any]]] = None
+    learning_goal: str = ""
 
 
 class LearningPathScheduler(BaseAgent):
@@ -79,6 +81,7 @@ def schedule_learning_path_with_llm(
     llm: Any,
     learner_profile: Mapping[str, Any],
     session_count: int = 0,
+    learning_goal: str = "",
 ) -> JSONDict:
     """Convenience helper to create a scheduler and produce a new learning path."""
 
@@ -86,6 +89,7 @@ def schedule_learning_path_with_llm(
     payload_dict = {
         "learner_profile": learner_profile,
         "session_count": session_count,
+        "learning_goal": learning_goal,
     }
     return learning_path_scheduler.schedule_session(payload_dict)
 
@@ -96,6 +100,7 @@ def reschedule_learning_path_with_llm(
     learner_profile: Mapping[str, Any],
     session_count: Optional[int] = None,
     other_feedback: Optional[Union[str, Mapping[str, Any]]] = None,
+    learning_goal: str = "",
     *,
     system_prompt: str = learning_path_scheduler_system_prompt,
     task_prompt: str = learning_path_scheduler_task_prompt_reschedule,
@@ -108,6 +113,7 @@ def reschedule_learning_path_with_llm(
         "learning_path": learning_path,
         "session_count": session_count,
         "other_feedback": other_feedback,
+        "learning_goal": learning_goal,
     }
     return learning_path_scheduler.reschedule(payload_dict)
 

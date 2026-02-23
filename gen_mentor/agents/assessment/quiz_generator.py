@@ -34,6 +34,7 @@ def generate_document_quizzes_with_llm(
     multiple_choice_count: int = 0,
     true_false_count: int = 0,
     short_answer_count: int = 0,
+    learning_goal: str = "",
 ):
     payload = {
         "learner_profile": learner_profile,
@@ -42,6 +43,7 @@ def generate_document_quizzes_with_llm(
         "multiple_choice_count": multiple_choice_count,
         "true_false_count": true_false_count,
         "short_answer_count": short_answer_count,
+        "learning_goal": learning_goal,
     }
     gen = DocumentQuizGenerator(llm)
     return gen.generate(payload)

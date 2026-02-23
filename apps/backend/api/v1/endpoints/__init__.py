@@ -13,6 +13,7 @@ from . import (
     memory,
     dashboard,
     progress,
+    users,
 )
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "memory",
     "dashboard",
     "progress",
+    "users",
 ]

@@ -1,10 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, User, BookOpen } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bell, User, BookOpen, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useGoal } from "@/components/GoalContext";
 
 export function Topbar() {
+  const router = useRouter();
+  const { learner, resetLearner } = useGoal();
+  const userName = learner.profile?.name;
+
+  const handleLogout = () => {
+    resetLearner();
+    router.push("/login");
+  };
+
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-8">
       <div className="flex items-center gap-8">
@@ -17,17 +28,29 @@ export function Topbar() {
       </div>
 
       <div className="flex items-center gap-4">
+        {userName && (
+          <span className="text-sm text-muted-foreground hidden sm:inline">
+            {userName}
+          </span>
+        )}
         <ThemeToggle />
         <button className="relative rounded-full p-2 text-muted-foreground hover:bg-muted transition-colors">
           <Bell size={18} />
           <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-card" />
         </button>
-        <Link 
+        <Link
           href="/profile"
           className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 hover:bg-primary-200 dark:hover:bg-primary-900/80 transition-colors"
         >
           <User size={18} />
         </Link>
+        <button
+          onClick={handleLogout}
+          title="Log out"
+          className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-colors"
+        >
+          <LogOut size={18} />
+        </button>
       </div>
     </header>
   );

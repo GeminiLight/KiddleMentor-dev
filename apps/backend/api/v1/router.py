@@ -15,6 +15,7 @@ from api.v1.endpoints import (
     memory,
     dashboard,
     progress,
+    users,
 )
 
 # Create main API router
@@ -31,3 +32,4 @@ api_router.include_router(assessment.router, prefix="/assessment", tags=["Assess
 api_router.include_router(memory.router, prefix="/memory", tags=["Memory"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 api_router.include_router(progress.router, prefix="/progress", tags=["Progress"])
+api_router.include_router(users.router, prefix="/users", tags=["Users"])

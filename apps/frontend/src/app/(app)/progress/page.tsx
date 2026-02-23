@@ -1,19 +1,34 @@
 "use client";
 
-import { Target, TrendingUp, Play, Star, Zap, Trophy, CheckCircle2, Activity } from "lucide-react";
+import { Target, TrendingUp, Play, Star, Zap, Trophy, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGoal } from "@/components/GoalContext";
 
 export default function ProgressPage() {
   const router = useRouter();
-  const { currentGoal, goals, setCurrentGoalIndex } = useGoal();
+  const { currentGoal, goals, setCurrentGoalIndex, learner } = useGoal();
+
+  const name = learner.profile?.name || "Learner";
+  const totalSessions = (() => {
+    const goalId = currentGoal.goal_id;
+    const pathData = learner.learningPath[goalId];
+    const sessions = pathData?.learning_path || [];
+    return Array.isArray(sessions) ? sessions.length : 0;
+  })();
+  const completedSessions = (() => {
+    const goalId = currentGoal.goal_id;
+    const pathData = learner.learningPath[goalId];
+    const sessions = pathData?.learning_path || [];
+    if (!Array.isArray(sessions)) return 0;
+    return sessions.filter((s: Record<string, unknown>) => s.completed).length;
+  })();
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Welcome back, Alex</h1>
+          <h1 className="text-3xl font-bold text-foreground">Welcome back, {name}</h1>
           <div className="flex items-center gap-3 mt-2">
             <div className="flex items-center gap-1.5 bg-orange-500/10 text-orange-600 dark:text-orange-400 px-3 py-1 rounded-full text-sm font-bold border border-orange-500/20">
               <Zap size={14} fill="currentColor" />
@@ -43,7 +58,7 @@ export default function ProgressPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
               { label: "Goal Readiness", value: `${currentGoal.readiness}%`, icon: Target, color: "text-primary-500", bg: "bg-primary-50 dark:bg-primary-950/30" },
-              { label: "Sessions Done", value: "12", icon: Play, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
+              { label: "Sessions Done", value: `${completedSessions}/${totalSessions}`, icon: Play, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
               { label: "Current Streak", value: "3 Days", icon: TrendingUp, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/30" },
               { label: "Badges", value: "8", icon: Trophy, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/30" },
             ].map((stat, i) => (
@@ -97,7 +112,7 @@ export default function ProgressPage() {
               <div className="bg-gradient-to-br from-primary-600 to-blue-700 rounded-[2rem] p-8 md:p-10 text-white shadow-xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 group-hover:scale-125 transition-transform duration-700" />
                 <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center justify-between">
-                  <div className="flex-1">
+                  <div className="flex-1 w-full">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-bold mb-4">
                       <Star size={12} fill="currentColor" />
                       Double XP Active
@@ -106,15 +121,21 @@ export default function ProgressPage() {
                     <p className="text-primary-100 mb-8 max-w-md font-medium text-lg">
                       Continue your Python Fundamentals module. Complete this to reach Level 13!
                     </p>
-                    <button
-                      onClick={() => router.push("/session/2")}
-                      className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-black hover:bg-slate-100 transition-all flex items-center gap-3 active:scale-95 shadow-lg text-lg"
-                    >
-                      <Play size={20} fill="currentColor" />
-                      Start Session
-                    </button>
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <button
+                        onClick={() => router.push("/session/2")}
+                        className="w-full sm:w-auto relative group/btn bg-white text-primary-700 px-10 py-5 rounded-2xl font-black hover:bg-slate-50 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] text-xl overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-100/50 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 ease-in-out" />
+                        <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-primary-100 text-primary-600 group-hover/btn:scale-110 transition-transform">
+                          <Play size={16} fill="currentColor" className="ml-1" />
+                        </div>
+                        Start Session Now
+                      </button>
+                      <span className="text-primary-200 text-sm font-bold">~15 mins</span>
+                    </div>
                   </div>
-                  <div className="w-full md:w-1/3 aspect-square bg-white/10 rounded-2xl border border-white/20 backdrop-blur-sm p-6 flex flex-col justify-between relative overflow-hidden">
+                  <div className="hidden md:flex w-full md:w-1/3 aspect-square bg-white/10 rounded-2xl border border-white/20 backdrop-blur-sm p-6 flex-col justify-between relative overflow-hidden transform group-hover:rotate-2 transition-transform duration-500">
                     <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
                     <div className="relative z-10">
                       <div className="text-primary-100 text-sm font-bold uppercase tracking-wider mb-1">Session 2</div>

@@ -23,6 +23,7 @@ from models import (
 )
 from services.llm_service import get_llm_service, LLMService
 from services.memory_service import get_memory_service, MemoryService
+from services.user_registry import get_user_registry
 from repositories.learner_repository import LearnerRepository
 from dependencies import get_learner_repository
 from config import get_backend_settings, BackendSettings
@@ -123,6 +124,15 @@ async def initialize_session(
 
     # Save to repository
     repository.save_profile(learner_id, profile)
+
+    # Register in user registry
+    user_registry = get_user_registry()
+    user_registry.register_user(
+        learner_id,
+        name=name or "Anonymous Learner",
+        email=email,
+        created_at=profile["created_at"],
+    )
 
     # Log session initialization
     repository.log_interaction(

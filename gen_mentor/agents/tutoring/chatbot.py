@@ -103,6 +103,7 @@ class AITutorChatbot(BaseAgent):
 
 		input_vars = {
 			"learner_profile": data.get("learner_profile", ""),
+			"learning_goal": data.get("learning_goal", ""),
 			"messages": history_text,
 			"external_resources": external_context,
 		}
@@ -120,6 +121,7 @@ def chat_with_tutor_with_llm(
 	llm: Any,
 	messages: Optional[Sequence[Mapping[str, Any]]] | str = None,
 	learner_profile: Any = "",
+	learning_goal: str = "",
 	*,
 	search_rag_manager: Optional[SearchRagManager] = None,
 	memory_store: Optional[LearnerMemoryStore] = None,
@@ -132,6 +134,7 @@ def chat_with_tutor_with_llm(
 		llm: Language model instance
 		messages: Chat messages or message string
 		learner_profile: Learner profile information
+		learning_goal: Learning goal for context
 		search_rag_manager: Optional SearchRagManager for RAG
 		memory_store: Optional LearnerMemoryStore for context persistence
 		use_search: Whether to use web search (if search_rag_manager provided)
@@ -156,5 +159,6 @@ def chat_with_tutor_with_llm(
 		"messages": messages,
 		"use_search": use_search,
 		"top_k": top_k,
+		"learning_goal": learning_goal,
 	}
 	return agent.chat(payload)

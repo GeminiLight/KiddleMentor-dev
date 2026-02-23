@@ -32,6 +32,9 @@ SESSION_KNOWLEDGE_OUTPUT_FORMAT
 goal_oriented_knowledge_explorer_task_prompt = """
 Explore the essential knowledge points for the given learning session, tailored to the learner's profile.
 
+**Learning Goal**:
+{learning_goal}
+
 **Learner Profile**:
 {learner_profile}
 

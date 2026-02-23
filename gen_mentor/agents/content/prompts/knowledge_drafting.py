@@ -30,6 +30,9 @@ Do NOT include any other text or markdown tags (e.g., ```json) around the final 
 search_enhanced_knowledge_drafter_task_prompt = """
 Draft detailed markdown content for the selected knowledge point using the provided resources.
 
+**Learning Goal**:
+{learning_goal}
+
 **Learner Profile**:
 {learner_profile}
 

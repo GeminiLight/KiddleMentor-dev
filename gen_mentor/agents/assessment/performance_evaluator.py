@@ -17,6 +17,7 @@ def evaluate_learner_performance_with_llm(
     session_data: Dict[str, Any],
     quiz_results: Optional[Dict[str, Any]] = None,
     task_prompt: Optional[str] = None,
+    learning_goal: str = "",
 ) -> Dict[str, Any]:
     """Evaluate learner performance based on profile, path, and quiz results.
 
@@ -52,6 +53,7 @@ def evaluate_learner_performance_with_llm(
         "learning_path": learning_path,
         "session_data": session_data,
         "quiz_results": quiz_results or {},
+        "learning_goal": learning_goal,
     }
 
     # Invoke agent
@@ -110,6 +112,7 @@ def generate_performance_report_with_llm(
     learner_profile: Dict[str, Any],
     performance_history: list[Dict[str, Any]],
     time_period: str = "current session",
+    learning_goal: str = "",
 ) -> str:
     """Generate a comprehensive performance report.
 
@@ -137,6 +140,7 @@ def generate_performance_report_with_llm(
         "learner_profile": learner_profile,
         "performance_history": performance_history,
         "time_period": time_period,
+        "learning_goal": learning_goal,
     }
 
     result = agent.invoke(

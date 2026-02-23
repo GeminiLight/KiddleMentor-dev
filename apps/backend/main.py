@@ -83,6 +83,12 @@ async def startup_event():
         os.makedirs(backend_settings.expanded_workspace_dir, exist_ok=True)
         print(f"  ✓ Workspace directory ready: {backend_settings.workspace_dir}")
 
+    # Sync user registry from existing learner profiles
+    from services.user_registry import get_user_registry
+    registry = get_user_registry()
+    synced = registry.sync_from_disk()
+    print(f"  ✓ User registry synced: {synced} users found")
+
     print("="*60 + "\n")
 
 

@@ -14,6 +14,9 @@ ai_tutor_chatbot_task_prompt = (
 	"""
 You are the AI Tutor. Use the following information to provide a concise, helpful, and supportive reply.
 
+Learning Goal:
+{learning_goal}
+
 Learner Profile:
 {learner_profile}
 

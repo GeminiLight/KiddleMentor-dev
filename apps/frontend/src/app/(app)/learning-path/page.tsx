@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Play, CheckCircle2, Clock, Calendar, MoreVertical, Lock, RefreshCw, Award, Sparkles, X, Check, Target, AlertCircle } from "lucide-react";
+import { Play, CheckCircle2, Clock, Calendar, MoreVertical, Lock, RefreshCw, Award, Sparkles, X, Check, Target, AlertCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useGoal } from "@/components/GoalContext";
+import { api, getStoredLearnerId } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function LearningPathPage() {
   const router = useRouter();
+  const { currentGoal, learner, refresh } = useGoal();
   const [sessions, setSessions] = useState<Record<string, unknown>[]>([]);
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
@@ -15,6 +19,8 @@ export default function LearningPathPage() {
   const [activeTooltip, setActiveTooltip] = useState<string | number | null>(null);
   const [skills, setSkills] = useState<Record<string, unknown>[]>([]);
   const [showSkillGap, setShowSkillGap] = useState(false);
+  const [generatingSessionId, setGeneratingSessionId] = useState<number | null>(null);
+  const [rescheduledRawPath, setRescheduledRawPath] = useState<Record<string, unknown> | null>(null);
 
   // Close tooltip when clicking outside
   useEffect(() => {
@@ -23,25 +29,46 @@ export default function LearningPathPage() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
+  // Helper: extract session array from potentially double-nested learning_path
+  const extractSessions = (raw: unknown): Record<string, unknown>[] => {
+    if (Array.isArray(raw)) return raw;
+    if (raw && typeof raw === "object" && Array.isArray((raw as Record<string, unknown>).learning_path))
+      return (raw as Record<string, unknown>).learning_path as Record<string, unknown>[];
+    return [];
+  };
+
+  // Helper: map raw sessions to UI format, marking new ones if oldIds is provided
+  const mapSessions = (
+    pathSessions: Record<string, unknown>[],
+    oldIds?: Set<string>
+  ): Record<string, unknown>[] =>
+    pathSessions.map((s: Record<string, unknown>, idx: number) => ({
+      id: idx + 1,
+      title: s.session_title || s.title || `Session ${idx + 1}`,
+      description: s.abstract || "",
+      duration: s.estimated_duration || "45 min",
+      status: (s.completed || s.if_learned)
+        ? "completed"
+        : (idx === 0 || (idx > 0 && (pathSessions[idx - 1]?.completed || pathSessions[idx - 1]?.if_learned)))
+          ? "in-progress"
+          : "locked",
+      week: Math.floor(idx / 3) + 1,
+      isMilestone: (idx + 1) % 3 === 0,
+      skills: s.associated_skills || [],
+      isNew: oldIds ? !oldIds.has(String(s.id || s.title || idx)) : false,
+      data: s,
+    }));
+
+  // Load learning path and skill gaps from context
   useEffect(() => {
-    const pathData = JSON.parse(localStorage.getItem('learning_path') || '[]');
-    
-    // Map backend learning path to sessions
-    // pathData is likely an array of session objects
-    if (pathData && Array.isArray(pathData) && pathData.length > 0) {
-      const mappedSessions = pathData.map((s: Record<string, unknown>, idx: number) => ({
-        id: idx + 1,
-        title: s.session_title || s.title || `Session ${idx + 1}`,
-        duration: s.estimated_duration || "45 min",
-        status: idx === 0 ? "in-progress" : (idx < 2 ? "completed" : "locked"), // Mocking status for demo
-        week: Math.floor(idx / 3) + 1,
-        isMilestone: (idx + 1) % 3 === 0, // Every 3rd session is a milestone
-        data: s
-      }));
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSessions(mappedSessions);
+    const goalId = currentGoal.goal_id;
+
+    const pathData = learner.learningPath[goalId];
+    const pathSessions = extractSessions(pathData?.learning_path);
+
+    if (pathSessions.length > 0) {
+      setSessions(mapSessions(pathSessions));
     } else {
-      // Fallback mock sessions if no data found
       setSessions([
         { id: 1, title: "Introduction to Python Syntax", duration: "45 min", status: "completed", week: 1, isMilestone: false },
         { id: 2, title: "Variables and Data Types", duration: "60 min", status: "in-progress", week: 1, isMilestone: false },
@@ -49,16 +76,33 @@ export default function LearningPathPage() {
       ]);
     }
 
-    const skillGapData = JSON.parse(localStorage.getItem('skill_gap') || '{}');
-    const mappedSkills = Object.entries(skillGapData).map(([name, info]) => {
-      const infoRecord = info as Record<string, unknown>;
-      return {
-        name,
-        current: (infoRecord.current_level as number) || 20,
-        target: (infoRecord.target_level as number) || 80,
-        priority: (infoRecord.priority as string) || "Normal",
-      };
-    });
+    // Skill gaps — handle double-nested structure and array format
+    const skillGapRaw = learner.skillGaps[goalId]?.skill_gaps;
+    const skillGapArr: Record<string, unknown>[] = Array.isArray(skillGapRaw)
+      ? skillGapRaw
+      : Array.isArray(skillGapRaw?.skill_gaps)
+        ? skillGapRaw.skill_gaps
+        : [];
+
+    // Convert level strings to numeric percentages
+    const levelToNumber = (level: unknown): number => {
+      const map: Record<string, number> = { unlearned: 0, beginner: 25, intermediate: 50, advanced: 75, expert: 100 };
+      return map[String(level).toLowerCase()] ?? 0;
+    };
+
+    const mappedSkills = skillGapArr
+      .filter((gap: Record<string, unknown>) => gap.is_gap !== false)
+      .map((gap: Record<string, unknown>) => ({
+        name: gap.name as string || "Unknown Skill",
+        current: levelToNumber(gap.current_level),
+        target: levelToNumber(gap.required_level),
+        priority: gap.required_level === "advanced"
+          ? "Critical"
+          : gap.required_level === "intermediate"
+            ? "Important"
+            : "Normal",
+        reason: gap.reason as string || "",
+      }));
 
     setSkills(mappedSkills.length > 0 ? mappedSkills : [
       { name: "Python Fundamentals", current: 35, target: 80, priority: "Critical" },
@@ -67,41 +111,100 @@ export default function LearningPathPage() {
       { name: "Algorithms", current: 15, target: 70, priority: "Important" },
       { name: "System Design", current: 10, target: 60, priority: "Normal" },
     ]);
-  }, []);
+  }, [currentGoal.goal_id, learner.learningPath, learner.skillGaps]);
 
-  const handleReschedule = () => {
+  const handleReschedule = async () => {
+    const learnerId = getStoredLearnerId();
+    if (!learnerId) return;
+
     setIsRescheduling(true);
     setOriginalSessions([...sessions]);
-    // Simulate API call for rescheduling
-    setTimeout(() => {
-      setSessions(prev => {
-        const newSessions = [...prev];
-        // Add a new session to simulate dynamic adaptation
-        newSessions.splice(2, 0, {
-          id: Date.now(),
-          title: "Deep Dive: Python Data Structures",
-          duration: "30 min",
-          status: "locked",
-          week: 1,
-          isNew: true,
-          isMilestone: false,
-          data: {}
-        });
-        return newSessions;
+
+    try {
+      const goalId = currentGoal.goal_id;
+      const pathData = learner.learningPath[goalId];
+      const currentRawPath = pathData?.learning_path;
+      // Unwrap nested structure: send the sessions array, not the wrapper object
+      const sessionsArray = extractSessions(currentRawPath);
+
+      const result = await api.rescheduleLearningPath({
+        learner_profile: { learner_id: learnerId },
+        learning_path: sessionsArray,
+        session_count: -1,
+        goal_id: currentGoal.goal_id,
       });
-      setIsRescheduling(false);
+
+      // Build a set of old session IDs for "isNew" detection
+      const oldIds = new Set(sessions.map((s) => String(s.data && (s.data as Record<string, unknown>).id || s.data && (s.data as Record<string, unknown>).title || s.id)));
+      const newRawSessions = extractSessions(result.learning_path);
+      const newMapped = mapSessions(newRawSessions, oldIds);
+
+      setRescheduledRawPath(result.learning_path as Record<string, unknown>);
+      setSessions(newMapped);
       setHasPendingChanges(true);
-    }, 1500);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to reschedule";
+      toast.error(message);
+      console.error("[Reschedule]", err);
+    } finally {
+      setIsRescheduling(false);
+    }
   };
 
-  const handleAccept = () => {
-    setSessions(prev => prev.map(s => ({ ...s, isNew: false })));
+  const handleAccept = async () => {
+    // The backend already persisted the rescheduled path during the API call.
+    // Refresh context so all pages see the updated data.
+    setSessions((prev) => prev.map((s) => ({ ...s, isNew: false })));
     setHasPendingChanges(false);
+    setRescheduledRawPath(null);
+    await refresh();
+    toast.success("Learning path updated");
   };
 
   const handleReject = () => {
+    // Revert to the original sessions locally.
+    // Note: backend already persisted the new path, so we re-save the original.
     setSessions(originalSessions);
     setHasPendingChanges(false);
+    setRescheduledRawPath(null);
+  };
+
+  const handleStartSession = async (session: Record<string, unknown>) => {
+    const learnerId = getStoredLearnerId();
+    if (!learnerId) return;
+
+    const sessionId = session.id as number;
+    setGeneratingSessionId(sessionId);
+
+    try {
+      const goalId = currentGoal.goal_id;
+      const pathData = learner.learningPath[goalId];
+      const rawPath = pathData?.learning_path;
+      // Unwrap nested structure: send the sessions array
+      const sessionsArray = extractSessions(rawPath);
+
+      const result = await api.generateTailoredContent({
+        learner_profile: { learner_id: learnerId },
+        learning_path: sessionsArray,
+        learning_session: (session.data as Record<string, unknown>) || {},
+        with_quiz: true,
+        use_search: true,
+        allow_parallel: true,
+        goal_id: currentGoal.goal_id,
+      });
+
+      // Store generated content for the session page to pick up
+      localStorage.setItem("current_session", JSON.stringify(session.data));
+      localStorage.setItem("current_session_content", JSON.stringify(result.tailored_content));
+
+      router.push(`/session/${sessionId}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to generate content";
+      toast.error(message);
+      console.error("[GenerateContent]", err);
+    } finally {
+      setGeneratingSessionId(null);
+    }
   };
 
   const radarData = skills.map(s => ({
@@ -129,13 +232,23 @@ export default function LearningPathPage() {
             <Target size={16} />
             {showSkillGap ? "Hide Skills" : "View Skills"}
           </button>
-          <button
-            onClick={() => router.push("/session/2")}
-            className="flex items-center gap-2 bg-primary-500 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-primary-600 transition-colors shadow-sm"
-          >
-            <Play size={18} fill="currentColor" />
-            Continue Session
-          </button>
+          {(() => {
+            const nextSession = sessions.find((s) => s.status === "in-progress");
+            return nextSession ? (
+              <button
+                onClick={() => handleStartSession(nextSession)}
+                disabled={generatingSessionId !== null}
+                className="flex items-center gap-2 bg-primary-500 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-primary-600 transition-colors shadow-sm disabled:opacity-50"
+              >
+                {generatingSessionId === nextSession.id ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Play size={18} fill="currentColor" />
+                )}
+                {generatingSessionId === nextSession.id ? "Generating..." : "Continue Session"}
+              </button>
+            ) : null;
+          })()}
           <button
             onClick={handleReschedule}
             disabled={isRescheduling}
@@ -443,13 +556,18 @@ export default function LearningPathPage() {
                         
                         {session.status === "in-progress" && (
                           <button
-                            onClick={() => {
-                              localStorage.setItem('current_session', JSON.stringify(session.data));
-                              router.push(`/session/${session.id}`);
-                            }}
-                            className="mt-4 w-full py-2 bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-lg font-medium hover:bg-primary-500/20 transition-colors relative z-10"
+                            onClick={() => handleStartSession(session)}
+                            disabled={generatingSessionId !== null}
+                            className="mt-4 w-full py-2 bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-lg font-medium hover:bg-primary-500/20 transition-colors relative z-10 disabled:opacity-50 flex items-center justify-center gap-2"
                           >
-                            Start Learning
+                            {generatingSessionId === session.id ? (
+                              <>
+                                <Loader2 size={16} className="animate-spin" />
+                                Generating Content...
+                              </>
+                            ) : (
+                              "Start Learning"
+                            )}
                           </button>
                         )}
                       </div>

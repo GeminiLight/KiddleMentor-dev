@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import json
 from typing import Any, Mapping, Optional, List
 from concurrent.futures import ThreadPoolExecutor
 
@@ -23,6 +24,7 @@ class KnowledgeDraftPayload(BaseModel):
     knowledge_points: Any
     knowledge_point: Any
     external_resources: str | None = ""
+    learning_goal: str = ""
 
     @field_validator("learner_profile", "learning_path", "learning_session", "knowledge_points", "knowledge_point")
     @classmethod
@@ -42,7 +44,12 @@ class SearchEnhancedKnowledgeDrafter(BaseAgent):
 
     def __init__(self, model: Any, *, search_rag_manager: Optional[SearchRagManager] = None, use_search: bool = True):
         super().__init__(model=model, system_prompt=search_enhanced_knowledge_drafter_system_prompt, jsonalize_output=True)
-        self.search_rag_manager = search_rag_manager or SearchRagManager.from_config(default_config)
+        if search_rag_manager is not None:
+            self.search_rag_manager = search_rag_manager
+        elif use_search:
+            self.search_rag_manager = SearchRagManager.from_config(default_config.model_dump() if hasattr(default_config, 'model_dump') else default_config)
+        else:
+            self.search_rag_manager = None
         self.use_search = use_search
 
     def draft(self, payload: KnowledgeDraftPayload | Mapping[str, Any] | str):
@@ -73,6 +80,7 @@ def draft_knowledge_point_with_llm(
     knowledge_points,
     knowledge_point,
     use_search: bool = True,
+    learning_goal: str = "",
     *,
     search_rag_manager: Optional[SearchRagManager] = None,
 ):
@@ -84,6 +92,7 @@ def draft_knowledge_point_with_llm(
         "learning_session": learning_session,
         "knowledge_points": knowledge_points,
         "knowledge_point": knowledge_point,
+        "learning_goal": learning_goal,
     }
     return drafter.draft(payload)
 
@@ -97,16 +106,23 @@ def draft_knowledge_points_with_llm(
     allow_parallel: bool = True,
     use_search: bool = True,
     max_workers: int = 8,
+    learning_goal: str = "",
     *,
     search_rag_manager: Optional[SearchRagManager] = None,
 ):
     """Draft multiple knowledge points in parallel or sequentially using the agent."""
     if isinstance(learning_session, str):
-        learning_session = ast.literal_eval(learning_session)
+        try:
+            learning_session = json.loads(learning_session)
+        except (json.JSONDecodeError, ValueError):
+            learning_session = ast.literal_eval(learning_session)
     if isinstance(knowledge_points, str):
-        knowledge_points = ast.literal_eval(knowledge_points)
+        try:
+            knowledge_points = json.loads(knowledge_points)
+        except (json.JSONDecodeError, ValueError):
+            knowledge_points = ast.literal_eval(knowledge_points)
     if search_rag_manager is None and use_search:
-        search_rag_manager = SearchRagManager.from_config(default_config)
+        search_rag_manager = SearchRagManager.from_config(default_config.model_dump() if hasattr(default_config, 'model_dump') else default_config)
     def draft_one(kp):
         return draft_knowledge_point_with_llm(
             llm,
@@ -116,6 +132,7 @@ def draft_knowledge_points_with_llm(
             knowledge_points,
             kp,
             use_search=use_search,
+            learning_goal=learning_goal,
             search_rag_manager=search_rag_manager,
         )
 

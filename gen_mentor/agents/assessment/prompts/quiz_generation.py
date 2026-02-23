@@ -55,6 +55,9 @@ Do NOT include any other text or markdown tags (e.g., ```json) around the final 
 document_quiz_generator_task_prompt = """
 Generate an interactive quiz based on the provided document and learner profile.
 
+**Learning Goal**:
+{learning_goal}
+
 **Learner Profile**:
 {learner_profile}
 

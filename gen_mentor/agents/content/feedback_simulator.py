@@ -16,11 +16,13 @@ from gen_mentor.schemas import LearnerFeedback
 class LearningPathFeedbackPayload(BaseModel):
     learner_profile: Any = Field(default_factory=dict)
     learning_path: Any
+    learning_goal: str = ""
 
 
 class LearningContentFeedbackPayload(BaseModel):
     learner_profile: Any = Field(default_factory=dict)
     learning_content: Any
+    learning_goal: str = ""
 
     @field_validator("learner_profile", "learning_content")
     @classmethod

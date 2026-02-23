@@ -20,6 +20,7 @@ class TutorChatPayload(BaseModel):
     use_search: bool = Field(default=True, description="Whether to use web search for context")
     top_k: int = Field(default=5, description="Number of documents to retrieve")
     external_resources: Optional[str] = Field(default=None, description="Additional external resources")
+    learning_goal: str = Field(default="", description="Learning goal for context")
 
     @field_validator("learner_profile")
     @classmethod

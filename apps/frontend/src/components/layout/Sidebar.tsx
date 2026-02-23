@@ -9,7 +9,7 @@ import {
   Home,
   Map,
   BookOpen,
-  Settings,
+  User,
   Target,
   ChevronLeft,
   ChevronRight,
@@ -23,7 +23,7 @@ const navItems = [
   { name: "Home", href: "/progress", icon: Home },
   { name: "Roadmap", href: "/learning-path", icon: Map },
   { name: "Library", href: "/library", icon: BookOpen },
-  { name: "Settings", href: "/profile", icon: Settings },
+  { name: "Profile", href: "/profile", icon: User },
 ];
 
 export function Sidebar() {

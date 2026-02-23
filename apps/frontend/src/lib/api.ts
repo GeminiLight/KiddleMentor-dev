@@ -183,6 +183,24 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  /**
+   * Identify skill gaps and persist to learner memory (keyed by active goal).
+   */
+  identifyAndSaveSkillGap: (data: {
+    learner_id: string;
+    learning_goal: string;
+    learner_information?: string;
+  } & BaseRequest) =>
+    fetchApi<{
+      success: boolean;
+      skill_requirements: any;
+      skill_gaps: any;
+      learning_goal: string;
+    }>('/skills/identify-and-save-skill-gap', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   // ------------------------------------------------------------------------
   // Learning Path
   // ------------------------------------------------------------------------
@@ -194,6 +212,7 @@ export const api = {
   scheduleLearningPath: (data: {
     learner_profile: string | Record<string, any>;
     session_count: number;
+    goal_id?: string;
   } & BaseRequest) =>
     fetchApi<{
       success: boolean;
@@ -217,6 +236,7 @@ export const api = {
     learning_path: string | Record<string, any>;
     session_count: number;
     other_feedback?: string | Record<string, any>;
+    goal_id?: string;
   } & BaseRequest) =>
     fetchApi<{
       success: boolean;
@@ -246,6 +266,7 @@ export const api = {
     learner_profile: string | Record<string, any>;
     learning_path: string | Record<string, any>;
     learning_session: string | Record<string, any>;
+    goal_id?: string;
   } & BaseRequest) =>
     fetchApi<{
       success: boolean;
@@ -271,6 +292,7 @@ export const api = {
     with_quiz?: boolean;
     use_search?: boolean;
     allow_parallel?: boolean;
+    goal_id?: string;
   } & BaseRequest) =>
     fetchApi<{
       success: boolean;
@@ -326,6 +348,7 @@ export const api = {
   chatWithTutor: (data: {
     messages: string | Array<{ role: string; content: string }>;
     learner_profile?: string | Record<string, any>;
+    goal_id?: string;
   } & BaseRequest) =>
     fetchApi<{ success: boolean; response: string }>('/chat/chat-with-tutor', {
       method: 'POST',
@@ -350,6 +373,7 @@ export const api = {
   generateDocumentQuizzes: (data: {
     learning_document: string | Record<string, any>;
     quiz_count?: number;
+    goal_id?: string;
   } & BaseRequest) =>
     fetchApi<{
       success: boolean;
@@ -362,6 +386,46 @@ export const api = {
           ? data.learning_document
           : JSON.stringify(data.learning_document),
       }),
+    }),
+
+  // ------------------------------------------------------------------------
+  // Users
+  // ------------------------------------------------------------------------
+
+  /**
+   * List all registered users.
+   */
+  listUsers: () =>
+    fetchApi<{
+      success: boolean;
+      users: Array<{ learner_id: string; name: string; email?: string; created_at?: string }>;
+      count: number;
+    }>('/users/list'),
+
+  /**
+   * Login as an existing user by learner_id.
+   */
+  loginUser: (learnerId: string) =>
+    fetchApi<{
+      success: boolean;
+      learner_id: string;
+      name: string;
+      email?: string;
+    }>('/users/login', {
+      method: 'POST',
+      body: JSON.stringify({ learner_id: learnerId }),
+    }),
+
+  /**
+   * Delete a user account and all associated data.
+   */
+  deleteUser: (learnerId: string) =>
+    fetchApi<{
+      success: boolean;
+      message: string;
+    }>('/users/delete', {
+      method: 'POST',
+      body: JSON.stringify({ learner_id: learnerId }),
     }),
 
   // ------------------------------------------------------------------------
@@ -393,6 +457,29 @@ export const api = {
       version: string;
       memory_enabled: boolean;
     }>('/health'),
+
+  // ------------------------------------------------------------------------
+  // Memory
+  // ------------------------------------------------------------------------
+
+  /**
+   * Get full learner memory (profile, goals, skill_gaps, learning_path, mastery).
+   */
+  getLearnerMemory: (learnerId: string) =>
+    fetchApi<{
+      success: boolean;
+      learner_id: string;
+      profile: Record<string, any>;
+      learning_goals: Record<string, any>;
+      skill_gaps: Record<string, any>;
+      mastery: Record<string, any>;
+      learning_path: Record<string, any>;
+      context: string;
+      recent_history: string;
+    }>('/memory/learner-memory', {
+      method: 'POST',
+      body: JSON.stringify({ learner_id: learnerId }),
+    }),
 };
 
 // ============================================================================

@@ -54,6 +54,7 @@ Simulate the learner's response to the provided `learning_path`, assessing it ba
 Your feedback should focus on the three key criteria below.
 
 **Provided Details**:
+* **Learning Goal**: {learning_goal}
 * **Learner Profile**: {learner_profile}
 * **Learning Path**: {learning_path}
 
@@ -77,6 +78,7 @@ Simulate the learner's response to the provided `learning_content`, assessing it
 Your feedback should focus on the three key criteria below.
 
 **Provided Details**:
+* **Learning Goal**: {learning_goal}
 * **Learner Profile**: {learner_profile}
 * **Learning Content**: {learning_content}
 

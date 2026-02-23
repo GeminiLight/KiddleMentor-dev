@@ -16,6 +16,7 @@ class KnowledgeExplorePayload(BaseModel):
     learner_profile: Any
     learning_path: Any
     learning_session: Any
+    learning_goal: str = ""
 
 class GoalOrientedKnowledgeExplorer(BaseAgent):
     name: str = "GoalOrientedKnowledgeExplorer"
@@ -31,7 +32,7 @@ class GoalOrientedKnowledgeExplorer(BaseAgent):
         return validated_output.model_dump()
 
 
-def explore_knowledge_points_with_llm(llm, learner_profile, learning_path, learning_session):
+def explore_knowledge_points_with_llm(llm, learner_profile, learning_path, learning_session, learning_goal=""):
     """Convenience wrapper to explore knowledge points for a session using the agent.
 
     Mirrors the selected helper signature and behavior.
@@ -40,6 +41,7 @@ def explore_knowledge_points_with_llm(llm, learner_profile, learning_path, learn
         "learner_profile": learner_profile,
         "learning_path": learning_path,
         "learning_session": learning_session,
+        "learning_goal": learning_goal,
     }
     explorer = GoalOrientedKnowledgeExplorer(llm)
     return explorer.explore(input_dict)

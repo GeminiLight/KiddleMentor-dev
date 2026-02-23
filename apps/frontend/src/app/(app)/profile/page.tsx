@@ -1,118 +1,251 @@
 "use client";
 
-import { User, Mail, Shield, Bell, LogOut, Settings, Award, Clock, Flame } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { User, Shield, Bell, AlertTriangle, Globe, Mic, FileText, Sliders, Settings, Palette, Loader2 } from "lucide-react";
+import { api, getStoredLearnerId } from "@/lib/api";
+import { useGoal } from "@/components/GoalContext";
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { resetLearner } = useGoal();
+  const [activeTab, setActiveTab] = useState("information");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const tabs = [
+    { id: "information", label: "Information", icon: User },
+    { id: "preferences", label: "Preferences", icon: Sliders },
+    { id: "settings", label: "Settings", icon: Settings },
+  ];
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Profile</h1>
-        <p className="mt-2 text-muted-foreground">Manage your account settings and view your achievements.</p>
+        <h1 className="text-3xl font-bold text-foreground">Profile & Settings</h1>
+        <p className="mt-2 text-muted-foreground">Manage your personal information, preferences, and account settings.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Profile Card & Stats */}
-        <div className="lg:col-span-1 space-y-8">
-          <div className="bg-card rounded-2xl shadow-sm border border-border p-8 text-center">
-            <div className="relative inline-block mb-4">
-              <div className="w-24 h-24 rounded-full bg-primary-50 dark:bg-primary-950/30 flex items-center justify-center text-primary-600 dark:text-primary-400">
-                <User size={48} />
-              </div>
-              <button className="absolute bottom-0 right-0 p-1.5 bg-card rounded-full border border-border text-muted-foreground hover:text-primary-600 dark:hover:text-primary-400 transition-colors shadow-sm">
-                <Settings size={14} />
-              </button>
-            </div>
-            <h2 className="text-xl font-bold text-foreground">Alex Johnson</h2>
-            <p className="text-sm text-muted-foreground mb-6">Learning Data Science</p>
-            
-            <div className="flex justify-center gap-4 py-4 border-t border-border">
-              <div className="text-center">
-                <p className="text-lg font-bold text-foreground">12</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Sessions</p>
-              </div>
-              <div className="w-px h-8 bg-border self-center" />
-              <div className="text-center">
-                <p className="text-lg font-bold text-foreground">3d</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Streak</p>
-              </div>
-              <div className="w-px h-8 bg-border self-center" />
-              <div className="text-center">
-                <p className="text-lg font-bold text-foreground">4</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Badges</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-card rounded-2xl shadow-sm border border-border p-6">
-            <h3 className="font-bold text-foreground mb-4">Quick Stats</h3>
-            <div className="space-y-4">
-              {[
-                { label: "Total Learning Time", value: "24.5 Hours", icon: Clock, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
-                { label: "Longest Streak", value: "7 Days", icon: Flame, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/30" },
-                { label: "Skills in Progress", value: "6 Skills", icon: Award, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/30" },
-              ].map((stat, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", stat.bg, stat.color)}>
-                    <stat.icon size={16} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{stat.label}</p>
-                    <p className="text-sm font-bold text-foreground">{stat.value}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* Sidebar Navigation */}
+        <div className="w-full md:w-64 shrink-0 space-y-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
+                activeTab === tab.id
+                  ? "bg-primary-50 dark:bg-primary-950/30 text-primary-600 dark:text-primary-400"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <tab.icon size={18} />
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Settings */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
-            <div className="p-6 border-b border-border">
-              <h3 className="font-bold text-foreground">Account Settings</h3>
-            </div>
-            <div className="divide-y divide-border">
-              {[
-                { label: "Email Address", value: "alex.j@example.com", icon: Mail },
-                { label: "Password", value: "••••••••••••", icon: Shield },
-                { label: "Notifications", value: "Enabled", icon: Bell },
-              ].map((item, i) => (
-                <button key={i} className="w-full flex items-center justify-between p-6 hover:bg-muted/50 transition-colors text-left group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-muted/50 text-muted-foreground group-hover:text-primary-600 dark:group-hover:text-primary-400 group-hover:bg-primary-50 dark:group-hover:bg-primary-950/30 transition-colors flex items-center justify-center">
-                      <item.icon size={20} />
+        {/* Main Content Area */}
+        <div className="flex-1 space-y-8">
+          {activeTab === "information" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
+                <h3 className="text-xl font-bold text-foreground mb-6">User Information</h3>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-6">
+                    <div className="w-20 h-20 rounded-full bg-primary-50 dark:bg-primary-950/30 flex items-center justify-center text-primary-600 dark:text-primary-400">
+                      <User size={32} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">{item.label}</p>
-                      <p className="text-sm text-muted-foreground">{item.value}</p>
+                      <button className="bg-background border border-border text-foreground px-4 py-2 rounded-xl text-sm font-semibold hover:bg-muted transition-colors">
+                        Change Avatar
+                      </button>
                     </div>
                   </div>
-                  <span className="text-xs font-semibold text-primary-600 dark:text-primary-400 opacity-0 group-hover:opacity-100 transition-opacity">Edit</span>
-                </button>
-              ))}
-            </div>
-          </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-foreground">First Name</label>
+                      <input type="text" defaultValue="Alex" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-foreground">Last Name</label>
+                      <input type="text" defaultValue="Johnson" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                    </div>
+                  </div>
 
-          <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
-            <div className="p-6 border-b border-border">
-              <h3 className="font-bold text-foreground">Danger Zone</h3>
-            </div>
-            <div className="p-6 space-y-4">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Once you delete your account, there is no going back. Please be certain.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl border border-border text-muted-foreground font-semibold hover:bg-muted/50 transition-colors">
-                  <LogOut size={18} />
-                  Log Out
-                </button>
-                <button className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 font-semibold hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors">
-                  Delete Account
-                </button>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-foreground">Bio</label>
+                    <textarea defaultValue="Passionate about turning raw data into actionable insights." className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 min-h-[100px] resize-none" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
+                <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
+                  <FileText size={20} className="text-primary-500" />
+                  Context Connector
+                </h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Upload your latest resume or context document to help GenMentor better understand your background and adjust your learning path.
+                </p>
+                <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center hover:bg-muted/30 transition-colors cursor-pointer">
+                  <FileText size={32} className="mx-auto text-muted-foreground mb-4" />
+                  <p className="font-semibold text-foreground">Click to upload or drag and drop</p>
+                  <p className="text-sm text-muted-foreground mt-1">PDF, DOCX up to 5MB</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {activeTab === "preferences" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
+                <h3 className="text-xl font-bold text-foreground mb-6">App Preferences</h3>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <Palette size={16} className="text-primary-500" />
+                      Theme Style
+                    </label>
+                    <select className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500">
+                      <option>System Default</option>
+                      <option>Light Mode</option>
+                      <option>Dark Mode</option>
+                    </select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <Mic size={16} className="text-primary-500" />
+                      AI Tutor Voice & Personality
+                    </label>
+                    <select className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500">
+                      <option>Professional & Encouraging (Default)</option>
+                      <option>Strict & Direct</option>
+                      <option>Socratic (Asks more questions)</option>
+                    </select>
+                    <p className="text-xs text-muted-foreground mt-1">Choose how your AI Tutor interacts with you during sessions.</p>
+                  </div>
+
+                  <div className="space-y-2 pt-4 border-t border-border">
+                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <Bell size={16} className="text-primary-500" />
+                      Notifications & Behaviors
+                    </label>
+                    <div className="space-y-3 mt-3">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-4 h-4 text-primary-500 rounded border-border focus:ring-primary-500" />
+                        <span className="text-sm text-foreground">Daily Learning Reminders</span>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-4 h-4 text-primary-500 rounded border-border focus:ring-primary-500" />
+                        <span className="text-sm text-foreground">Weekly Progress Reports</span>
+                      </label>
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-4 h-4 text-primary-500 rounded border-border focus:ring-primary-500" />
+                        <span className="text-sm text-foreground">Auto-play next session</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "settings" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
+                <h3 className="text-xl font-bold text-foreground mb-6">Account Settings</h3>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <Globe size={16} className="text-primary-500" />
+                      Language
+                    </label>
+                    <select className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500">
+                      <option>English (US)</option>
+                      <option>中文 (简体)</option>
+                      <option>Español</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2 pt-4 border-t border-border">
+                    <label className="text-sm font-semibold text-foreground">Email Address</label>
+                    <div className="flex gap-4">
+                      <input type="email" defaultValue="alex.j@example.com" disabled className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-muted-foreground cursor-not-allowed" />
+                      <button className="shrink-0 bg-background border border-border text-foreground px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-muted transition-colors">
+                        Change
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-foreground">Password</label>
+                    <div className="flex gap-4">
+                      <input type="password" defaultValue="••••••••••••" disabled className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-muted-foreground cursor-not-allowed" />
+                      <button className="shrink-0 bg-background border border-border text-foreground px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-muted transition-colors">
+                        Update
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-red-50 dark:bg-red-950/10 rounded-2xl border border-red-200 dark:border-red-900/30 p-8">
+                <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">
+                  <AlertTriangle size={20} />
+                  Danger Zone
+                </h3>
+                <p className="text-sm text-red-600/80 dark:text-red-400/80 mb-6">
+                  Once you delete your account, there is no going back. All your progress, goals, and data will be permanently erased.
+                </p>
+                {deleteError && (
+                  <p className="text-sm text-red-600 mb-4">{deleteError}</p>
+                )}
+                {!showConfirm ? (
+                  <button
+                    onClick={() => setShowConfirm(true)}
+                    className="bg-red-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-red-700 transition-colors shadow-sm"
+                  >
+                    Delete Account
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={async () => {
+                        const learnerId = getStoredLearnerId();
+                        if (!learnerId) return;
+                        setIsDeleting(true);
+                        setDeleteError(null);
+                        try {
+                          await api.deleteUser(learnerId);
+                          resetLearner();
+                          router.push("/login");
+                        } catch (err: unknown) {
+                          const message = err instanceof Error ? err.message : "Delete failed";
+                          setDeleteError(message);
+                          setIsDeleting(false);
+                        }
+                      }}
+                      disabled={isDeleting}
+                      className="bg-red-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {isDeleting && <Loader2 size={16} className="animate-spin" />}
+                      Yes, delete my account
+                    </button>
+                    <button
+                      onClick={() => setShowConfirm(false)}
+                      disabled={isDeleting}
+                      className="bg-background border border-border text-foreground px-6 py-2.5 rounded-xl font-semibold hover:bg-muted transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

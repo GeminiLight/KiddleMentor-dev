@@ -134,6 +134,7 @@ class ChatWithTutorRequest(BaseRequest):
         default="",
         description="JSON string of learner profile"
     )
+    goal_id: Optional[str] = Field(default=None, description="Goal ID to resolve learning goal from")
 
     @field_validator("messages")
     @classmethod
@@ -219,6 +220,7 @@ class LearningPathSchedulingRequest(BaseRequest):
         gt=0,
         le=100
     )
+    goal_id: Optional[str] = Field(default=None, description="Goal ID to resolve learning goal from")
 
 
 class LearningPathReschedulingRequest(BaseRequest):
@@ -234,6 +236,7 @@ class LearningPathReschedulingRequest(BaseRequest):
         default="",
         description="Additional feedback for rescheduling"
     )
+    goal_id: Optional[str] = Field(default=None, description="Goal ID to resolve learning goal from")
 
 
 # Knowledge exploration and drafting
@@ -243,6 +246,7 @@ class KnowledgePointExplorationRequest(BaseModel):
     learner_profile: str = Field(..., description="Learner profile as JSON string")
     learning_path: str = Field(..., description="Learning path as JSON string")
     learning_session: str = Field(..., description="Current learning session as JSON string")
+    goal_id: Optional[str] = Field(default=None, description="Goal ID to resolve learning goal from")
 
 
 class KnowledgePointDraftingRequest(BaseModel):
@@ -254,6 +258,7 @@ class KnowledgePointDraftingRequest(BaseModel):
     knowledge_points: str = Field(..., description="All knowledge points as JSON string")
     knowledge_point: str = Field(..., description="Specific knowledge point to draft")
     use_search: bool = Field(default=True, description="Whether to use web search")
+    goal_id: Optional[str] = Field(default=None, description="Goal ID to resolve learning goal from")
 
 
 class KnowledgePointsDraftingRequest(BaseModel):
@@ -265,6 +270,7 @@ class KnowledgePointsDraftingRequest(BaseModel):
     knowledge_points: str = Field(..., description="Knowledge points to draft as JSON string")
     use_search: bool = Field(default=True, description="Whether to use web search")
     allow_parallel: bool = Field(default=True, description="Allow parallel processing")
+    goal_id: Optional[str] = Field(default=None, description="Goal ID to resolve learning goal from")
 
 
 # Document integration
@@ -277,6 +283,7 @@ class LearningDocumentIntegrationRequest(BaseModel):
     knowledge_points: str = Field(..., description="Knowledge points as JSON string")
     knowledge_drafts: str = Field(..., description="Knowledge drafts as JSON string")
     output_markdown: bool = Field(default=False, description="Output as markdown format")
+    goal_id: Optional[str] = Field(default=None, description="Goal ID to resolve learning goal from")
 
 
 # Assessment
@@ -289,6 +296,7 @@ class KnowledgeQuizGenerationRequest(BaseModel):
     multiple_choice_count: int = Field(default=0, ge=0, le=20, description="Number of multiple-choice questions")
     true_false_count: int = Field(default=0, ge=0, le=20, description="Number of true/false questions")
     short_answer_count: int = Field(default=0, ge=0, le=10, description="Number of short answer questions")
+    goal_id: Optional[str] = Field(default=None, description="Goal ID to resolve learning goal from")
 
 
 # Content generation
@@ -301,6 +309,7 @@ class TailoredContentGenerationRequest(BaseModel):
     use_search: bool = Field(default=True, description="Whether to use web search")
     allow_parallel: bool = Field(default=True, description="Allow parallel processing")
     with_quiz: bool = Field(default=True, description="Include quiz generation")
+    goal_id: Optional[str] = Field(default=None, description="Goal ID to resolve learning goal from")
 
 
 # Memory and history

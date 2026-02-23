@@ -14,11 +14,13 @@ interface Message {
 
 export default function AITutorChat({
   externalQuery,
-  onQueryProcessed
+  onQueryProcessed,
+  goalId
 }: {
   sessionId?: string;
   externalQuery?: string;
   onQueryProcessed?: () => void;
+  goalId?: string;
 }) {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -56,6 +58,7 @@ export default function AITutorChat({
       const data = await api.chatWithTutor({
         messages: chatHistory,
         learner_profile: learnerId ? { learner_id: learnerId } : undefined,
+        goal_id: goalId,
       });
 
       const assistantMessage: Message = {
@@ -76,7 +79,7 @@ export default function AITutorChat({
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [goalId]);
 
   useEffect(() => {
     if (externalQuery) {

@@ -190,6 +190,47 @@ def extract_learner_id(profile_data: str | Dict[str, Any]) -> Optional[str]:
         return None
 
 
+def resolve_learning_goal(
+    memory_service: MemoryService,
+    learner_id: Optional[str],
+    goal_id: Optional[str] = None,
+) -> str:
+    """Resolve the learning goal text from memory.
+
+    Looks up the goal by *goal_id* when provided, otherwise falls back to the
+    learner's currently active goal.
+
+    Args:
+        memory_service: Memory service instance
+        learner_id: Learner identifier
+        goal_id: Optional explicit goal ID
+
+    Returns:
+        The learning goal string, or "" if not found
+    """
+    if not learner_id:
+        return ""
+
+    memory_store = memory_service.get_memory_store(learner_id)
+    if memory_store is None:
+        return ""
+
+    if goal_id:
+        # Try to find the specific goal by ID
+        goals_data = memory_store.read_learning_goals()
+        for goal in goals_data.get("goals", []):
+            if goal.get("goal_id") == goal_id:
+                return goal.get("learning_goal", "")
+        return ""
+
+    # Fall back to active goal
+    active_goal = memory_store.get_active_goal()
+    if active_goal:
+        return active_goal.get("learning_goal", "")
+
+    return ""
+
+
 # =============================================================================
 # Authentication Dependencies (Future)
 # =============================================================================

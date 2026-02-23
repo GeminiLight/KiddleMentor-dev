@@ -159,18 +159,9 @@ class BehavioralPatterns(BaseModel):
 class LearnerProfile(BaseModel):
     """Complete learner profile."""
     learner_information: str
-    learning_goal: str
     cognitive_status: CognitiveStatus
     learning_preferences: LearningPreferences
     behavioral_patterns: BehavioralPatterns
-
-    @field_validator("learning_goal")
-    @classmethod
-    def ensure_nonempty_goal(cls, v: str) -> str:
-        v = v.strip()
-        if not v:
-            raise ValueError("learning_goal must be non-empty")
-        return v
 
 
 # Learner Simulation Schemas

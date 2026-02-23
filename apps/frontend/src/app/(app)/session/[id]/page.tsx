@@ -6,9 +6,11 @@ import { ArrowLeft, CheckCircle2, BookOpen, RefreshCw, ArrowRight, MessageSquare
 import { motion, AnimatePresence } from "framer-motion";
 
 import AITutorChat from "@/components/AITutorChat";
+import { useGoal } from "@/components/GoalContext";
 
 export default function SessionPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { currentGoal } = useGoal();
   const [activeTab, setActiveTab] = useState("learn");
   const [isCompleted, setIsCompleted] = useState(false);
   const [showXPAnimation, setShowXPAnimation] = useState(false);
@@ -244,10 +246,11 @@ export default function SessionPage({ params }: { params: { id: string } }) {
         </div>
 
         {/* AI Tutor Sidebar */}
-        <AITutorChat 
-          sessionId={params.id} 
-          externalQuery={externalQuery} 
-          onQueryProcessed={() => setExternalQuery("")} 
+        <AITutorChat
+          sessionId={params.id}
+          externalQuery={externalQuery}
+          onQueryProcessed={() => setExternalQuery("")}
+          goalId={currentGoal.goal_id}
         />
       </div>
     </div>

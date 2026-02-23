@@ -20,6 +20,7 @@ class ContentBasePayload(BaseModel):
     learning_path: Any
     learning_session: Any
     external_resources: str | None = ""
+    learning_goal: str = ""
 
 
 class ContentDraftPayload(ContentBasePayload):
@@ -55,12 +56,13 @@ class LearningContentCreator(BaseAgent):
         return validated_output.model_dump()
 
 
-def prepare_content_outline_with_llm(llm, learner_profile, learning_path, learning_session, *, search_rag_manager: Optional[SearchRagManager] = None):
+def prepare_content_outline_with_llm(llm, learner_profile, learning_path, learning_session, learning_goal="", *, search_rag_manager: Optional[SearchRagManager] = None):
     creator = LearningContentCreator(llm, search_rag_manager=search_rag_manager)
     payload = {
         "learner_profile": learner_profile,
         "learning_path": learning_path,
         "learning_session": learning_session,
+        "learning_goal": learning_goal,
     }
     return creator.prepare_outline(payload)
 
@@ -77,6 +79,7 @@ def create_learning_content_with_llm(
     use_search=True,
     output_markdown=True,
     method_name="genmentor",
+    learning_goal="",
     *,
     search_rag_manager: Optional[SearchRagManager] = None,
 ):
@@ -87,7 +90,8 @@ def create_learning_content_with_llm(
 
     if method_name == "genmentor":
         knowledge_points = explore_knowledge_points_with_llm(
-            llm, learner_profile, learning_path, learning_session
+            llm, learner_profile, learning_path, learning_session,
+            learning_goal=learning_goal,
         )
         knowledge_drafts = draft_knowledge_points_with_llm(
             llm,
@@ -98,6 +102,7 @@ def create_learning_content_with_llm(
             allow_parallel=allow_parallel,
             use_search=use_search,
             max_workers=max_workers,
+            learning_goal=learning_goal,
             search_rag_manager=search_rag_manager,
         )
         learning_document = integrate_learning_document_with_llm(
@@ -108,6 +113,7 @@ def create_learning_content_with_llm(
             knowledge_points,
             knowledge_drafts,
             output_markdown=output_markdown,
+            learning_goal=learning_goal,
         )
         learning_content = {"document": learning_document}
         if not with_quiz:
@@ -120,6 +126,7 @@ def create_learning_content_with_llm(
             multiple_choice_count=0,
             true_false_count=0,
             short_answer_count=0,
+            learning_goal=learning_goal,
         )
         learning_content["quizzes"] = document_quiz
         return learning_content
@@ -131,6 +138,7 @@ def create_learning_content_with_llm(
                 learner_profile,
                 learning_path,
                 learning_session,
+                learning_goal=learning_goal,
                 search_rag_manager=search_rag_manager,
             )
         outline = document_outline if isinstance(document_outline, dict) else document_outline
@@ -139,5 +147,6 @@ def create_learning_content_with_llm(
             "learning_path": learning_path,
             "learning_session": learning_session,
             "external_resources": "",
+            "learning_goal": learning_goal,
         }
         return creator.create_content(payload)

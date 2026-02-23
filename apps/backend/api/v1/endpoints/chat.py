@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 from models import ChatWithTutorRequest, ChatResponse
 from services.llm_service import get_llm_service, LLMService
 from services.memory_service import get_memory_service, MemoryService
-from dependencies import get_search_rag_manager, extract_learner_id
+from dependencies import get_search_rag_manager, extract_learner_id, resolve_learning_goal
 from gen_mentor.core.tools.retrieval.search_rag import SearchRagManager
 from gen_mentor.agents.tutoring.chatbot import chat_with_tutor_with_llm
 from exceptions import ValidationError, LLMError
@@ -73,12 +73,16 @@ async def chat_with_tutor(
     if not learner_profile and learner_id:
         learner_profile = memory_service.load_profile_from_memory(learner_id)
 
+    # Resolve learning goal
+    learning_goal = resolve_learning_goal(memory_service, learner_id, request.goal_id)
+
     # Generate response with memory context
     try:
         response = chat_with_tutor_with_llm(
             llm,
             converted_messages,
             learner_profile,
+            learning_goal=learning_goal,
             search_rag_manager=search_rag_manager,
             memory_store=memory_store,  # Pass memory for context injection
             use_search=True,

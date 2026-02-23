@@ -81,6 +81,9 @@ learning_content_creator_task_prompt_outline = """
 Given the learner's profile and session, prepare an outline for the tailored content.
 You MUST use the "Task A: Content Outline" JSON format.
 
+**Learning Goal**:
+{learning_goal}
+
 **Learner Profile**:
 {learner_profile}
 
@@ -99,6 +102,9 @@ learning_content_creator_task_prompt_draft = """
 
 Create a draft of the content for *one* specific section.
 You MUST use the "Task B: Draft Section" JSON format.
+
+**Learning Goal**:
+{learning_goal}
 
 **Learner Profile**:
 {learner_profile}
@@ -121,6 +127,9 @@ learning_content_creator_task_prompt_content = """
 
 Create the *complete* tailored content for the given learning session from scratch.
 You MUST use the "Task C: Full Content Creation" JSON format.
+
+**Learning Goal**:
+{learning_goal}
 
 **Learner Profile**:
 {learner_profile}

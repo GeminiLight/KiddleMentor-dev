@@ -3,6 +3,9 @@
 PERFORMANCE_EVALUATION_PROMPT = """
 Evaluate the learner's performance based on the following information:
 
+Learning Goal:
+{learning_goal}
+
 Learner Profile:
 {learner_profile}
 
@@ -131,6 +134,9 @@ Return your evaluation as JSON:
 
 PERFORMANCE_REPORT_PROMPT = """
 Generate a comprehensive performance report for the learner:
+
+Learning Goal:
+{learning_goal}
 
 Learner Profile:
 {learner_profile}

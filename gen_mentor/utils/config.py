@@ -1,3 +1,4 @@
+import dataclasses
 from typing import Any, Dict, Union, cast
 from omegaconf import DictConfig, OmegaConf
 
@@ -10,6 +11,8 @@ def ensure_config_dict(
         return cast(Dict[str, Any], OmegaConf.to_container(config, resolve=True))
     elif isinstance(config, dict):
         return config
+    elif dataclasses.is_dataclass(config) and not isinstance(config, type):
+        return dataclasses.asdict(config)
     else:
         raise ValueError("Unsupported config type.")
     return config

@@ -1,7 +1,6 @@
 learner_profile_output_format = """
 {{
     "learner_information": "Summary of the learner's information (should include any information that may related to learning goal and impact learning)",
-    "learning_goal": "learner's input learning goal (should be same with the provide learning goal",
     "cognitive_status": {{
         "overall_progress": 60,
         "mastered_skills": [
@@ -51,10 +50,11 @@ Task A. Initial Profiling:
 1. Generate an initial learner profile based on the provided information (e.g., resume).
 2. Include the learner's cognitive status, learning preferences, and behavioral patterns.
 3. If any information is missing, make reasonable assumptions based on the context.
+4. Do NOT include learning_goal in the output profile — the learning goal is provided separately for context only.
 
 Chain of Thoughts for Task A
 1. Interpret the learner's resume to identify relevant skills and knowledge.
-2. Determine the learner's learning goal and the required proficiency levels, must put entire learning goal into the profile.
+2. Use the learner's learning goal as context to determine the required proficiency levels, but do NOT put the learning goal into the profile output.
 3. Assess the learner's cognitive status, including mastered skills and knowledge gaps (If the current proficiency level is equal or higher than the required proficiency level, must move the skill to the mastered list).
 4. Tailor the learning preferences to match the learner's content and activity preferences.
 5. Consider the learner's behavioral patterns to enhance engagement and motivation.
@@ -101,7 +101,8 @@ adaptive_learner_profiler_task_prompt_initialization = adaptive_learner_profiler
 adaptive_learner_profiler_task_prompt_update = """
 Task B: Profile Update
 
-Update the learner's profile based on recent interactions and new information:
+Update the learner's profile based on recent interactions and new information.
+Note: The profile no longer contains learning_goal — goals are managed separately.
 
 - Learner's Previous Profile: {learner_profile}
 - New Learner Interactions: {learner_interactions}
