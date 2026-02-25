@@ -93,6 +93,9 @@ def create_learning_content_with_llm(
             llm, learner_profile, learning_path, learning_session,
             learning_goal=learning_goal,
         )
+        # Unwrap {"knowledge_points": [...]} to a plain list
+        if isinstance(knowledge_points, dict) and "knowledge_points" in knowledge_points:
+            knowledge_points = knowledge_points["knowledge_points"]
         knowledge_drafts = draft_knowledge_points_with_llm(
             llm,
             learner_profile,

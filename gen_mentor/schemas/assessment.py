@@ -17,7 +17,6 @@ class DocumentQuizPayload(BaseModel):
     multiple_choice_count: int = Field(default=0, description="Number of multiple choice questions")
     true_false_count: int = Field(default=0, description="Number of true/false questions")
     short_answer_count: int = Field(default=0, description="Number of short answer questions")
-    learning_goal: str = Field(default="", description="Learning goal for context")
 
     @field_validator("learner_profile", "learning_document")
     @classmethod

@@ -121,6 +121,9 @@ def draft_knowledge_points_with_llm(
             knowledge_points = json.loads(knowledge_points)
         except (json.JSONDecodeError, ValueError):
             knowledge_points = ast.literal_eval(knowledge_points)
+    # Unwrap {"knowledge_points": [...]} to a plain list
+    if isinstance(knowledge_points, dict) and "knowledge_points" in knowledge_points:
+        knowledge_points = knowledge_points["knowledge_points"]
     if search_rag_manager is None and use_search:
         search_rag_manager = SearchRagManager.from_config(default_config.model_dump() if hasattr(default_config, 'model_dump') else default_config)
     def draft_one(kp):

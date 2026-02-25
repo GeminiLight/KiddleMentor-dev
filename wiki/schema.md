@@ -157,18 +157,29 @@ export interface DashboardData {
 
 ## Layer 2: Backend Data Layer
 
-**Location**: `apps/backend/models/`
+**Location**: `apps/backend/`
 
 ### File Structure
 
 ```
-models/
-├── __init__.py        # Model exports
-├── common.py          # Base models (BaseRequest, BaseResponse, ErrorResponse)
-├── requests.py        # Request models for all endpoints
-├── responses.py       # Response models for all endpoints
-└── defaults.py        # Default values (DEFAULT_MODEL_PROVIDER, DEFAULT_MODEL_NAME)
+apps/backend/
+├── models/                    # New model structure (primary)
+│   ├── __init__.py           # Model exports
+│   ├── common.py             # Base models (BaseRequest, BaseResponse, ErrorResponse)
+│   ├── requests.py           # Request models for all endpoints
+│   ├── responses.py          # Response models for all endpoints
+│   └── defaults.py           # Default values (DEFAULT_MODEL_PROVIDER, DEFAULT_MODEL_NAME)
+├── schemas.py                # Legacy schemas (deprecated, kept for compatibility)
+├── schemas.py                # Top-level schemas (legacy)
+├── services/
+│   └── memory_service.py     # Memory management service
+├── repositories/
+│   └── learner_repository.py # Learner data repository
+├── api/v1/endpoints/         # API endpoint handlers
+└── core/                     # Core utilities and dependencies
 ```
+
+> **Note**: The `apps/backend/models/` directory contains the new Pydantic models using the unified `model` parameter. The legacy `schemas.py` file at the root still uses the old `model_provider`/`model_name` split and is deprecated.
 
 ### Base Models
 
@@ -229,6 +240,7 @@ class ErrorResponse(BaseModel):
 | `LearningGoalRefinementRequest` | `learning_goal: str, learner_information: str, model?: str` | Refine learning goal | ❌ |
 | `SkillGapIdentificationRequest` | `learning_goal: str, learner_information: str, skill_requirements?: str, model?: str` | Identify skill gaps | ❌ |
 | `LearnerProfileInitializationWithInfoRequest` | `learning_goal: str, learner_information: str, skill_gaps: str, model?: str` | Initialize profile with info | ❌ |
+| `LearnerProfileInitializationRequest` | `learning_goal: str, skill_requirements: str, skill_gaps: str, cv_path: str, model?: str` | Initialize profile from CV | ❌ |
 | `LearnerProfileUpdateRequest` | `learner_profile: str, learner_interactions: str, learner_information?: str, session_information?: str, model?: str` | Update profile | ❌ |
 | `LearningPathSchedulingRequest` | `learner_profile: str, session_count: int, goal_id?: str, model?: str` | Schedule learning path | ✅ |
 | `LearningPathReschedulingRequest` | `learner_profile: str, learning_path: str, session_count: int, other_feedback?: str, goal_id?: str, model?: str` | Reschedule learning path | ✅ |
@@ -238,7 +250,7 @@ class ErrorResponse(BaseModel):
 | `LearningDocumentIntegrationRequest` | `learner_profile: str, learning_path: str, learning_session: str, knowledge_points: str, knowledge_drafts: str, output_markdown?: bool, goal_id?: str` | Integrate document | ✅ |
 | `KnowledgeQuizGenerationRequest` | `learner_profile: str, learning_document: str, single_choice_count?: int, multiple_choice_count?: int, true_false_count?: int, short_answer_count?: int, goal_id?: str` | Generate quizzes | ✅ |
 | `TailoredContentGenerationRequest` | `learner_profile: str, learning_path: str, learning_session: str, use_search?: bool, allow_parallel?: bool, with_quiz?: bool, goal_id?: str` | Generate tailored content | ✅ |
-| `HistorySearchRequest` | `query: str` | Search history | ❌ |
+| `HistorySearchRequest` | `query: str` | Search history globally | ❌ |
 
 ### Response Models
 
@@ -742,6 +754,106 @@ class TutorResponse(BaseModel):
 
 ---
 
+## Memory Service Architecture
+
+The backend uses a **MemoryService** to manage learner context and history through the `LearnerMemoryStore` from the algorithm layer.
+
+### Memory Service API
+
+**File**: `apps/backend/services/memory_service.py`
+
+```python
+class MemoryService:
+    """Service for managing learner memory and context."""
+
+    def is_available(self) -> bool:
+        """Check if memory storage is available (local mode only)."""
+        
+    def get_memory_store(self, learner_id: Optional[str]) -> Optional[LearnerMemoryStore]:
+        """Get learner-specific memory store instance."""
+        
+    def get_learner_memory(self, learner_id: str) -> Dict[str, Any]:
+        """Get all memory and context for a learner.
+        
+        Returns:
+            {
+                "learner_id": str,
+                "profile": Dict,
+                "learning_goals": Dict[str, Any],  # Keyed by goal_id
+                "skill_gaps": Dict[str, Any],      # Keyed by goal_id
+                "mastery": Dict[str, Any],
+                "learning_path": Dict[str, Any],   # Keyed by goal_id
+                "context": str,
+                "recent_history": str
+            }
+        """
+        
+    def search_history(self, learner_id: str, query: str) -> list[dict]:
+        """Search learner interaction history."""
+        
+    def log_interaction(self, learner_id: str, role: str, content: str, metadata?: dict):
+        """Log a learning interaction to history."""
+        
+    def save_profile(self, learner_id: str, profile: Dict[str, Any]):
+        """Save learner profile to memory."""
+        
+    def save_learning_goals(self, learner_id: str, learning_goals: Dict[str, Any]):
+        """Save learning goals to memory."""
+        
+    def save_skill_gaps(self, learner_id: str, skill_gaps: Dict[str, Any]):
+        """Save skill gaps to memory (keyed by goal_id)."""
+        
+    def save_learning_path(self, learner_id: str, learning_path: Dict[str, Any]):
+        """Save learning path to memory."""
+        
+    def get_context_for_llm(self, learner_id: str) -> Dict[str, Any]:
+        """Get all context needed for LLM prompts."""
+```
+
+### Storage Modes
+
+| Mode | Description | Memory Available | Use Case |
+|------|-------------|------------------|----------|
+| `local` | Local file-based storage | ✅ Yes | Development, single-user |
+| `cloud` | Cloud storage (S3, GCS) | ❌ No | Production, multi-user |
+
+```python
+# config.py
+class BackendSettings:
+    storage_mode: str = "local"  # or "cloud"
+    workspace_dir: str = "~/.gen-mentor/workspace"
+```
+
+### Memory Store Integration
+
+The backend memory service integrates with the algorithm layer's `LearnerMemoryStore`:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Backend Memory Service                               │
+│  Location: apps/backend/services/memory_service.py                          │
+└─────────────────────────────────────────┬───────────────────────────────────┘
+                                          │ uses
+                                          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      Algorithm Memory Store                                  │
+│  Location: gen_mentor/core/memory/memory_store.py                           │
+│                                                                              │
+│  Methods:                                                                    │
+│  - read_profile() / write_profile()                                         │
+│  - read_learning_goals() / write_learning_goals()                           │
+│  - read_skill_gaps() / write_skill_gaps()                                   │
+│  - read_mastery() / append_mastery_entry()                                  │
+│  - read_learning_path() / write_learning_path()                             │
+│  - get_learner_context()                                                     │
+│  - get_recent_history(n)                                                     │
+│  - search_history(query)                                                     │
+│  - log_interaction(role, content, metadata)                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Multi-Goal Architecture
 
 GenMentor supports multiple learning goals per learner. The `goal_id` parameter is used to key data in the memory system.
@@ -1019,8 +1131,21 @@ All layers should return consistent error responses:
 | Layer | Location | Key Files |
 |-------|----------|-----------|
 | Frontend | `apps/frontend/src/lib/api.ts` | `api.ts` |
-| Backend | `apps/backend/models/` | `common.py`, `requests.py`, `responses.py` |
+| Backend | `apps/backend/models/` | `common.py`, `requests.py`, `responses.py`, `defaults.py` |
+| Backend (Legacy) | `apps/backend/schemas.py` | `schemas.py` (deprecated) |
+| Backend Services | `apps/backend/services/` | `memory_service.py`, `llm_service.py`, `user_registry.py` |
+| Backend Repositories | `apps/backend/repositories/` | `learner_repository.py` |
 | Algorithm | `gen_mentor/schemas/` | `learning.py`, `content.py`, `assessment.py`, `tutoring.py` |
+| Algorithm Memory | `gen_mentor/core/memory/` | `memory_store.py` |
+
+### Storage Configuration
+
+| Setting | Location | Description |
+|---------|----------|-------------|
+| `storage_mode` | `apps/backend/config.py` | "local" or "cloud" |
+| `workspace_dir` | `apps/backend/config.py` | Workspace directory for local storage |
+| `DEFAULT_MODEL_PROVIDER` | `apps/backend/models/defaults.py` | Default LLM provider |
+| `DEFAULT_MODEL_NAME` | `apps/backend/models/defaults.py` | Default model name |
 
 ### Common Enums
 
@@ -1069,6 +1194,69 @@ parse_skill_mastery_evaluation(data) -> SkillMasteryEvaluation
 
 ---
 
+## Legacy vs New Models
+
+The backend has two model systems:
+
+### Legacy Schemas (`apps/backend/schemas.py`)
+
+**Status**: ⚠️ **Deprecated** - kept for backward compatibility
+
+```python
+# Legacy format (deprecated)
+class BaseRequest(BaseModel):
+    model_provider: str = DEFAULT_MODEL_PROVIDER
+    model_name: str = DEFAULT_MODEL_NAME
+    method_name: str = "genmentor"
+    storage_mode: str = "local"
+```
+
+### New Models (`apps/backend/models/`)
+
+**Status**: ✅ **Current** - use for all new endpoints
+
+```python
+# New format (current)
+class BaseRequest(BaseModel):
+    model: Optional[str] = Field(
+        default=f"{DEFAULT_MODEL_PROVIDER}/{DEFAULT_MODEL_NAME}",
+        description="Model in 'provider/model' format"
+    )
+
+    def get_model_parts(self) -> tuple[str, str]:
+        """Parse model string into provider and model name."""
+```
+
+### Migration Guide
+
+| Legacy Parameter | New Parameter | Format |
+|------------------|---------------|--------|
+| `model_provider: "openai"` | `model: "openai/gpt-4"` | Combined |
+| `model_name: "gpt-4"` | (included in model) | Combined |
+| `method_name: "genmentor"` | (removed) | N/A |
+| `storage_mode: "local"` | (config-based) | N/A |
+
+### Migration Example
+
+```python
+# Legacy request (deprecated)
+{
+    "model_provider": "openai",
+    "model_name": "gpt-4",
+    "method_name": "genmentor",
+    "storage_mode": "local",
+    "learning_goal": "Learn Python"
+}
+
+# New request (current)
+{
+    "model": "openai/gpt-4",
+    "learning_goal": "Learn Python"
+}
+```
+
+---
+
 ## Version History
 
 | Version | Date | Changes |
@@ -1081,6 +1269,13 @@ parse_skill_mastery_evaluation(data) -> SkillMasteryEvaluation
 | 1.3.0 | 2026-02-23 | Added new schemas: FeedbackDetail, LearnerFeedback, SearchResult, SkillGapsRoot |
 | 1.3.1 | 2026-02-23 | Added learning_goal field to TutorChatPayload and DocumentQuizPayload |
 | 1.4.0 | 2026-02-23 | Added new endpoints: identifyAndSaveSkillGap, rescheduleLearningPath, user management |
+| 1.5.0 | 2026-02-24 | **Major update**: Added Memory Service Architecture section |
+| | | - Documented MemoryService API and storage modes |
+| | | - Added Memory Store integration diagram |
+| | | - Updated backend file structure with correct paths |
+| | | - Added LearnerProfileInitializationRequest (CV-based) |
+| | | - Added Legacy vs New Models section for migration guide |
+| | | - Updated request models table with accurate field types |
 
 ---
 

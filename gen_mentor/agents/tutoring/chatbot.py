@@ -69,7 +69,7 @@ class AITutorChatbot(BaseAgent):
 		self.search_rag_manager = search_rag_manager
 		self.memory_store = memory_store
 
-	def chat(self, payload: TutorChatPayload | Mapping[str, Any] | str):
+	def chat(self, payload: TutorChatPayload | Mapping[str, Any] | str, *, learning_goal: str = ""):
 		if not isinstance(payload, TutorChatPayload):
 			payload = TutorChatPayload.model_validate(payload)
 
@@ -103,7 +103,7 @@ class AITutorChatbot(BaseAgent):
 
 		input_vars = {
 			"learner_profile": data.get("learner_profile", ""),
-			"learning_goal": data.get("learning_goal", ""),
+			"learning_goal": learning_goal,
 			"messages": history_text,
 			"external_resources": external_context,
 		}
@@ -159,6 +159,5 @@ def chat_with_tutor_with_llm(
 		"messages": messages,
 		"use_search": use_search,
 		"top_k": top_k,
-		"learning_goal": learning_goal,
 	}
-	return agent.chat(payload)
+	return agent.chat(payload, learning_goal=learning_goal)

@@ -18,10 +18,12 @@ class DocumentQuizGenerator(BaseAgent):
     def __init__(self, model: Any):
         super().__init__(model=model, system_prompt=document_quiz_generator_system_prompt, jsonalize_output=True)
 
-    def generate(self, payload: DocumentQuizPayload | Mapping[str, Any] | str):
+    def generate(self, payload: DocumentQuizPayload | Mapping[str, Any] | str, *, learning_goal: str = ""):
         if not isinstance(payload, DocumentQuizPayload):
             payload = DocumentQuizPayload.model_validate(payload)
-        raw_output = self.invoke(payload.model_dump(), task_prompt=document_quiz_generator_task_prompt)
+        data = payload.model_dump()
+        data["learning_goal"] = learning_goal
+        raw_output = self.invoke(data, task_prompt=document_quiz_generator_task_prompt)
         validated_output = DocumentQuiz.model_validate(raw_output)
         return validated_output.model_dump()
 
@@ -43,7 +45,6 @@ def generate_document_quizzes_with_llm(
         "multiple_choice_count": multiple_choice_count,
         "true_false_count": true_false_count,
         "short_answer_count": short_answer_count,
-        "learning_goal": learning_goal,
     }
     gen = DocumentQuizGenerator(llm)
-    return gen.generate(payload)
+    return gen.generate(payload, learning_goal=learning_goal)

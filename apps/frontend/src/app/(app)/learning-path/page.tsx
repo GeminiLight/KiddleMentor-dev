@@ -169,42 +169,28 @@ export default function LearningPathPage() {
     setRescheduledRawPath(null);
   };
 
-  const handleStartSession = async (session: Record<string, unknown>) => {
+  const handleStartSession = (session: Record<string, unknown>) => {
     const learnerId = getStoredLearnerId();
     if (!learnerId) return;
 
     const sessionId = session.id as number;
-    setGeneratingSessionId(sessionId);
+    const goalId = currentGoal.goal_id;
+    const pathData = learner.learningPath[goalId];
+    const rawPath = pathData?.learning_path;
+    const sessionsArray = extractSessions(rawPath);
 
-    try {
-      const goalId = currentGoal.goal_id;
-      const pathData = learner.learningPath[goalId];
-      const rawPath = pathData?.learning_path;
-      // Unwrap nested structure: send the sessions array
-      const sessionsArray = extractSessions(rawPath);
+    // Store session metadata & request params so the session page can fetch content
+    localStorage.setItem("current_session", JSON.stringify(session.data));
+    localStorage.setItem("current_session_request", JSON.stringify({
+      learner_id: learnerId,
+      learning_path: sessionsArray,
+      learning_session: (session.data as Record<string, unknown>) || {},
+      goal_id: goalId,
+    }));
+    // Clear any stale content from a previous session
+    localStorage.removeItem("current_session_content");
 
-      const result = await api.generateTailoredContent({
-        learner_profile: { learner_id: learnerId },
-        learning_path: sessionsArray,
-        learning_session: (session.data as Record<string, unknown>) || {},
-        with_quiz: true,
-        use_search: true,
-        allow_parallel: true,
-        goal_id: currentGoal.goal_id,
-      });
-
-      // Store generated content for the session page to pick up
-      localStorage.setItem("current_session", JSON.stringify(session.data));
-      localStorage.setItem("current_session_content", JSON.stringify(result.tailored_content));
-
-      router.push(`/session/${sessionId}`);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to generate content";
-      toast.error(message);
-      console.error("[GenerateContent]", err);
-    } finally {
-      setGeneratingSessionId(null);
-    }
+    router.push(`/session/${sessionId}`);
   };
 
   const radarData = skills.map(s => ({
@@ -237,15 +223,10 @@ export default function LearningPathPage() {
             return nextSession ? (
               <button
                 onClick={() => handleStartSession(nextSession)}
-                disabled={generatingSessionId !== null}
-                className="flex items-center gap-2 bg-primary-500 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-primary-600 transition-colors shadow-sm disabled:opacity-50"
+                className="flex items-center gap-2 bg-primary-500 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-primary-600 transition-colors shadow-sm"
               >
-                {generatingSessionId === nextSession.id ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <Play size={18} fill="currentColor" />
-                )}
-                {generatingSessionId === nextSession.id ? "Generating..." : "Continue Session"}
+                <Play size={18} fill="currentColor" />
+                Continue Session
               </button>
             ) : null;
           })()}
