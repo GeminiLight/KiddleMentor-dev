@@ -119,7 +119,7 @@ def cmd_identify_skill_gap(args: argparse.Namespace) -> int:
 
 
 def cmd_schedule_path(args: argparse.Namespace) -> int:
-    from gen_mentor.agents.content.personalized_resource_delivery.agents.learning_path_scheduler import (
+    from gen_mentor.agents.content.path_scheduler import (
         schedule_learning_path_with_llm,
     )
 
