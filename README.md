@@ -15,182 +15,216 @@
 
 ---
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > :sparkles: Welcome to visit the [GenMentor website](https://www.tianfuwang.tech/gen-mentor) to learn more about our work!
 
-This is official code of our paper "*LLM-powered Multi-agent Framework for Goal-oriented Learning in Intelligent Tutoring System*", accepted by **WWW 2025 (Industry Track) as an Oral Presentation**.
+This is the official code for our paper "*LLM-powered Multi-agent Framework for Goal-oriented Learning in Intelligent Tutoring System*", accepted by **WWW 2025 (Industry Track) as an Oral Presentation**.
 
-In this paper, we propose GenMentor, a large language model (LLM)-powered multi-agent framework designed for goal-oriented learning in Intelligent Tutoring Systems (ITS). This framework emphasizes personalization, adaptive learning, and goal-aligned content delivery, making it a robust solution for professional and lifelong learning scenarios.
+GenMentor is a large language model (LLM)-powered multi-agent framework designed for goal-oriented learning in Intelligent Tutoring Systems (ITS). It delivers **personalized, adaptive, goal-aligned** learning experiences through coordinated AI agents — from skill-gap analysis and learning-path scheduling to tailored content generation and real-time performance evaluation.
 
 
-## 🏫 ITS Paradigm Comparison
+## ITS Paradigm Comparison
 
 <div align="center">
   <p align="center">
-    <img src="resources/its-paradigms.png" alt="GenMentor Overview" width="500" style="box-shadow: 0 8px 24px rgba(0,0,0,0.15); border-radius: 8px;"/>
+    <img src="resources/its-paradigms.png" alt="ITS Paradigm Comparison" width="500" style="box-shadow: 0 8px 24px rgba(0,0,0,0.15); border-radius: 8px;"/>
   </p>
 </div>
 
 | Paradigm | Typical characteristics | Primary focus |
 |---|---|---|
-| 🏫 Traditional MOOC | Static syllabus; pre-recorded lectures; fragmented learning | Broad access, low personalization |
-| 🤖 Chatbot ITS | Reactive Q&A; rule/LLM-driven; session-based help | Instant support, limited long-term adaptation |
-| 🎯 Goal-oriented ITS | Proactive planning; personalized paths; goal-aligned assessments | Targeted skill acquisition, continual adaptation |
+| Traditional MOOC | Static syllabus; pre-recorded lectures; fragmented learning | Broad access, low personalization |
+| Chatbot ITS | Reactive Q&A; rule/LLM-driven; session-based help | Instant support, limited long-term adaptation |
+| **Goal-oriented ITS** | Proactive planning; personalized paths; goal-aligned assessments | Targeted skill acquisition, continual adaptation |
 
 
-
-
-**🤖 Key Agent Modules**
+## Core Features
 
 <div align="center">
   <p align="center">
-    <img src="resources/genmentor-framework.png" alt="GenMentor Overview" width="700" style="box-shadow: 0 8px 24px rgba(0,0,0,0.15); border-radius: 8px;"/>
+    <img src="resources/genmentor-framework.png" alt="GenMentor Framework" width="700" style="box-shadow: 0 8px 24px rgba(0,0,0,0.15); border-radius: 8px;"/>
   </p>
 </div>
 
-- 🧭 `Skill Gap Identifier`: Analyzes learner's current knowledge to identify gaps.
-- 👤 `Adaptive Learner Modeler`: Builds and updates learner profiles based on interactions.
-- 🗓️ `Learning Path Scheduler`: Creates personalized learning paths and schedules.
-- 📝 `Tailored Content Generator`: Produces customized learning materials and assessments.
-- 🧑‍🏫 `AI Chatbot Tutor`: Engages learners in dialogue, answering questions and providing support.
+### Agent Modules
 
-**Key Demo Interfaces**
+| Agent | Responsibility |
+|-------|---------------|
+| **Goal Refiner** | Transforms raw learning intentions into structured, actionable goals |
+| **Skill Gap Identifier** | Analyzes current knowledge against goal requirements to surface gaps |
+| **Adaptive Learner Modeler** | Builds and continuously updates learner profiles from interactions |
+| **Learning Path Scheduler** | Creates and reschedules personalized session sequences |
+| **Tailored Content Generator** | Produces customized learning materials, knowledge drafts, and documents |
+| **Quiz Generator** | Generates multi-format quizzes (single-choice, multiple-choice, true/false, short answer) |
+| **Performance Evaluator** | Evaluates session performance, skill mastery, and generates progress reports |
+| **Feedback Simulator** | Simulates learner feedback on paths and content for quality assurance |
+| **AI Chatbot Tutor** | Engages learners in context-aware dialogue with memory of past interactions |
 
-<div align="center">
-  <p align="center">
-    <img src="resources/genmentor_demo_1.png" alt="GenMentor Demo Interface-1" width="400" style="box-shadow: 0 8px 24px rgba(0,0,0,0.15); border-radius: 8px; margin: 8px;"/>
-    <img src="resources/genmentor_demo_2.png" alt="GenMentor Demo Interface-2" width="400" style="box-shadow: 0 8px 24px rgba(0,0,0,0.15); border-radius: 8px; margin: 8px;"/>
-    <img src="resources/genmentor_demo_3.png" alt="GenMentor Demo Interface-3" width="400" style="box-shadow: 0 8px 24px rgba(0,0,0,0.15); border-radius: 8px; margin: 8px;"/>
-    <img src="resources/genmentor_demo_4.png" alt="GenMentor Demo Interface-4" width="400" style="box-shadow: 0 8px 24px rgba(0,0,0,0.15); border-radius: 8px; margin: 8px;"/>
-    <img src="resources/genmentor_demo_5.png" alt="GenMentor Demo Interface-5" width="400" style="box-shadow: 0 8px 24px rgba(0,0,0,0.15); border-radius: 8px; margin: 8px;"/>
-  </p>
-</div>
+### Platform Capabilities
 
-## 🚀 Quick start
+- **Multi-goal management** — learners can maintain multiple learning goals with independent skill gaps, learning paths, and progress tracking per goal
+- **Goal-scoped persistence** — all data (skill gaps, learning paths, mastery) is stored per goal, allowing learners to switch contexts
+- **Pluggable LLM backend** — supports OpenAI, DeepSeek, and other LangChain-compatible providers via a unified `provider/model` format
+- **Web search augmentation** — optional web search integration for knowledge drafting and content generation
+- **Full REST API** — 25+ endpoints across profile, goals, skills, learning path, content, assessment, chat, and progress domains
+- **CLI mode** — run core agent capabilities directly without starting the web application
 
-Here, we briefly describe how to set up and run the GenMentor system locally. Please see more details in the respective `apps/backend/` and `apps/frontend/` directories.
 
-### 🛠️ Installation
+## Project Architecture
 
-1. Backend environment setup
+```
+gen-mentor/
+├── gen_mentor/                    # Core library (provider-agnostic)
+│   ├── agents/                    # AI agent implementations
+│   │   ├── learning/              #   Goal Refiner, Skill Gap Identifier, Learner Profiler
+│   │   ├── content/               #   Path Scheduler, Knowledge Explorer/Drafter,
+│   │   │                          #   Document Integrator, Feedback Simulator
+│   │   ├── assessment/            #   Quiz Generator, Performance Evaluator
+│   │   └── tutoring/              #   Chatbot Tutor
+│   ├── core/
+│   │   ├── llm/                   # LLM factory (LangChain-based)
+│   │   ├── memory/                # LearnerMemoryStore (file-based persistence)
+│   │   └── tools/                 # Search, RAG, embedding, filesystem tools
+│   ├── schemas/                   # Pydantic domain schemas
+│   ├── cli/                       # Command-line interface
+│   └── config/                    # YAML config loader & schema definitions
+│
+├── apps/
+│   ├── backend/                   # FastAPI REST API server
+│   │   ├── api/v1/endpoints/      # Route handlers (profile, goals, skills,
+│   │   │                          #   learning_path, assessment, chat, progress, ...)
+│   │   ├── models/                # Request / response Pydantic models
+│   │   ├── services/              # LLM service, memory service, user registry
+│   │   ├── repositories/          # Data access layer (LearnerRepository)
+│   │   └── middleware/             # CORS, error handling
+│   │
+│   └── frontend/                  # Next.js web application
+│       └── src/
+│           ├── app/               # Pages: onboarding, goals, learning-path,
+│           │                      #   session, progress, profile, library
+│           ├── components/        # Reusable UI components
+│           └── lib/api.ts         # Typed API client (all backend endpoints)
+│
+├── scripts/                       # Start/stop helper scripts
+├── tests/                         # Test suite
+└── resources/                     # Static assets (images, sample data)
+```
+
+**Data flow:**
+
+```
+Frontend (Next.js)  ──HTTP──>  Backend (FastAPI)  ──invokes──>  Agent (gen_mentor)
+                                     │                               │
+                                     │                          LLM Provider
+                                     v                         (OpenAI / DeepSeek / ...)
+                              LearnerMemoryStore
+                            (workspace/memory/{id}/)
+```
+
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.11+, [uv](https://github.com/astral-sh/uv) (recommended) or pip
+- Node.js 18+ and npm
+- At least one LLM API key (OpenAI or DeepSeek)
+
+### 1. Install dependencies
 
 ```bash
+# Backend
 cd apps/backend
 uv venv
 source .venv/bin/activate  # on Windows: .venv\Scripts\activate
 uv pip install -r requirements.txt
-```
 
-2. Frontend environment setup
-
-```bash
+# Frontend
 cd apps/frontend
 npm install
 ```
 
-### ⚙️ Configuration
+### 2. Configure LLM secrets
 
-1. Configure LLM secrets (at least one) for backend
-
-*Option A*: update a `.env` file in `apps/backend/`
+Create a `.env` file in `apps/backend/`, or export in your shell:
 
 ```bash
-# Example for OpenAI:
+# OpenAI
 OPENAI_API_KEY="your-openai-api-key"
 
-# Example for DeepSeek:
+# DeepSeek
 DEEPSEEK_API_KEY="your-deepseek-api-key"
 ```
 
-*Option B*: export environment variables in your shell
+> [!TIP]
+> Only one provider is required. The system defaults to `deepseek/deepseek-chat` — override via the `model` parameter in any API request using `provider/model` format (e.g. `openai/gpt-4`).
 
-```bash
-# Example for OpenAI:
-export OPENAI_API_KEY="your-openai-api-key"
-
-# Example for DeepSeek:
-export DEEPSEEK_API_KEY="your-deepseek-api-key"
-DEEPSEEK_API_KEY="your-deepseek-api-key"
-```
-
-### ▶️ Running Locally
+### 3. Run the application
 
 > [!NOTE]
-> The default ports are 5000 for backend, 3000 for frontend by default
+> Default ports: **5000** (backend), **3000** (frontend).
 
-*Option A*: Manual (preferred when using separate venvs)
+**Option A — Manual**
 
 ```bash
-# start backend
+# Terminal 1: start backend
 cd apps/backend
-source .venv/bin/activate  # on Windows: .venv\Scripts\activate
+source .venv/bin/activate
 uvicorn main:app --reload --port 5000
-```
 
-```bash
-# start frontend
+# Terminal 2: start frontend
 cd apps/frontend
 npm run dev
 ```
 
-*Option B*: Helper scripts (single shell; assumes uvicorn on PATH)
+**Option B — Helper scripts**
 
 ```bash
-# start backend
 bash ./scripts/start_backend.sh [PORT]
-
-# start frontend
 bash ./scripts/start_frontend.sh [PORT]
 
 # stop all
 bash ./scripts/stop_all.sh
 ```
 
-### 🌐 Accessing the App
+### 4. Open in browser
 
-Finally, you can access:
+| Service | URL |
+|---------|-----|
+| Frontend UI | http://127.0.0.1:3000 |
+| Backend API | http://127.0.0.1:5000 |
+| API Docs (Swagger) | http://127.0.0.1:5000/docs |
 
-- Backend API: http://127.0.0.1:5000/
-- Frontend UI: http://127.0.0.1:3000/
+### 5. CLI mode (no web server needed)
 
-### 🧩 Run Core Features via CLI (No App Services)
-
-You can run core `gen_mentor` capabilities directly without starting FastAPI:
+Run core agent capabilities directly:
 
 ```bash
 python -m gen_mentor.cli --help
 ```
-
-Examples:
 
 ```bash
 # Refine a goal
 python -m gen_mentor.cli refine-goal \
   --goal "Become a data engineer" \
   --learner-info "I know Python and SQL" \
-  --provider deepseek \
-  --model deepseek-chat
-```
+  --provider deepseek --model deepseek-chat
 
-```bash
 # Identify skill gaps
 python -m gen_mentor.cli identify-skill-gap \
   --goal "Become a data engineer" \
   --learner-info @./resources/learner_info.txt \
-  --provider deepseek \
-  --model deepseek-chat
-```
+  --provider deepseek --model deepseek-chat
 
-```bash
-# Schedule learning path from profile JSON
+# Schedule learning path
 python -m gen_mentor.cli schedule-path \
   --learner-profile @./resources/learner_profile.json \
   --session-count 8 \
-  --provider deepseek \
-  --model deepseek-chat
+  --provider deepseek --model deepseek-chat
 ```
 
-## 🚀 Demo Version of Web Application
+
+## Demo
 
 Welcome to explore the demo version of the GenMentor web application:
 
@@ -206,7 +240,7 @@ You could also watch the demo video for a quick overview (click the image below)
 
 [![Video Preview](https://img.youtube.com/vi/vTdtGZop-Zc/0.jpg)](https://youtu.be/vTdtGZop-Zc)
 
-## 📚 Citation
+## Citation
 
 ```bibtex
 @inproceedings{wang2025llm,
