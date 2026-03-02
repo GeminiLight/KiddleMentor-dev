@@ -32,7 +32,7 @@ GenMentor is a large language model (LLM)-powered multi-agent framework designed
 - [🚀 Quick Start](#-quick-start)
   - [📋 Prerequisites](#-prerequisites)
   - [1️⃣ Install dependencies](#1️⃣-install-dependencies)
-  - [2️⃣ Configure LLM secrets](#2️⃣-configure-llm-secrets)
+  - [2️⃣ Configure](#2️⃣-configure)
   - [3️⃣ Run the application](#3️⃣-run-the-application)
   - [4️⃣ Open in browser](#4️⃣-open-in-browser)
   - [5️⃣ CLI mode](#5️⃣-cli-mode-no-web-server-needed)
@@ -161,20 +161,59 @@ cd apps/frontend
 npm install
 ```
 
-### 2️⃣ Configure LLM secrets
+### 2️⃣ Configure
 
-Create a `.env` file in `apps/backend/`, or export in your shell:
+GenMentor uses two configuration layers:
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| **API keys** | `apps/backend/.env` | LLM provider secrets (loaded via `dotenv`) |
+| **App config** | `~/.gen-mentor/config.yaml` | Default model, provider endpoints, search, embedding, RAG settings |
+
+**Step A — Set API keys** (required)
+
+Create a `.env` file in `apps/backend/`:
 
 ```bash
-# OpenAI
+# At least one is required
 OPENAI_API_KEY="your-openai-api-key"
-
-# DeepSeek
 DEEPSEEK_API_KEY="your-deepseek-api-key"
 ```
 
+**Step B — Set up config.yaml** (optional, auto-created on first run)
+
+```bash
+# Copy the example config to the default location
+mkdir -p ~/.gen-mentor
+cp gen_mentor/config/config.example.yaml ~/.gen-mentor/config.yaml
+```
+
+Edit `~/.gen-mentor/config.yaml` to customize:
+
+```yaml
+# Default model used by all agents
+agent_defaults:
+  model: openai/gpt-5.1        # Format: provider/model-name
+  temperature: 0.0
+  workspace: ~/.gen-mentor/workspace
+
+# Provider endpoints (API keys are read from .env)
+providers:
+  openai:
+    api_key: null               # ← resolved from OPENAI_API_KEY env var
+    api_base: null              # optional custom endpoint
+  deepseek:
+    api_key: null               # ← resolved from DEEPSEEK_API_KEY env var
+    api_base: null
+
+# Web search (disabled by default)
+search_defaults:
+  provider: duckduckgo
+  enable_search: false
+```
+
 > [!TIP]
-> Only one provider is required. The system defaults to `deepseek/deepseek-chat` — override via the `model` parameter in any API request using `provider/model` format (e.g. `openai/gpt-4`).
+> If you skip Step B, GenMentor auto-creates `~/.gen-mentor/config.yaml` from the built-in example on first run. You can always override the model per-request via the `model` parameter (e.g. `"model": "deepseek/deepseek-chat"`).
 
 ### 3️⃣ Run the application
 
