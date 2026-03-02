@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Stop backend and frontend processes started by start_all.sh
+# Stop backend and frontend processes started by start_service.sh
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 PID_DIR="$ROOT_DIR/pids"
