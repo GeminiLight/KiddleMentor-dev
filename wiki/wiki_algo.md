@@ -380,6 +380,7 @@ class BehavioralPatterns(BaseModel):
     system_usage_frequency: str
     session_duration_engagement: str
     motivational_triggers: Optional[str]
+    additional_notes: Optional[str] = None
 ```
 
 **Profiling Algorithm:**
@@ -1075,9 +1076,10 @@ workspace/
         ├── user_facts.md         # Long-term facts and context
         ├── chat_history.json     # Interaction log
         ├── profile.json          # Learner profile
-        ├── objectives.json       # Learning objectives
+        ├── learning_goals.json   # Learning goals (keyed by goal_id)
+        ├── skill_gaps.json       # Skill gaps (keyed by goal_id)
         ├── mastery.json          # Mastery and progress
-        └── learning_path.json    # Current learning path
+        └── learning_path.json    # Current learning path (keyed by goal_id)
 ```
 
 ### 9.2 Memory Store API
@@ -1106,22 +1108,40 @@ class MemoryStore:
 
 class LearnerMemoryStore(MemoryStore):
     """Extended memory for learner-specific data."""
-    
+
     def read_profile(self) -> dict:
         """Read learner profile."""
-    
+
     def write_profile(self, content: dict) -> None:
         """Write learner profile."""
-    
+
+    def read_learning_goals(self) -> dict:
+        """Read learning goals (keyed by goal_id)."""
+
+    def write_learning_goals(self, content: dict) -> None:
+        """Write learning goals (keyed by goal_id)."""
+
+    def read_skill_gaps(self) -> dict:
+        """Read skill gaps (keyed by goal_id)."""
+
+    def write_skill_gaps(self, content: dict) -> None:
+        """Write skill gaps (keyed by goal_id)."""
+
+    def read_learning_path(self) -> dict:
+        """Read learning path (keyed by goal_id)."""
+
+    def write_learning_path(self, content: dict) -> None:
+        """Write learning path (keyed by goal_id)."""
+
     def read_mastery(self) -> dict:
         """Read learning mastery and progress."""
-    
+
     def update_evaluations(self, evaluation: dict) -> None:
         """Update evaluations within mastery.json."""
-    
+
     def get_learner_context(self) -> str:
         """Get complete learner context for prompts."""
-    
+
     def log_interaction(self, role: str, content: str, metadata: Optional[dict] = None) -> None:
         """Log a tutor interaction."""
 ```
@@ -1137,9 +1157,9 @@ def get_learner_context(self) -> str:
     if profile:
         sections.append(f"## Learner Profile\n\n```json\n{json.dumps(profile)}\n```")
     
-    objectives = self.read_objectives()
+    objectives = self.read_learning_goals()
     if objectives:
-        sections.append(f"## Learning Objectives\n\n```json\n{json.dumps(objectives)}\n```")
+        sections.append(f"## Learning Goals\n\n```json\n{json.dumps(objectives)}\n```")
     
     mastery = self.read_mastery()
     if mastery:

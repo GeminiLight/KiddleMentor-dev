@@ -53,7 +53,7 @@ class LearnerRepository(BaseRepository):
         Returns:
             True if profile exists, False otherwise
         """
-        profile_path = self.workspace / "learners" / learner_id / "profile.json"
+        profile_path = self.workspace / "memory" / learner_id / "profile.json"
         return profile_path.exists()
 
     def get(self, learner_id: str) -> Optional[dict[str, Any]]:
@@ -83,7 +83,7 @@ class LearnerRepository(BaseRepository):
             learner_id: Learner identifier
         """
         import shutil
-        learner_dir = self.workspace / "learners" / learner_id
+        learner_dir = self.workspace / "memory" / learner_id
         if learner_dir.exists():
             shutil.rmtree(learner_dir)
 

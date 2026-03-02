@@ -146,11 +146,57 @@ class HistorySearchResponse(BaseResponse):
 class LLMModel(BaseModel):
     """LLM model information."""
 
-    model_name: str = Field(..., description="Model name")
-    model_provider: str = Field(..., description="Provider name")
+    model: str = Field(..., description="Model in provider/model format")
 
 
 class LLMModelsResponse(BaseResponse):
     """Response containing available LLM models."""
 
     models: List[LLMModel] = Field(..., description="List of available models")
+
+
+# =============================================================================
+# Assessment Responses
+# =============================================================================
+
+class PerformanceEvaluationResponse(BaseResponse):
+    """Response from performance evaluation."""
+
+    evaluation: Dict[str, Any] = Field(..., description="Performance evaluation result")
+
+
+class SkillMasteryEvaluationResponse(BaseResponse):
+    """Response from skill mastery evaluation."""
+
+    evaluation: Dict[str, Any] = Field(..., description="Skill mastery evaluation result")
+
+
+class PerformanceReportResponse(BaseResponse):
+    """Response from performance report generation."""
+
+    report: str = Field(..., description="Generated performance report")
+
+
+class FeedbackSimulationResponse(BaseResponse):
+    """Response from feedback simulation."""
+
+    feedback: Dict[str, Any] = Field(..., description="Simulated feedback result")
+
+
+# =============================================================================
+# Goal Responses
+# =============================================================================
+
+class GoalsListResponse(BaseResponse):
+    """Response containing list of goals."""
+
+    goals: List[Dict[str, Any]] = Field(default_factory=list, description="List of learning goals")
+    active_goal_id: Optional[str] = Field(None, description="Currently active goal ID")
+
+
+class GoalDetailResponse(BaseResponse):
+    """Response containing goal detail data."""
+
+    goal_id: str = Field(..., description="Goal identifier")
+    skill_gaps: Dict[str, Any] = Field(default_factory=dict, description="Skill gaps for goal")
+    learning_path: Dict[str, Any] = Field(default_factory=dict, description="Learning path for goal")

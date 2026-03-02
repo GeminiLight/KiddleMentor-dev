@@ -114,11 +114,16 @@ export interface DashboardData {
   };
   learning_path?: {
     sessions: Array<{
-      session_number: number;
-      topic: string;
-      completed: boolean;
+      id: string;
+      title: string;
+      abstract: string;
+      if_learned: boolean;
+      associated_skills?: string[];
+      desired_outcome_when_completed?: Array<{
+        name: string;
+        level: string;
+      }>;
       quiz_score?: number;
-      duration_estimate?: string;
     }>;
   };
   recent_activity: Array<{
@@ -147,7 +152,7 @@ export interface DashboardData {
 | `generateTailoredContent` | `{ learner_profile, learning_path, learning_session, with_quiz?, use_search?, allow_parallel?, goal_id?, model? }` | `{ success, tailored_content }` | ✅ |
 | `completeSession` | `{ learner_id, session_number, quiz_score?, duration_minutes? }` | `{ success, session_number, next_session?, progress_percent }` | ❌ |
 | `chatWithTutor` | `{ messages, learner_profile?, goal_id?, model? }` | `{ success, response }` | ✅ |
-| `generateDocumentQuizzes` | `{ learning_document, quiz_count?, goal_id?, model? }` | `{ success, quizzes }` | ✅ |
+| `generateDocumentQuizzes` | `{ learner_profile, learning_document, single_choice_count?, multiple_choice_count?, true_false_count?, short_answer_count?, goal_id?, model? }` | `{ success, quizzes }` | ✅ |
 | `getLearnerMemory` | `{ learner_id: string }` | `{ success, learner_id, profile, learning_goals, skill_gaps, mastery, learning_path, context, recent_history }` | ❌ |
 | `listUsers` | - | `{ success, users, count }` | ❌ |
 | `loginUser` | `{ learner_id: string }` | `{ success, learner_id, name, email? }` | ❌ |
@@ -170,7 +175,6 @@ apps/backend/
 │   ├── responses.py          # Response models for all endpoints
 │   └── defaults.py           # Default values (DEFAULT_MODEL_PROVIDER, DEFAULT_MODEL_NAME)
 ├── schemas.py                # Legacy schemas (deprecated, kept for compatibility)
-├── schemas.py                # Top-level schemas (legacy)
 ├── services/
 │   └── memory_service.py     # Memory management service
 ├── repositories/
@@ -395,12 +399,9 @@ class BehavioralPatterns(BaseModel):
 
 
 class LearnerProfile(BaseModel):
-    """Complete learner profile.
-    
-    Note: learning_goal is NOT included in this schema.
-    Learning goals are managed separately via goal_id in the memory system.
-    """
+    """Complete learner profile."""
     learner_information: str
+    learning_goal: str
     cognitive_status: CognitiveStatus
     learning_preferences: LearningPreferences
     behavioral_patterns: BehavioralPatterns
@@ -614,10 +615,13 @@ class SkillLevel(str, Enum):
 
 
 class ConfidenceLevel(str, Enum):
-    """Confidence in assessment."""
+    """Confidence in assessment. (Alias for Confidence enum from learning.py)"""
     low = "low"
     medium = "medium"
     high = "high"
+
+    # Note: This is identical to Confidence in learning.py.
+    # Consider consolidating into a single shared Confidence enum.
 
 
 class Priority(str, Enum):
@@ -1014,9 +1018,9 @@ Frontend:
 | Learner ID | `learner_id: string` | `learner_id: str` | N/A (storage key) |
 | Learning Goal | `learning_goal: string` | `learning_goal: str` | `RefinedLearningGoal` |
 | Skill Gaps | `skill_gaps: any` | `skill_gaps: Dict` | `SkillGaps` |
-| Learning Path | `learning_path.sessions[]` | `learning_path: Dict` | `LearningPath` |
+| Learning Path | `learning_path.sessions[]` (SessionItem) | `learning_path: Dict` | `LearningPath` |
 | Messages | `messages: Array<{role, content}>` | `messages: str (JSON)` | `List[ChatMessage]` |
-| Profile | `LearnerProfile` | `Dict[str, Any]` | `LearnerProfile` (no learning_goal) |
+| Profile | `LearnerProfile` | `Dict[str, Any]` | `LearnerProfile` (includes learning_goal) |
 
 ---
 
@@ -1062,9 +1066,9 @@ learner_profile: LearnerProfile  # Algorithm
 
 | Category | Frontend | Backend | Algorithm |
 |----------|----------|---------|-----------|
-| Skill Level | `string` | `str` | `LevelRequired`, `LevelCurrent`, `SkillLevel` |
-| Proficiency | `string` | `str` | `Proficiency` |
-| Confidence | `string` | `str` | `Confidence`, `ConfidenceLevel` |
+| Skill Level | `string` | `str` | `LevelRequired`, `LevelCurrent`, `SkillLevel` (to be consolidated) |
+| Proficiency | `string` | `str` | `Proficiency` (alias of `LevelRequired`) |
+| Confidence | `string` | `str` | `Confidence` / `ConfidenceLevel` (to be consolidated) |
 
 **Values**: `"beginner"`, `"intermediate"`, `"advanced"`, `"unlearned"`
 
@@ -1149,14 +1153,17 @@ All layers should return consistent error responses:
 
 ### Common Enums
 
-| Enum | Values | Location |
-|------|--------|----------|
-| `LevelRequired` | beginner, intermediate, advanced | `gen_mentor/schemas/learning.py` |
-| `LevelCurrent` | unlearned, beginner, intermediate, advanced | `gen_mentor/schemas/learning.py` |
-| `Proficiency` | beginner, intermediate, advanced | `gen_mentor/schemas/content.py` |
-| `KnowledgeType` | foundational, practical, strategic | `gen_mentor/schemas/content.py` |
-| `PerformanceLevel` | excellent, good, satisfactory, needs_improvement | `gen_mentor/schemas/assessment.py` |
-| `ProgressPace` | ahead, on_pace, behind | `gen_mentor/schemas/assessment.py` |
+| Enum | Values | Location | Notes |
+|------|--------|----------|-------|
+| `LevelRequired` | beginner, intermediate, advanced | `gen_mentor/schemas/learning.py` | |
+| `LevelCurrent` | unlearned, beginner, intermediate, advanced | `gen_mentor/schemas/learning.py` | Identical to `SkillLevel` — consolidate |
+| `Proficiency` | beginner, intermediate, advanced | `gen_mentor/schemas/content.py` | Identical to `LevelRequired` — consolidate |
+| `SkillLevel` | unlearned, beginner, intermediate, advanced | `gen_mentor/schemas/assessment.py` | Identical to `LevelCurrent` — consolidate |
+| `Confidence` | low, medium, high | `gen_mentor/schemas/learning.py` | |
+| `ConfidenceLevel` | low, medium, high | `gen_mentor/schemas/assessment.py` | Identical to `Confidence` — consolidate |
+| `KnowledgeType` | foundational, practical, strategic | `gen_mentor/schemas/content.py` | |
+| `PerformanceLevel` | excellent, good, satisfactory, needs_improvement | `gen_mentor/schemas/assessment.py` | |
+| `ProgressPace` | ahead, on_pace, behind | `gen_mentor/schemas/assessment.py` | |
 
 ### Parser Functions
 

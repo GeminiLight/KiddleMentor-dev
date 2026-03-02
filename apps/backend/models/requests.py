@@ -72,6 +72,10 @@ class SessionCompleteRequest(BaseModel):
         description="Learner identifier (optional, can be in URL path or body)",
         examples=["learner_123abc"]
     )
+    goal_id: Optional[str] = Field(
+        None,
+        description="Goal ID for goal-scoped learning path"
+    )
 
 
 class GetDashboardRequest(BaseModel):
@@ -317,3 +321,44 @@ class HistorySearchRequest(BaseModel):
     """Request for searching learner history."""
 
     query: str = Field(..., description="Search query", min_length=1)
+
+
+# =============================================================================
+# Assessment Requests
+# =============================================================================
+
+class PerformanceEvaluationRequest(BaseRequest):
+    """Request for evaluating learner performance."""
+
+    learner_profile: str = Field(..., description="Learner profile as JSON string")
+    learning_path: str = Field(..., description="Learning path as JSON string")
+    session_data: str = Field(..., description="Session data as JSON string")
+    quiz_results: Optional[str] = Field(default=None, description="Quiz results as JSON string")
+    goal_id: Optional[str] = Field(default=None, description="Goal ID to resolve learning goal from")
+
+
+class SkillMasteryEvaluationRequest(BaseRequest):
+    """Request for evaluating skill mastery."""
+
+    skill_name: str = Field(..., description="Name of the skill to evaluate")
+    learner_responses: str = Field(..., description="Learner responses as JSON string")
+    quiz_results: Optional[str] = Field(default=None, description="Quiz results as JSON string")
+    previous_attempts: Optional[str] = Field(default=None, description="Previous attempts as JSON string")
+
+
+class PerformanceReportRequest(BaseRequest):
+    """Request for generating performance report."""
+
+    learner_profile: str = Field(..., description="Learner profile as JSON string")
+    performance_history: str = Field(..., description="Performance history as JSON string")
+    time_period: str = Field(default="current session", description="Time period for the report")
+    goal_id: Optional[str] = Field(default=None, description="Goal ID to resolve learning goal from")
+
+
+class FeedbackSimulationRequest(BaseRequest):
+    """Request for simulating learner feedback."""
+
+    feedback_type: str = Field(..., description="Feedback type: 'path' or 'content'")
+    learner_profile: str = Field(..., description="Learner profile as JSON string")
+    data: str = Field(..., description="Learning path or content as JSON string")
+    goal_id: Optional[str] = Field(default=None, description="Goal ID to resolve learning goal from")

@@ -3,6 +3,7 @@ Progress endpoints - track learning progress.
 """
 
 from datetime import datetime
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 
 from models import SessionCompleteRequest, SessionCompleteResponse
@@ -66,8 +67,12 @@ async def _mark_session_complete_internal(
             detail=f"Profile not found for learner {learner_id}"
         )
 
-    # Get learning path
-    learning_path = repository.get_learning_path(learner_id)
+    # Get learning path — use goal-scoped path if goal_id is provided
+    if request.goal_id:
+        learning_path = repository.get_learning_path_for_goal(learner_id, request.goal_id)
+    else:
+        learning_path = repository.get_learning_path(learner_id)
+
     if not learning_path:
         raise HTTPException(
             status_code=404,
@@ -81,8 +86,8 @@ async def _mark_session_complete_internal(
     completed_count = 0
 
     for i, session in enumerate(sessions):
-        if session.get("session_number") == request.session_number:
-            session["completed"] = True
+        if session.get("id") == str(request.session_number):
+            session["if_learned"] = True
             session["completed_at"] = datetime.now().isoformat()
             session["duration_minutes"] = request.duration_minutes
             session["quiz_score"] = request.quiz_score
@@ -92,7 +97,7 @@ async def _mark_session_complete_internal(
             if i + 1 < len(sessions):
                 next_session = sessions[i + 1]
 
-        if session.get("completed"):
+        if session.get("if_learned"):
             completed_count += 1
 
     if not session_found:
@@ -102,7 +107,10 @@ async def _mark_session_complete_internal(
         )
 
     # Save updated learning path
-    repository.save_learning_path(learner_id, learning_path)
+    if request.goal_id:
+        repository.save_learning_path_for_goal(learner_id, request.goal_id, learning_path)
+    else:
+        repository.save_learning_path(learner_id, learning_path)
 
     # Calculate progress
     total_sessions = len(sessions)
@@ -123,6 +131,7 @@ async def _mark_session_complete_internal(
             "session_number": request.session_number,
             "duration_minutes": request.duration_minutes,
             "quiz_score": request.quiz_score,
+            "goal_id": request.goal_id,
             "timestamp": datetime.now().isoformat()
         }
     )
@@ -130,18 +139,23 @@ async def _mark_session_complete_internal(
     # Update mastery if quiz score provided
     if request.quiz_score is not None:
         mastery = repository.get_mastery(learner_id) or {}
-        session_topic = sessions[request.session_number - 1].get("topic", "unknown")
+        # Find the session title for mastery tracking
+        session_title = "unknown"
+        for s in sessions:
+            if s.get("id") == str(request.session_number):
+                session_title = s.get("title", "unknown")
+                break
 
-        # Simple mastery calculation (can be improved)
-        current_mastery = mastery.get(session_topic, 0)
+        # Simple mastery calculation
+        current_mastery = mastery.get(session_title, 0)
         new_mastery = (current_mastery + request.quiz_score) / 2
 
-        mastery[session_topic] = round(new_mastery, 1)
+        mastery[session_title] = round(new_mastery, 1)
         repository.save_mastery(learner_id, mastery)
 
         repository.append_mastery_entry(learner_id, {
             "session_number": request.session_number,
-            "topic": session_topic,
+            "title": session_title,
             "quiz_score": request.quiz_score,
             "mastery_level": new_mastery,
             "timestamp": datetime.now().isoformat()

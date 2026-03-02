@@ -19,7 +19,10 @@ from models import (
     LearnerProfileInitializationRequest,
     LearnerProfileUpdateRequest,
     LearnerProfileResponse,
-    GetProfileRequest
+    GetProfileRequest,
+    GoalsListResponse,
+    GoalDetailResponse,
+    BaseResponse,
 )
 from services.llm_service import get_llm_service, LLMService
 from services.memory_service import get_memory_service, MemoryService
@@ -526,4 +529,172 @@ async def update_learner_profile(
         success=True,
         message="Learner profile updated successfully",
         learner_profile=updated_profile
+    )
+
+
+# =============================================================================
+# Goal-Scoped CRUD Endpoints
+# =============================================================================
+
+@router.get("/{learner_id}/goals", response_model=GoalsListResponse, tags=["Goals"])
+async def get_learner_goals(
+    learner_id: str,
+    repository: LearnerRepository = Depends(get_learner_repository)
+):
+    """Get all learning goals for a learner.
+
+    Args:
+        learner_id: Learner identifier
+        repository: Learner repository dependency
+
+    Returns:
+        List of goals with active goal ID
+
+    Raises:
+        HTTPException: If profile not found
+    """
+    profile = repository.get_profile(learner_id)
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Profile not found for learner {learner_id}"
+        )
+
+    goals_data = repository.get_learning_goals(learner_id) or {}
+    goals = goals_data.get("goals", [])
+    active_goal_id = goals_data.get("active_goal_id")
+
+    return GoalsListResponse(
+        success=True,
+        message="Goals retrieved successfully",
+        goals=goals,
+        active_goal_id=active_goal_id
+    )
+
+
+@router.post("/{learner_id}/goals/{goal_id}/activate", response_model=BaseResponse, tags=["Goals"])
+async def activate_goal(
+    learner_id: str,
+    goal_id: str,
+    repository: LearnerRepository = Depends(get_learner_repository)
+):
+    """Activate a specific goal for a learner.
+
+    Sets the given goal as the active goal and deactivates others.
+
+    Args:
+        learner_id: Learner identifier
+        goal_id: Goal identifier to activate
+        repository: Learner repository dependency
+
+    Returns:
+        Success response
+
+    Raises:
+        HTTPException: If profile or goal not found
+    """
+    profile = repository.get_profile(learner_id)
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Profile not found for learner {learner_id}"
+        )
+
+    memory_store = repository._get_memory_store(learner_id)
+    goals_data = memory_store.read_learning_goals()
+
+    # Verify goal exists
+    goal_found = False
+    for goal in goals_data.get("goals", []):
+        if goal.get("goal_id") == goal_id:
+            goal["status"] = "active"
+            goal_found = True
+        else:
+            if goal.get("status") == "active":
+                goal["status"] = "inactive"
+
+    if not goal_found:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Goal {goal_id} not found for learner {learner_id}"
+        )
+
+    goals_data["active_goal_id"] = goal_id
+    memory_store.write_learning_goals(goals_data)
+
+    return BaseResponse(
+        success=True,
+        message=f"Goal {goal_id} activated successfully"
+    )
+
+
+@router.get("/{learner_id}/goals/{goal_id}/skill-gaps", response_model=GoalDetailResponse, tags=["Goals"])
+async def get_goal_skill_gaps(
+    learner_id: str,
+    goal_id: str,
+    repository: LearnerRepository = Depends(get_learner_repository)
+):
+    """Get skill gaps for a specific goal.
+
+    Args:
+        learner_id: Learner identifier
+        goal_id: Goal identifier
+        repository: Learner repository dependency
+
+    Returns:
+        Goal detail with skill gaps
+
+    Raises:
+        HTTPException: If profile not found
+    """
+    profile = repository.get_profile(learner_id)
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Profile not found for learner {learner_id}"
+        )
+
+    skill_gaps = repository.get_skill_gaps_for_goal(learner_id, goal_id)
+
+    return GoalDetailResponse(
+        success=True,
+        message="Skill gaps retrieved successfully",
+        goal_id=goal_id,
+        skill_gaps=skill_gaps
+    )
+
+
+@router.get("/{learner_id}/goals/{goal_id}/learning-path", response_model=GoalDetailResponse, tags=["Goals"])
+async def get_goal_learning_path(
+    learner_id: str,
+    goal_id: str,
+    repository: LearnerRepository = Depends(get_learner_repository)
+):
+    """Get learning path for a specific goal.
+
+    Args:
+        learner_id: Learner identifier
+        goal_id: Goal identifier
+        repository: Learner repository dependency
+
+    Returns:
+        Goal detail with learning path
+
+    Raises:
+        HTTPException: If profile not found
+    """
+    profile = repository.get_profile(learner_id)
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Profile not found for learner {learner_id}"
+        )
+
+    learning_path = repository.get_learning_path_for_goal(learner_id, goal_id)
+
+    return GoalDetailResponse(
+        success=True,
+        message="Learning path retrieved successfully",
+        goal_id=goal_id,
+        learning_path=learning_path
     )

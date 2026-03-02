@@ -486,8 +486,8 @@ async def set_learning_goal(
 ):
     """Set and refine learning goal for learner."""
     # Get LLM
-    llm = llm_service.get_llm(request.model_provider, request.model_name)
-    
+    llm = llm_service.get_llm(request.model)
+
     # Refine goal
     refined_goal = refine_learning_goal_with_llm(
         llm,
@@ -500,8 +500,8 @@ async def set_learning_goal(
     profile["refined_goal"] = refined_goal
     repository.save_profile(learner_id, profile)
     
-    # Save objectives
-    repository.save_objectives(learner_id, {
+    # Save learning goals
+    repository.save_learning_goals(learner_id, {
         "learning_goal": request.learning_goal,
         "refined_goal": refined_goal,
     })
@@ -523,8 +523,8 @@ async def create_learner_profile(
 ):
     """Create learner profile from information."""
     # Get LLM
-    llm = llm_service.get_llm(request.model_provider, request.model_name)
-    
+    llm = llm_service.get_llm(request.model)
+
     # Initialize profile
     learner_profile = initialize_learner_profile_with_llm(
         llm,
@@ -536,7 +536,7 @@ async def create_learner_profile(
     # Persist profile to workspace memory
     learner_id = learner_profile.get("learner_id")
     memory_service.save_profile(learner_id, learner_profile)
-    memory_service.save_objectives(learner_id, {...})
+    memory_service.save_learning_goals(learner_id, {...})
     
     return LearnerProfileResponse(
         success=True,
@@ -559,8 +559,8 @@ async def schedule_learning_path(
 ):
     """Schedule learning path."""
     # Get LLM
-    llm = llm_service.get_llm(request.model_provider, request.model_name)
-    
+    llm = llm_service.get_llm(request.model)
+
     # Parse learner profile
     learner_profile = json.loads(request.learner_profile)
     learner_id = learner_profile.get("learner_id")
@@ -631,7 +631,7 @@ async def get_dashboard(
     """Get complete dashboard state for learner."""
     # Get all data
     profile = repository.get_profile(learner_id)
-    objectives = repository.get_objectives(learner_id)
+    learning_goals = repository.get_learning_goals(learner_id)
     learning_path = repository.get_learning_path(learner_id)
     mastery = repository.get_mastery(learner_id)
     recent_history = repository.get_history(learner_id, limit=20)
@@ -955,7 +955,8 @@ class MemoryService:
         return {
             "learner_id": learner_id,
             "profile": memory.read_profile(),
-            "objectives": memory.read_objectives(),
+            "learning_goals": memory.read_learning_goals(),
+            "skill_gaps": memory.read_skill_gaps(),
             "mastery": memory.read_mastery(),
             "learning_path": memory.read_learning_path(),
             "context": memory.get_learner_context(),
@@ -1021,16 +1022,27 @@ class LearnerRepository(BaseRepository):
         memory_store = self._get_memory_store(learner_id)
         memory_store.write_profile(profile)
 
-    # Objectives operations
-    def get_objectives(self, learner_id: str) -> Optional[dict[str, Any]]:
-        """Get learning objectives."""
+    # Learning goals operations
+    def get_learning_goals(self, learner_id: str) -> Optional[dict[str, Any]]:
+        """Get learning goals."""
         memory_store = self._get_memory_store(learner_id)
-        return memory_store.read_objectives()
+        return memory_store.read_learning_goals()
 
-    def save_objectives(self, learner_id: str, objectives: dict[str, Any]):
-        """Save learning objectives."""
+    def save_learning_goals(self, learner_id: str, learning_goals: dict[str, Any]):
+        """Save learning goals."""
         memory_store = self._get_memory_store(learner_id)
-        memory_store.write_objectives(objectives)
+        memory_store.write_learning_goals(learning_goals)
+
+    # Skill gaps operations
+    def get_skill_gaps(self, learner_id: str) -> Optional[dict[str, Any]]:
+        """Get skill gaps."""
+        memory_store = self._get_memory_store(learner_id)
+        return memory_store.read_skill_gaps()
+
+    def save_skill_gaps(self, learner_id: str, skill_gaps: dict[str, Any]):
+        """Save skill gaps."""
+        memory_store = self._get_memory_store(learner_id)
+        memory_store.write_skill_gaps(skill_gaps)
 
     # Learning path operations
     def get_learning_path(self, learner_id: str) -> Optional[dict[str, Any]]:
@@ -1074,7 +1086,8 @@ class LearnerRepository(BaseRepository):
         return {
             "learner_id": learner_id,
             "profile": self.get_profile(learner_id) or {},
-            "objectives": self.get_objectives(learner_id) or {},
+            "learning_goals": self.get_learning_goals(learner_id) or {},
+            "skill_gaps": self.get_skill_gaps(learner_id) or {},
             "mastery": self.get_mastery(learner_id) or {},
             "learning_path": self.get_learning_path(learner_id) or {},
             "recent_history": self.get_history(learner_id, limit=10)
@@ -1474,12 +1487,13 @@ pytest tests/ --cov=. --cov-report=html
 
 ```
 workspace/
-└── learners/
+└── memory/
     └── {learner_id}/
         ├── profile.json           # Learner profile
-        ├── objectives.json        # Learning objectives
+        ├── learning_goals.json    # Learning goals (keyed by goal_id)
+        ├── skill_gaps.json        # Skill gaps (keyed by goal_id)
         ├── mastery.json           # Skill mastery levels
-        ├── learning_path.json     # Learning path
+        ├── learning_path.json     # Learning path (keyed by goal_id)
         ├── user_facts.md          # Long-term memory
         └── chat_history.json      # Interaction history
 ```

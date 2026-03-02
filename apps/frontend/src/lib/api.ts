@@ -53,11 +53,12 @@ export interface DashboardData {
   };
   learning_path?: {
     sessions: Array<{
-      session_number: number;
-      topic: string;
-      completed: boolean;
+      id: string;
+      title: string;
+      abstract: string;
+      if_learned: boolean;
+      associated_skills?: string[];
       quiz_score?: number;
-      duration_estimate?: string;
     }>;
   };
   recent_activity: Array<{
@@ -319,11 +320,12 @@ export const api = {
     learnerId: string,
     sessionNumber: number,
     quizScore?: number,
-    durationMinutes?: number
+    durationMinutes?: number,
+    goalId?: string
   ) =>
     fetchApi<{
       success: boolean;
-      message: string;
+      message?: string;
       session_number: number;
       next_session?: any;
       progress_percent: number;
@@ -334,6 +336,7 @@ export const api = {
         session_number: sessionNumber,
         quiz_score: quizScore,
         duration_minutes: durationMinutes,
+        goal_id: goalId,
       }),
     }),
 
@@ -371,8 +374,12 @@ export const api = {
    * Generate quizzes for learning document.
    */
   generateDocumentQuizzes: (data: {
+    learner_profile: string | Record<string, any>;
     learning_document: string | Record<string, any>;
-    quiz_count?: number;
+    single_choice_count?: number;
+    multiple_choice_count?: number;
+    true_false_count?: number;
+    short_answer_count?: number;
     goal_id?: string;
   } & BaseRequest) =>
     fetchApi<{
@@ -382,6 +389,9 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({
         ...data,
+        learner_profile: typeof data.learner_profile === 'string'
+          ? data.learner_profile
+          : JSON.stringify(data.learner_profile),
         learning_document: typeof data.learning_document === 'string'
           ? data.learning_document
           : JSON.stringify(data.learning_document),
@@ -436,7 +446,7 @@ export const api = {
    * List available LLM models.
    */
   listModels: () =>
-    fetchApi<{ models: Array<{ model_name: string; model_provider: string }> }>('/list-llm-models'),
+    fetchApi<{ success: boolean; models: Array<{ model: string }> }>('/list-llm-models'),
 
   /**
    * Get storage and workspace information.
@@ -480,6 +490,149 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ learner_id: learnerId }),
     }),
+
+  // ------------------------------------------------------------------------
+  // Assessment (additional)
+  // ------------------------------------------------------------------------
+
+  /**
+   * Evaluate learner performance on a session.
+   */
+  evaluatePerformance: (data: {
+    learner_profile: string | Record<string, any>;
+    learning_path: string | Record<string, any>;
+    session_data: string | Record<string, any>;
+    quiz_results?: string | Record<string, any>;
+    goal_id?: string;
+  } & BaseRequest) =>
+    fetchApi<{
+      success: boolean;
+      evaluation: Record<string, any>;
+    }>('/assessment/evaluate-performance', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        learner_profile: typeof data.learner_profile === 'string' ? data.learner_profile : JSON.stringify(data.learner_profile),
+        learning_path: typeof data.learning_path === 'string' ? data.learning_path : JSON.stringify(data.learning_path),
+        session_data: typeof data.session_data === 'string' ? data.session_data : JSON.stringify(data.session_data),
+        quiz_results: data.quiz_results
+          ? typeof data.quiz_results === 'string' ? data.quiz_results : JSON.stringify(data.quiz_results)
+          : undefined,
+      }),
+    }),
+
+  /**
+   * Evaluate mastery level of a specific skill.
+   */
+  evaluateSkillMastery: (data: {
+    skill_name: string;
+    learner_responses: string | Record<string, any>;
+    quiz_results?: string | Record<string, any>;
+    previous_attempts?: string | Record<string, any>;
+  } & BaseRequest) =>
+    fetchApi<{
+      success: boolean;
+      evaluation: Record<string, any>;
+    }>('/assessment/evaluate-skill-mastery', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        learner_responses: typeof data.learner_responses === 'string' ? data.learner_responses : JSON.stringify(data.learner_responses),
+        quiz_results: data.quiz_results
+          ? typeof data.quiz_results === 'string' ? data.quiz_results : JSON.stringify(data.quiz_results)
+          : undefined,
+        previous_attempts: data.previous_attempts
+          ? typeof data.previous_attempts === 'string' ? data.previous_attempts : JSON.stringify(data.previous_attempts)
+          : undefined,
+      }),
+    }),
+
+  /**
+   * Generate a performance report for a learner.
+   */
+  generatePerformanceReport: (data: {
+    learner_profile: string | Record<string, any>;
+    performance_history: string | Record<string, any>;
+    time_period?: string;
+    goal_id?: string;
+  } & BaseRequest) =>
+    fetchApi<{
+      success: boolean;
+      report: string;
+    }>('/assessment/generate-performance-report', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        learner_profile: typeof data.learner_profile === 'string' ? data.learner_profile : JSON.stringify(data.learner_profile),
+        performance_history: typeof data.performance_history === 'string' ? data.performance_history : JSON.stringify(data.performance_history),
+      }),
+    }),
+
+  /**
+   * Simulate learner feedback on a learning path or content.
+   */
+  simulateFeedback: (data: {
+    feedback_type: 'path' | 'content';
+    learner_profile: string | Record<string, any>;
+    data: string | Record<string, any>;
+    goal_id?: string;
+  } & BaseRequest) =>
+    fetchApi<{
+      success: boolean;
+      feedback: Record<string, any>;
+    }>('/assessment/simulate-feedback', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        learner_profile: typeof data.learner_profile === 'string' ? data.learner_profile : JSON.stringify(data.learner_profile),
+        data: typeof data.data === 'string' ? data.data : JSON.stringify(data.data),
+      }),
+    }),
+
+  // ------------------------------------------------------------------------
+  // Goal-Scoped CRUD
+  // ------------------------------------------------------------------------
+
+  /**
+   * Get all learning goals for a learner.
+   */
+  getGoals: (learnerId: string) =>
+    fetchApi<{
+      success: boolean;
+      goals: Array<Record<string, any>>;
+      active_goal_id?: string;
+    }>(`/profile/${learnerId}/goals`),
+
+  /**
+   * Activate a specific goal for a learner.
+   */
+  activateGoal: (learnerId: string, goalId: string) =>
+    fetchApi<{
+      success: boolean;
+      message?: string;
+    }>(`/profile/${learnerId}/goals/${goalId}/activate`, {
+      method: 'POST',
+    }),
+
+  /**
+   * Get skill gaps for a specific goal.
+   */
+  getGoalSkillGaps: (learnerId: string, goalId: string) =>
+    fetchApi<{
+      success: boolean;
+      goal_id: string;
+      skill_gaps: Record<string, any>;
+    }>(`/profile/${learnerId}/goals/${goalId}/skill-gaps`),
+
+  /**
+   * Get learning path for a specific goal.
+   */
+  getGoalLearningPath: (learnerId: string, goalId: string) =>
+    fetchApi<{
+      success: boolean;
+      goal_id: string;
+      learning_path: Record<string, any>;
+    }>(`/profile/${learnerId}/goals/${goalId}/learning-path`),
 };
 
 // ============================================================================

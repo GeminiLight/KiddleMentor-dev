@@ -389,14 +389,17 @@ export default function AITutorChat({ sessionId }: { sessionId: string }) {
     setInput("");
     setIsLoading(true);
 
-    // Call API
-    const response = await fetch(`${API_BASE_URL}/chat/chat-with-tutor`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session_id: sessionId, message: userMessage.content }),
+    // Build chat history for API
+    const allMessages = [...messages, userMessage];
+    const chatHistory = allMessages.map(m => ({ role: m.role, content: m.content }));
+
+    // Call API using the api client
+    const data = await api.chatWithTutor({
+      messages: chatHistory,
+      learner_profile: { learner_id: getStoredLearnerId() },
+      goal_id: goalId,
     });
 
-    const data = await response.json();
     const assistantMessage: Message = { id: (Date.now() + 1).toString(), role: "assistant", content: data.response };
     setMessages((prev) => [...prev, assistantMessage]);
     setIsLoading(false);
@@ -1739,11 +1742,16 @@ export interface DashboardData {
   };
   learning_path?: {
     sessions: Array<{
-      session_number: number;
-      topic: string;
-      completed: boolean;
+      id: string;
+      title: string;
+      abstract: string;
+      if_learned: boolean;
+      associated_skills?: string[];
+      desired_outcome_when_completed?: Array<{
+        name: string;
+        level: string;
+      }>;
       quiz_score?: number;
-      duration_estimate?: string;
     }>;
   };
   recent_activity: Array<{
@@ -1961,7 +1969,7 @@ completeSession: (
 ) =>
   fetchApi<{
     success: boolean;
-    message: string;
+    message?: string;
     session_number: number;
     next_session?: any;
     progress_percent: number;
@@ -2010,14 +2018,19 @@ chatWithTutor: (data: {
 
 ```ts
 generateDocumentQuizzes: (data: {
+  learner_profile: string | Record<string, any>;
   learning_document: string | Record<string, any>;
-  quiz_count?: number;
+  single_choice_count?: number;
+  multiple_choice_count?: number;
+  true_false_count?: number;
+  short_answer_count?: number;
   goal_id?: string;
 } & BaseRequest) =>
   fetchApi<{ success: boolean; quizzes: any }>('/assessment/generate-document-quizzes', {
     method: 'POST',
     body: JSON.stringify({
       ...data,
+      learner_profile: typeof data.learner_profile === 'string' ? data.learner_profile : JSON.stringify(data.learner_profile),
       learning_document: typeof data.learning_document === 'string' ? data.learning_document : JSON.stringify(data.learning_document),
     }),
   })
@@ -2086,7 +2099,7 @@ getLearnerMemory: (learnerId: string) =>
 ```ts
 // List available LLM models
 listModels: () =>
-  fetchApi<{ models: Array<{ model_name: string; model_provider: string }> }>('/list-llm-models')
+  fetchApi<{ success: boolean; models: Array<{ model: string }> }>('/list-llm-models')
 
 // Get storage info
 getStorageInfo: () =>

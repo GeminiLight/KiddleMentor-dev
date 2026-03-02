@@ -51,7 +51,7 @@ async def list_llm_models(
     Returns a list of configured LLM models that can be used for generation.
     """
     models_data = llm_service.list_available_models()
-    models = [LLMModel(**model) for model in models_data]
+    models = [LLMModel(model=f"{m['model_provider']}/{m['model_name']}") for m in models_data]
     return LLMModelsResponse(
         success=True,
         message="Models retrieved successfully",

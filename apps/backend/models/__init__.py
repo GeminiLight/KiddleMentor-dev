@@ -32,6 +32,10 @@ from .requests import (
     KnowledgeQuizGenerationRequest,
     TailoredContentGenerationRequest,
     HistorySearchRequest,
+    PerformanceEvaluationRequest,
+    SkillMasteryEvaluationRequest,
+    PerformanceReportRequest,
+    FeedbackSimulationRequest,
 )
 from .responses import (
     InitializeSessionResponse,
@@ -52,6 +56,12 @@ from .responses import (
     HistorySearchResponse,
     LLMModel,
     LLMModelsResponse,
+    PerformanceEvaluationResponse,
+    SkillMasteryEvaluationResponse,
+    PerformanceReportResponse,
+    FeedbackSimulationResponse,
+    GoalsListResponse,
+    GoalDetailResponse,
 )
 
 __all__ = [
@@ -85,6 +95,11 @@ __all__ = [
     "KnowledgeQuizGenerationRequest",
     "TailoredContentGenerationRequest",
     "HistorySearchRequest",
+    # Assessment Requests
+    "PerformanceEvaluationRequest",
+    "SkillMasteryEvaluationRequest",
+    "PerformanceReportRequest",
+    "FeedbackSimulationRequest",
     # Session Management Responses
     "InitializeSessionResponse",
     "DashboardResponse",
@@ -105,4 +120,12 @@ __all__ = [
     "HistorySearchResponse",
     "LLMModel",
     "LLMModelsResponse",
+    # Assessment Responses
+    "PerformanceEvaluationResponse",
+    "SkillMasteryEvaluationResponse",
+    "PerformanceReportResponse",
+    "FeedbackSimulationResponse",
+    # Goal Responses
+    "GoalsListResponse",
+    "GoalDetailResponse",
 ]
