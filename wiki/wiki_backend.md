@@ -245,9 +245,10 @@ class BackendSettings(BaseSettings):
 | Module | Prefix | Endpoints | Description |
 |--------|--------|-----------|-------------|
 | System | - | `/health`, `/storage-info`, `/list-llm-models` | System status and configuration |
+| Users | `/users` | `/list`, `/login`, `/sync`, `/delete` | User management and authentication |
 | Chat | `/chat` | `/chat-with-tutor` | AI tutor conversation |
 | Goals | `/goals` | `/refine-learning-goal` | Goal refinement |
-| Skills | `/skills` | `/identify-skill-gap-with-info`, `/identify-skill-gap` | Skill gap analysis |
+| Skills | `/skills` | `/identify-skill-gap-with-info`, `/identify-skill-gap`, `/identify-and-save-skill-gap` | Skill gap analysis |
 | Profile | `/profile` | Multiple endpoints | Profile and session management |
 | Learning | `/learning` | Multiple endpoints | Learning path and content |
 | Assessment | `/assessment` | `/generate-document-quizzes` | Quiz generation |
@@ -286,7 +287,108 @@ async def list_llm_models(llm_service: LLMService = Depends(get_llm_service)):
     ...
 ```
 
-### 5.3 Chat Endpoint
+### 5.3 Users Endpoints
+
+**File**: `api/v1/endpoints/users.py`
+
+User management endpoints for listing, logging in, syncing, and deleting user accounts.
+
+#### List Users
+
+```python
+@router.get("/list", response_model=UserListResponse)
+async def list_users():
+    """List all registered users."""
+    registry = get_user_registry()
+    users = registry.list_users()
+    return UserListResponse(
+        success=True,
+        users=[UserInfo(**u) for u in users],
+        count=len(users),
+    )
+```
+
+#### Login User
+
+```python
+@router.post("/login", response_model=LoginResponse)
+async def login_user(request: LoginRequest):
+    """Login as an existing user by learner_id."""
+    registry = get_user_registry()
+    user = registry.get_user(request.learner_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return LoginResponse(
+        success=True,
+        learner_id=user["learner_id"],
+        name=user.get("name", "Anonymous Learner"),
+        email=user.get("email"),
+    )
+```
+
+#### Sync Users
+
+```python
+@router.post("/sync", response_model=SyncResponse)
+async def sync_users():
+    """Sync user registry from existing learner profiles on disk."""
+    registry = get_user_registry()
+    count = registry.sync_from_disk()
+    return SyncResponse(success=True, synced_count=count)
+```
+
+#### Delete User
+
+```python
+@router.post("/delete", response_model=DeleteResponse)
+async def delete_user(request: DeleteRequest):
+    """Delete a user account and all associated learner data."""
+    registry = get_user_registry()
+    deleted = registry.delete_user(request.learner_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="User not found")
+    return DeleteResponse(
+        success=True,
+        message=f"Account {request.learner_id} deleted successfully",
+    )
+```
+
+**Response Models**:
+
+```python
+class UserInfo(BaseModel):
+    learner_id: str
+    name: str
+    email: Optional[str] = None
+    created_at: Optional[str] = None
+
+class UserListResponse(BaseModel):
+    success: bool
+    users: List[UserInfo]
+    count: int
+
+class LoginRequest(BaseModel):
+    learner_id: str
+
+class LoginResponse(BaseModel):
+    success: bool
+    learner_id: str
+    name: str
+    email: Optional[str] = None
+
+class SyncResponse(BaseModel):
+    success: bool
+    synced_count: int
+
+class DeleteRequest(BaseModel):
+    learner_id: str
+
+class DeleteResponse(BaseModel):
+    success: bool
+    message: str
+```
+
+### 5.4 Chat Endpoint
 
 **File**: `api/v1/endpoints/chat.py`
 
@@ -337,7 +439,7 @@ async def chat_with_tutor(
     return ChatResponse(success=True, response=response)
 ```
 
-### 5.4 Profile Endpoints
+### 5.5 Profile Endpoints
 
 **File**: `api/v1/endpoints/profile.py`
 
@@ -442,7 +544,7 @@ async def create_learner_profile(
     )
 ```
 
-### 5.5 Learning Path Endpoints
+### 5.6 Learning Path Endpoints
 
 **File**: `api/v1/endpoints/learning_path.py`
 
@@ -516,7 +618,7 @@ async def tailor_knowledge_content(
     )
 ```
 
-### 5.6 Dashboard Endpoint
+### 5.7 Dashboard Endpoint
 
 **File**: `api/v1/endpoints/dashboard.py`
 
@@ -555,7 +657,7 @@ async def get_dashboard(
     )
 ```
 
-### 5.7 Progress Endpoint
+### 5.8 Progress Endpoint
 
 **File**: `api/v1/endpoints/progress.py`
 

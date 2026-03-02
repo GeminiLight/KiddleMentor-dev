@@ -1276,6 +1276,11 @@ class BaseRequest(BaseModel):
 | | | - Added LearnerProfileInitializationRequest (CV-based) |
 | | | - Added Legacy vs New Models section for migration guide |
 | | | - Updated request models table with accurate field types |
+| 1.6.0 | 2026-03-02 | **Maintenance update**: Verified all schemas match current implementation |
+| | | - Confirmed all API endpoints match current router configuration |
+| | | - Verified frontend API client types match backend models |
+| | | - Added user management endpoints documentation (listUsers, loginUser, deleteUser) |
+| | | - Updated API Method Signatures table with accurate goal_id support |
 
 ---
 
