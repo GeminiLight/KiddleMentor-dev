@@ -50,8 +50,8 @@ GenMentor is an intelligent tutoring system (ITS) that leverages Large Language 
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │                         Application Layer                            │   │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐  │   │
-│  │  │   CLI App    │  │  FastAPI     │  │   Streamlit Frontend     │  │   │
-│  │  │  (cli/main)  │  │  (backend)   │  │   (frontend_streamlit)   │  │   │
+│  │  │   CLI App    │  │  FastAPI     │  │   Next.js Frontend       │  │   │
+│  │  │  (cli/main)  │  │  (backend)   │  │   (frontend)             │  │   │
 │  │  └──────────────┘  └──────────────┘  └──────────────────────────┘  │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                    │                                        │

@@ -74,18 +74,7 @@ dev = [
     "isort>=5.12.0",
 ]
 
-frontend = [
-    "streamlit>=1.40.0",
-    "streamlit-card",
-    "streamlit-chat",
-    "streamlit-extras",
-    "streamlit-tags",
-    "st-pages>=0.4.5",
-    "streamlit-float>=0.3.5",
-    "streamlit-option-menu",
-    "streamlit-on-Hover-tabs",
-    "extra-streamlit-components>=0.1.60",
-]
+frontend = []
 
 [project.scripts]
 gen-mentor = "gen_mentor.cli.main:main"

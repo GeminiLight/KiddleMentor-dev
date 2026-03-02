@@ -59,8 +59,8 @@ GenMentor is an advanced Intelligent Tutoring System (ITS) that leverages Large 
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐ │
-│  │   Web Frontend   │  │   FastAPI        │  │   CLI Tool   │ │
-│  │   (Streamlit)    │◄─┤   Backend        │  │              │ │
+│  │   Web Frontend  │  │   FastAPI        │  │   CLI Tool   │ │
+│  │   (Next.js)     │◄─┤   Backend        │  │              │ │
 │  └──────────────────┘  └──────────────────┘  └──────────────┘ │
 │           │                      │                    │         │
 │           └──────────────────────┴────────────────────┘         │
@@ -101,7 +101,7 @@ gen-mentor/
 │   ├── backend/                  # FastAPI backend
 │   │   ├── main.py              # API server
 │   │   └── api/                 # API schemas
-│   └── frontend_streamlit/       # Streamlit frontend
+│   └── frontend/                 # Next.js frontend
 │
 ├── tests/                        # Test suite
 │   ├── unit/                    # Unit tests
@@ -212,13 +212,13 @@ uvicorn main:app --reload --port 5000
 
 **Frontend:**
 ```bash
-cd apps/frontend_streamlit
-streamlit run main.py --server.port 8501
+cd apps/frontend
+npm run dev
 ```
 
 **Access:**
 - Backend API: http://localhost:5000
-- Frontend UI: http://localhost:8501
+- Frontend UI: http://localhost:3000
 
 ---
 

@@ -68,7 +68,7 @@ In this paper, we propose GenMentor, a large language model (LLM)-powered multi-
 
 ## 🚀 Quick start
 
-Here, we briefly describe how to set up and run the GenMentor system locally. Please see more details in the respective `apps/backend/` and `apps/frontend_streamlit/` directories.
+Here, we briefly describe how to set up and run the GenMentor system locally. Please see more details in the respective `apps/backend/` and `apps/frontend/` directories.
 
 ### 🛠️ Installation
 
@@ -84,10 +84,8 @@ uv pip install -r requirements.txt
 2. Frontend environment setup
 
 ```bash
-cd apps/frontend_streamlit
-uv venv
-source .venv/bin/activate  # on Windows: .venv\Scripts\activate
-uv pip install -r requirements.txt
+cd apps/frontend
+npm install
 ```
 
 ### ⚙️ Configuration
@@ -115,18 +113,10 @@ export DEEPSEEK_API_KEY="your-deepseek-api-key"
 DEEPSEEK_API_KEY="your-deepseek-api-key"
 ```
 
-2. Configure api endpoint for frontend
-
-If you would like to run the backend on a different host/port, please update the API URL in `apps/frontend_streamlit/config.py`:
-
-```python
-backend_endpoint = "http://127.0.0.1:5000/"
-```
-
 ### ▶️ Running Locally
 
 > [!NOTE]
-> The default ports are 5000 for backend, 8501 for frontend by default
+> The default ports are 5000 for backend, 3000 for frontend by default
 
 *Option A*: Manual (preferred when using separate venvs)
 
@@ -139,12 +129,11 @@ uvicorn main:app --reload --port 5000
 
 ```bash
 # start frontend
-cd apps/frontend_streamlit
-source .venv/bin/activate  # on Windows: .venv\Scripts\activate
-streamlit run main.py --server.port 8501
+cd apps/frontend
+npm run dev
 ```
 
-*Option B*: Helper scripts (single shell; assumes uvicorn/streamlit on PATH)
+*Option B*: Helper scripts (single shell; assumes uvicorn on PATH)
 
 ```bash
 # start backend
@@ -162,11 +151,11 @@ bash ./scripts/stop_all.sh
 Finally, you can access:
 
 - Backend API: http://127.0.0.1:5000/
-- Frontend UI: http://127.0.0.1:8501/
+- Frontend UI: http://127.0.0.1:3000/
 
 ### 🧩 Run Core Features via CLI (No App Services)
 
-You can run core `gen_mentor` capabilities directly without starting FastAPI/Streamlit:
+You can run core `gen_mentor` capabilities directly without starting FastAPI:
 
 ```bash
 python -m gen_mentor.cli --help
