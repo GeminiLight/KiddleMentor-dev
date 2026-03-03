@@ -7,7 +7,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 LOG_DIR="$ROOT_DIR/logs"
-PID_DIR="$ROOT_DIR/pids"
+PID_DIR="$LOG_DIR/pids"
 mkdir -p "$LOG_DIR" "$PID_DIR"
 
 echo "============================================================"

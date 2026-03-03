@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Check, Loader2, Sparkles, UploadCloud, FileText, X, Wand2, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
@@ -11,7 +11,20 @@ import { setStoredLearnerId } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function OnboardingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+        <Loader2 className="animate-spin text-primary-500" size={32} />
+      </div>
+    }>
+      <OnboardingContent />
+    </Suspense>
+  );
+}
+
+function OnboardingContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState(0);
@@ -25,6 +38,14 @@ export default function OnboardingPage() {
     background: "",
     commitment: "5-10 hours/week",
   });
+
+  // Pre-fill goal from query param (e.g. from landing page)
+  useEffect(() => {
+    const goalParam = searchParams.get("goal");
+    if (goalParam) {
+      setFormData(prev => ({ ...prev, goal: goalParam }));
+    }
+  }, [searchParams]);
 
   const handleNext = async () => {
     if (step === 1) {
@@ -88,16 +109,25 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleRefineGoal = () => {
+  const handleRefineGoal = async () => {
     if (!formData.goal.trim()) return;
     setIsRefiningGoal(true);
-    setTimeout(() => {
-      setFormData(prev => ({
-        ...prev,
-        goal: `I want to become a professional in ${prev.goal}, focusing on core industry skills and practical applications to achieve mastery.`
-      }));
+    try {
+      const result = await api.refineGoal({
+        learning_goal: formData.goal,
+        learner_information: formData.background || undefined,
+      });
+      const refined = result.refined_goal;
+      const refinedText =
+        typeof refined === "string"
+          ? refined
+          : refined?.goal_description || refined?.description || refined?.refined_goal || JSON.stringify(refined);
+      setFormData(prev => ({ ...prev, goal: refinedText }));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to refine goal");
+    } finally {
       setIsRefiningGoal(false);
-    }, 1500);
+    }
   };
 
   const getEstimatedTime = (commitment: string) => {

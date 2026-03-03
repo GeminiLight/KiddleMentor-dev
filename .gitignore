@@ -10,6 +10,7 @@ __pycache__/
 .DS_Store
 .claude
 .pytest_cache
+logs
 
 frontend/user_data/*
 

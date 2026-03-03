@@ -28,8 +28,25 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { goals, currentGoalIndex, setCurrentGoalIndex } = useGoal();
+  const { goals, currentGoalIndex, setCurrentGoalIndex, learner } = useGoal();
   const [isGoalListOpen, setIsGoalListOpen] = useState(false);
+
+  // Compute XP from learner progress: each completed session = 50 XP
+  const totalCompleted = Object.values(learner.learningPath).reduce((acc: number, pathData: unknown) => {
+    const pd = pathData as Record<string, unknown> | undefined;
+    const sessions = pd?.learning_path;
+    if (!Array.isArray(sessions)) return acc;
+    return acc + sessions.filter((s: Record<string, unknown>) => s.completed || s.if_learned).length;
+  }, 0);
+  const xp = totalCompleted * 50;
+  const level = Math.floor(xp / 500) + 1;
+  const xpInLevel = xp % 500;
+  const xpForNextLevel = 500;
+  const xpPercent = xpForNextLevel > 0 ? Math.round((xpInLevel / xpForNextLevel) * 100) : 0;
+  const xpRemaining = xpForNextLevel - xpInLevel;
+  const levelTitles = ["Newcomer", "Beginner", "AI Apprentice", "Scholar", "Agent Architect", "Mentor", "Grand Master"];
+  const currentTitle = levelTitles[Math.min(level - 1, levelTitles.length - 1)];
+  const nextTitle = levelTitles[Math.min(level, levelTitles.length - 1)];
 
   return (
     <div className="flex h-full w-64 flex-col border-r border-border bg-card px-4 py-6">
@@ -148,13 +165,13 @@ export function Sidebar() {
                 <Trophy size={16} />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Level 4</h4>
-                <p className="text-[10px] font-medium text-muted-foreground">AI Apprentice</p>
+                <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Level {level}</h4>
+                <p className="text-[10px] font-medium text-muted-foreground">{currentTitle}</p>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-xs font-bold text-amber-600 dark:text-amber-400">1,250 XP</span>
-              <p className="text-[10px] text-muted-foreground">/ 2,000 XP</p>
+              <span className="text-xs font-bold text-amber-600 dark:text-amber-400">{xpInLevel.toLocaleString()} XP</span>
+              <p className="text-[10px] text-muted-foreground">/ {xpForNextLevel.toLocaleString()} XP</p>
             </div>
           </div>
 
@@ -162,7 +179,7 @@ export function Sidebar() {
             <div className="h-2 w-full bg-background rounded-full overflow-hidden border border-border/50">
               <div 
                 className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full relative overflow-hidden"
-                style={{ width: "62.5%" }}
+                style={{ width: `${xpPercent}%` }}
               >
                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay" />
                 <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-white/40 to-transparent" />
@@ -170,8 +187,8 @@ export function Sidebar() {
               </div>
             </div>
             <div className="mt-2 flex items-center justify-between text-[10px] font-medium text-muted-foreground">
-              <span className="flex items-center gap-1"><Star size={10} className="text-amber-500" /> Next: Agent Architect</span>
-              <span>750 XP left</span>
+              <span className="flex items-center gap-1"><Star size={10} className="text-amber-500" /> Next: {nextTitle}</span>
+              <span>{xpRemaining.toLocaleString()} XP left</span>
             </div>
           </div>
         </div>

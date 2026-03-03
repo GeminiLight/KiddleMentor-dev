@@ -169,7 +169,7 @@ export default function LearningPathPage() {
     setRescheduledRawPath(null);
   };
 
-  const handleStartSession = (session: Record<string, unknown>) => {
+  const handleStartSession = async (session: Record<string, unknown>) => {
     const learnerId = getStoredLearnerId();
     if (!learnerId) return;
 
@@ -190,7 +190,29 @@ export default function LearningPathPage() {
     // Clear any stale content from a previous session
     localStorage.removeItem("current_session_content");
 
-    router.push(`/session/${sessionId}`);
+    // Show spinner on the button while generating content
+    setGeneratingSessionId(sessionId);
+
+    try {
+      const result = await api.generateTailoredContent({
+        learner_profile: { learner_id: learnerId },
+        learning_path: sessionsArray,
+        learning_session: (session.data as Record<string, unknown>) || {},
+        with_quiz: true,
+        goal_id: goalId,
+      });
+
+      // Store generated content for the session page to pick up
+      localStorage.setItem("current_session_content", JSON.stringify(result.tailored_content));
+
+      router.push(`/session/${sessionId}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to generate content";
+      toast.error(message);
+      console.error("[GenerateContent]", err);
+    } finally {
+      setGeneratingSessionId(null);
+    }
   };
 
   const radarData = skills.map(s => ({

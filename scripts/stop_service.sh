@@ -4,7 +4,7 @@ set -euo pipefail
 # Stop backend and frontend processes started by start_service.sh
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
-PID_DIR="$ROOT_DIR/pids"
+PID_DIR="$LOG_DIR/pids"
 
 stop_by_pidfile() {
   local name="$1" pidfile="$PID_DIR/$1.pid"

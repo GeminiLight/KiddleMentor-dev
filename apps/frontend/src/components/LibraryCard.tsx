@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, FileText, BookOpen, Clock } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { api, getStoredLearnerId } from "@/lib/api";
 
 interface LibraryCardProps {
   id: string;
@@ -30,17 +31,22 @@ export function LibraryCard({
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [summary, setSummary] = useState(aiSummary);
 
-  const handleToggleSummary = () => {
+  const handleToggleSummary = async () => {
     if (!isSummaryOpen && !summary) {
       setIsLoadingSummary(true);
       setIsSummaryOpen(true);
-      // Simulate AI generation
-      setTimeout(() => {
-        setSummary(
-          "- **Core Concept**: Understand the fundamental principles of this topic.\n- **Key Application**: Learn how to apply these concepts in real-world scenarios.\n- **Common Pitfall**: Avoid typical mistakes by following best practices."
-        );
+      try {
+        const learnerId = getStoredLearnerId();
+        const result = await api.chatWithTutor({
+          messages: [{ role: "user", content: `Give me a concise knowledge summary (3-4 bullet points in markdown) for the topic: "${title}". Focus on core concepts, key applications, and common pitfalls.` }],
+          learner_profile: learnerId ? { learner_id: learnerId } : undefined,
+        });
+        setSummary(result.response);
+      } catch {
+        setSummary("Failed to generate summary. Please try again.");
+      } finally {
         setIsLoadingSummary(false);
-      }, 1500);
+      }
     } else {
       setIsSummaryOpen(!isSummaryOpen);
     }

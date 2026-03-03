@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight, Sparkles, Target, Zap, Shield, CheckCircle2, Search, BrainCircuit, Map, Globe, Radar } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -17,17 +18,15 @@ const radarData = [
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
   const [goalInput, setGoalInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = () => {
     if (!goalInput.trim()) return;
     setIsGenerating(true);
-    // Simulate generation
-    setTimeout(() => {
-      setIsGenerating(false);
-      // In a real app, this would redirect to onboarding or learning path
-    }, 4000);
+    // Redirect to onboarding with goal pre-filled
+    router.push(`/onboarding?goal=${encodeURIComponent(goalInput.trim())}`);
   };
 
   return (

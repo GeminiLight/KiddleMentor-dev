@@ -2,18 +2,22 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, FileText, CheckCircle2, AlertCircle, Archive, Sparkles, ChevronDown, Target, Zap } from "lucide-react";
+import { BookOpen, FileText, CheckCircle2, AlertCircle, Archive, Sparkles, ChevronDown, Target, Zap, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { LibraryCard } from "@/components/LibraryCard";
 import { MistakeBook } from "@/components/MistakeBook";
 import { useSession } from "@/lib/hooks/useSession";
+import { useGoal } from "@/components/GoalContext";
+import { api, getStoredLearnerId } from "@/lib/api";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export default function LibraryPage() {
   const { isLoading } = useSession();
+  const { currentGoal, goals, setCurrentGoalIndex, learner } = useGoal();
   const [activeTab, setActiveTab] = useState<"Overview" | "Study Materials" | "Assessments" | "Archives">("Overview");
   const [isGoalMenuOpen, setIsGoalMenuOpen] = useState(false);
-  const [currentGoal, setCurrentGoal] = useState("Senior Data Analyst");
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [goalSummary, setGoalSummary] = useState<string | null>(null);
 
@@ -24,44 +28,60 @@ export default function LibraryPage() {
     { id: "Archives", icon: Archive },
   ];
 
-  const mockDocuments = [
-    {
-      id: "doc-1",
-      title: "Advanced SQL Window Functions",
-      type: "document" as const,
-      mastery: 85,
-      skills: ["SQL", "Data Analysis"],
-      date: "2 days ago",
-      duration: "15 min read",
-    },
-    {
-      id: "doc-2",
-      title: "Python Pandas for Data Manipulation",
-      type: "interactive" as const,
-      mastery: 60,
-      skills: ["Python", "Pandas"],
-      date: "1 week ago",
-      duration: "30 min practice",
-    },
-    {
-      id: "doc-3",
-      title: "Data Visualization with Matplotlib",
-      type: "video" as const,
-      mastery: 40,
-      skills: ["Python", "Data Viz"],
-      date: "2 weeks ago",
-      duration: "45 min watch",
-    }
-  ];
+  // Build documents from real learning path sessions
+  const goalId = currentGoal.goal_id;
+  const pathData = learner.learningPath[goalId];
+  const rawSessions = pathData?.learning_path;
+  const sessionsArray: Record<string, any>[] = Array.isArray(rawSessions)
+    ? rawSessions
+    : Array.isArray(rawSessions?.learning_path)
+      ? rawSessions.learning_path
+      : [];
 
-  const handleGenerateSummary = () => {
+  const documents = sessionsArray
+    .filter((s) => s.completed || s.if_learned)
+    .map((s, idx) => ({
+      id: `session-${idx}`,
+      title: (s.session_title || s.title || `Session ${idx + 1}`) as string,
+      type: "document" as const,
+      mastery: s.quiz_score != null ? Number(s.quiz_score) : 50,
+      skills: (Array.isArray(s.associated_skills) ? s.associated_skills : []) as string[],
+      date: s.completed_at || "Completed",
+      duration: (s.estimated_duration || "45 min") as string,
+    }));
+
+  // Compute sidebar stats from skill gaps
+  const skillGapRaw = learner.skillGaps[goalId]?.skill_gaps;
+  const skillGapArr: Record<string, any>[] = Array.isArray(skillGapRaw)
+    ? skillGapRaw
+    : Array.isArray(skillGapRaw?.skill_gaps)
+      ? skillGapRaw.skill_gaps
+      : [];
+
+  const totalSkills = skillGapArr.length;
+  const gapSkills = skillGapArr.filter((g) => g.is_gap !== false).length;
+  const masteredSkills = totalSkills - gapSkills;
+  const readiness = currentGoal.readiness;
+
+  const handleGenerateSummary = async () => {
     setIsGeneratingSummary(true);
-    setTimeout(() => {
-      setGoalSummary(
-        "You have made significant progress in **SQL** and **Python Data Manipulation**. Your mastery of Window Functions is strong (85%), but you need more practice with Data Visualization (40%). Focus on Matplotlib and Seaborn in your upcoming sessions to close this gap."
-      );
+    try {
+      const learnerId = getStoredLearnerId();
+      const completedTitles = documents.map(d => d.title).join(", ");
+      const result = await api.chatWithTutor({
+        messages: [{
+          role: "user",
+          content: `I'm working toward the goal: "${currentGoal.title}". I've completed these sessions: ${completedTitles || "none yet"}. Give me a concise progress summary in markdown (2-3 sentences) covering what I've mastered and what I should focus on next.`
+        }],
+        learner_profile: learnerId ? { learner_id: learnerId } : undefined,
+        goal_id: goalId,
+      });
+      setGoalSummary(result.response);
+    } catch {
+      setGoalSummary("Failed to generate summary. Please try again.");
+    } finally {
       setIsGeneratingSummary(false);
-    }, 2000);
+    }
   };
 
   if (isLoading) {
@@ -93,7 +113,7 @@ export default function LibraryPage() {
             </div>
             <div className="text-left">
               <div className="text-xs text-muted-foreground font-medium">Current Goal Filter</div>
-              <div className="text-sm font-semibold text-foreground">{currentGoal}</div>
+              <div className="text-sm font-semibold text-foreground">{currentGoal.title}</div>
             </div>
             <ChevronDown size={16} className="text-muted-foreground ml-2" />
           </button>
@@ -107,20 +127,21 @@ export default function LibraryPage() {
                 className="absolute right-0 top-full mt-2 w-64 bg-popover border border-border rounded-xl shadow-lg z-50 overflow-hidden"
               >
                 <div className="p-2">
-                  {["Senior Data Analyst", "Full Stack Developer", "Product Manager"].map((goal) => (
+                  {goals.map((goal, idx) => (
                     <button
-                      key={goal}
+                      key={goal.goal_id}
                       onClick={() => {
-                        setCurrentGoal(goal);
+                        setCurrentGoalIndex(idx);
                         setIsGoalMenuOpen(false);
+                        setGoalSummary(null);
                       }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        currentGoal === goal
+                        currentGoal.goal_id === goal.goal_id
                           ? "bg-primary-500/10 text-primary-600 dark:text-primary-400 font-medium"
                           : "text-foreground hover:bg-muted"
                       }`}
                     >
-                      {goal}
+                      {goal.title}
                     </button>
                   ))}
                 </div>
@@ -173,7 +194,7 @@ export default function LibraryPage() {
                       <div>
                         <h2 className="text-xl font-bold text-primary-700 dark:text-primary-400 flex items-center gap-2">
                           <Sparkles size={24} />
-                          Goal Summary: {currentGoal}
+                          Goal Summary: {currentGoal.title}
                         </h2>
                         <p className="text-primary-600/80 dark:text-primary-400/80 mt-2 max-w-2xl">
                           Generate a synthesis of all learned sessions for this goal to help with long-term retention and identify next steps.
@@ -191,10 +212,9 @@ export default function LibraryPage() {
                     </div>
 
                     {isGeneratingSummary && (
-                      <div className="mt-6 space-y-3">
-                        <div className="h-4 bg-primary-500/20 rounded animate-pulse w-3/4" />
-                        <div className="h-4 bg-primary-500/20 rounded animate-pulse w-full" />
-                        <div className="h-4 bg-primary-500/20 rounded animate-pulse w-5/6" />
+                      <div className="mt-6 flex items-center gap-3">
+                        <Loader2 size={20} className="animate-spin text-primary-500" />
+                        <span className="text-primary-600/80 dark:text-primary-400/80">Generating summary...</span>
                       </div>
                     )}
 
@@ -215,18 +235,28 @@ export default function LibraryPage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-foreground">Latest Study Materials</h3>
-                      <button 
-                        onClick={() => setActiveTab("Study Materials")}
-                        className="text-sm text-primary-500 hover:text-primary-600 font-medium"
-                      >
-                        View All
-                      </button>
+                      {documents.length > 2 && (
+                        <button
+                          onClick={() => setActiveTab("Study Materials")}
+                          className="text-sm text-primary-500 hover:text-primary-600 font-medium"
+                        >
+                          View All
+                        </button>
+                      )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {mockDocuments.slice(0, 2).map((doc) => (
-                        <LibraryCard key={doc.id} {...doc} />
-                      ))}
-                    </div>
+                    {documents.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {documents.slice(0, 2).map((doc) => (
+                          <LibraryCard key={doc.id} {...doc} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 bg-muted/30 rounded-2xl border border-dashed border-border">
+                        <BookOpen className="mx-auto text-muted-foreground mb-3" size={32} />
+                        <h3 className="text-foreground font-medium">No completed sessions yet</h3>
+                        <p className="text-muted-foreground text-sm mt-1">Complete sessions to see your study materials here.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -235,24 +265,22 @@ export default function LibraryPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold text-foreground">All Documents & Resources</h2>
-                    <div className="flex gap-2">
-                      <select className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option>All Types</option>
-                        <option>Documents</option>
-                        <option>Videos</option>
-                        <option>Interactive</option>
-                      </select>
-                      <select className="bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option>Sort by Date</option>
-                        <option>Sort by Mastery</option>
-                      </select>
+                  </div>
+                  {documents.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {documents.map((doc) => (
+                        <LibraryCard key={doc.id} {...doc} />
+                      ))}
                     </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {mockDocuments.map((doc) => (
-                      <LibraryCard key={doc.id} {...doc} />
-                    ))}
-                  </div>
+                  ) : (
+                    <div className="text-center py-20 bg-muted/30 rounded-2xl border border-dashed border-border">
+                      <FileText className="mx-auto text-muted-foreground mb-4" size={48} />
+                      <h3 className="text-xl font-semibold text-foreground">No study materials yet</h3>
+                      <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+                        Complete learning sessions to build your knowledge library.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -280,7 +308,7 @@ export default function LibraryPage() {
               <Target className="text-primary-500" size={20} />
               Goal Progress
             </h3>
-            
+
             <div className="space-y-6">
               {/* Readiness Score */}
               <div className="text-center">
@@ -303,12 +331,12 @@ export default function LibraryPage() {
                       strokeWidth="12"
                       fill="transparent"
                       strokeDasharray={351.85}
-                      strokeDashoffset={351.85 - (351.85 * 65) / 100}
+                      strokeDashoffset={351.85 - (351.85 * readiness) / 100}
                       className="text-primary-500 transition-all duration-1000 ease-out"
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center justify-center">
-                    <span className="text-3xl font-bold text-foreground">65%</span>
+                    <span className="text-3xl font-bold text-foreground">{readiness}%</span>
                     <span className="text-xs text-muted-foreground font-medium">Readiness</span>
                   </div>
                 </div>
@@ -321,25 +349,28 @@ export default function LibraryPage() {
                     <CheckCircle2 size={16} className="text-green-500" />
                     Mastered Skills
                   </div>
-                  <span className="font-semibold text-foreground">12</span>
+                  <span className="font-semibold text-foreground">{masteredSkills}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <AlertCircle size={16} className="text-amber-500" />
                     Skill Gap (ΔS)
                   </div>
-                  <span className="font-semibold text-foreground">8</span>
+                  <span className="font-semibold text-foreground">{gapSkills}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <BookOpen size={16} className="text-blue-500" />
                     Total Required
                   </div>
-                  <span className="font-semibold text-foreground">20</span>
+                  <span className="font-semibold text-foreground">{totalSkills}</span>
                 </div>
               </div>
 
-              <button className="w-full py-2.5 bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-xl font-medium hover:bg-primary-500/20 transition-colors">
+              <button
+                onClick={() => setActiveTab("Assessments")}
+                className="w-full py-2.5 bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-xl font-medium hover:bg-primary-500/20 transition-colors"
+              >
                 View Detailed Analysis
               </button>
             </div>

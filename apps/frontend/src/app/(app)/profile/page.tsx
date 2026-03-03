@@ -2,17 +2,23 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, Shield, Bell, AlertTriangle, Globe, Mic, FileText, Sliders, Settings, Palette, Loader2 } from "lucide-react";
+import { User, Bell, AlertTriangle, Globe, Mic, FileText, Sliders, Settings, Palette, Loader2 } from "lucide-react";
 import { api, getStoredLearnerId } from "@/lib/api";
 import { useGoal } from "@/components/GoalContext";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { resetLearner } = useGoal();
+  const { resetLearner, learner } = useGoal();
   const [activeTab, setActiveTab] = useState("information");
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const profileName = (learner.profile?.name as string) || "";
+  const profileEmail = (learner.profile?.email as string) || "";
+  const nameParts = profileName.split(" ");
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.slice(1).join(" ") || "";
 
   const tabs = [
     { id: "information", label: "Information", icon: User },
@@ -67,17 +73,17 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-foreground">First Name</label>
-                      <input type="text" defaultValue="Alex" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                      <input type="text" defaultValue={firstName} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-foreground">Last Name</label>
-                      <input type="text" defaultValue="Johnson" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                      <input type="text" defaultValue={lastName} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-foreground">Bio</label>
-                    <textarea defaultValue="Passionate about turning raw data into actionable insights." className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 min-h-[100px] resize-none" />
+                    <textarea defaultValue={(learner.profile?.bio as string) || ""} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 min-h-[100px] resize-none" />
                   </div>
                 </div>
               </div>
@@ -102,6 +108,54 @@ export default function ProfilePage() {
           {activeTab === "preferences" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
               <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
+                <h3 className="text-xl font-bold text-foreground mb-6">Learner Profile Preferences</h3>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <User size={16} className="text-primary-500" />
+                      Preferred Learning Style
+                    </label>
+                    <select className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500">
+                      <option>Balanced Mix (Default)</option>
+                      <option>Visual First</option>
+                      <option>Practice First</option>
+                      <option>Concept First</option>
+                    </select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <User size={16} className="text-primary-500" />
+                      Session Intensity
+                    </label>
+                    <select className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500">
+                      <option>Balanced (Default)</option>
+                      <option>Light Review</option>
+                      <option>Deep Focus</option>
+                    </select>
+                    <p className="text-xs text-muted-foreground mt-1">Control how challenging your default learning sessions should be.</p>
+                  </div>
+
+                  <div className="space-y-2 pt-4 border-t border-border">
+                    <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <User size={16} className="text-primary-500" />
+                      Learner Profile Behavior
+                    </label>
+                    <div className="space-y-3 mt-3">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-4 h-4 text-primary-500 rounded border-border focus:ring-primary-500" />
+                        <span className="text-sm text-foreground">Prioritize beginner-friendly explanations</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "settings" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
                 <h3 className="text-xl font-bold text-foreground mb-6">App Preferences</h3>
                 <div className="space-y-6">
                   <div className="space-y-2">
@@ -115,7 +169,7 @@ export default function ProfilePage() {
                       <option>Dark Mode</option>
                     </select>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-foreground flex items-center gap-2">
                       <Mic size={16} className="text-primary-500" />
@@ -151,11 +205,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {activeTab === "settings" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
               <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
                 <h3 className="text-xl font-bold text-foreground mb-6">Account Settings</h3>
                 <div className="space-y-6">
@@ -174,7 +224,7 @@ export default function ProfilePage() {
                   <div className="space-y-2 pt-4 border-t border-border">
                     <label className="text-sm font-semibold text-foreground">Email Address</label>
                     <div className="flex gap-4">
-                      <input type="email" defaultValue="alex.j@example.com" disabled className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-muted-foreground cursor-not-allowed" />
+                      <input type="email" defaultValue={profileEmail} disabled className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-muted-foreground cursor-not-allowed" />
                       <button className="shrink-0 bg-background border border-border text-foreground px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-muted transition-colors">
                         Change
                       </button>

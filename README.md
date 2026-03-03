@@ -150,11 +150,10 @@ Frontend (Next.js)  ──HTTP──>  Backend (FastAPI)  ──invokes──>  
 ### 1️⃣ Install dependencies
 
 ```bash
-# Backend
-cd apps/backend
+# Backend (from project root)
 uv venv
 source .venv/bin/activate  # on Windows: .venv\Scripts\activate
-uv pip install -r requirements.txt
+uv pip install -e .         # editable install — includes gen_mentor + all backend deps
 
 # Frontend
 cd apps/frontend

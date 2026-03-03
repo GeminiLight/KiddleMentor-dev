@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, CheckCircle2, XCircle, RefreshCw, Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertCircle, CheckCircle2, XCircle, Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useGoal } from "@/components/GoalContext";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 interface MistakeItemProps {
   id: string;
@@ -36,7 +39,7 @@ function MistakeItem({
 
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-      <div 
+      <div
         className="p-5 cursor-pointer flex items-start justify-between gap-4"
         onClick={() => setIsExpanded(!isExpanded)}
       >
@@ -87,32 +90,26 @@ function MistakeItem({
               </div>
 
               {/* AI Key Insight */}
-              <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 relative overflow-hidden">
-                <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-                <div className="flex items-start gap-3 relative z-10">
-                  <div className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg shrink-0">
-                    <Lightbulb size={18} />
-                  </div>
-                  <div>
-                    <h5 className="font-semibold text-amber-700 dark:text-amber-400 text-sm mb-1">
-                      AI Key Insight
-                    </h5>
-                    <div className="prose prose-sm dark:prose-invert max-w-none text-amber-900/80 dark:text-amber-100/80">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {keyInsight}
-                      </ReactMarkdown>
+              {keyInsight && (
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 relative overflow-hidden">
+                  <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+                  <div className="flex items-start gap-3 relative z-10">
+                    <div className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg shrink-0">
+                      <Lightbulb size={18} />
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-amber-700 dark:text-amber-400 text-sm mb-1">
+                        AI Key Insight
+                      </h5>
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-amber-900/80 dark:text-amber-100/80">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {keyInsight}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Action */}
-              <div className="flex justify-end">
-                <button className="flex items-center gap-2 bg-primary-500 text-white px-5 py-2.5 rounded-full font-medium hover:bg-primary-600 transition-colors shadow-sm text-sm">
-                  <RefreshCw size={16} />
-                  Re-attempt Question
-                </button>
-              </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -122,43 +119,63 @@ function MistakeItem({
 }
 
 export function MistakeBook() {
+  const { currentGoal, learner } = useGoal();
   const [filter, setFilter] = useState<"All" | "Low" | "Medium" | "High">("All");
 
-  const mistakes: MistakeItemProps[] = [
-    {
-      id: "1",
-      question: "What is the time complexity of searching for an element in a balanced Binary Search Tree?",
-      wrongAnswer: "O(n)",
-      correctAnswer: "O(log n)",
-      keyInsight: "A balanced BST halves the search space at each step. `O(n)` is the time complexity for an unbalanced tree (worst case) or a linear array.",
-      confidenceLevel: "Low",
-      date: "2 days ago",
-      skill: "Data Structures",
-    },
-    {
-      id: "2",
-      question: "Which HTTP method is typically used to partially update a resource?",
-      wrongAnswer: "PUT",
-      correctAnswer: "PATCH",
-      keyInsight: "`PUT` replaces the entire resource, while `PATCH` applies partial modifications. Think of `PATCH` as a diff.",
-      confidenceLevel: "Medium",
-      date: "1 week ago",
-      skill: "API Design",
-    },
-    {
-      id: "3",
-      question: "In React, what hook should be used to perform side effects?",
-      wrongAnswer: "useState",
-      correctAnswer: "useEffect",
-      keyInsight: "`useState` is for managing local component state. `useEffect` is specifically designed for side effects like data fetching, subscriptions, or manually changing the DOM.",
-      confidenceLevel: "High",
-      date: "2 weeks ago",
-      skill: "React Hooks",
-    }
-  ];
+  // Extract quiz mistakes from completed sessions' stored quiz data
+  const goalId = currentGoal.goal_id;
+  const pathData = learner.learningPath[goalId];
+  const rawSessions = pathData?.learning_path;
+  const sessionsArray: Record<string, any>[] = Array.isArray(rawSessions)
+    ? rawSessions
+    : Array.isArray(rawSessions?.learning_path)
+      ? rawSessions.learning_path
+      : [];
 
-  const filteredMistakes = filter === "All" 
-    ? mistakes 
+  const mistakes: MistakeItemProps[] = [];
+  let mistakeId = 0;
+
+  sessionsArray.forEach((session, sessionIdx) => {
+    if (!session.completed && !session.if_learned) return;
+
+    // Try to extract quiz results from session data
+    const quizResults = session.quiz_results || session.quizResults;
+    if (!quizResults) return;
+
+    const questions: any[] =
+      quizResults.single_choice_questions ||
+      quizResults.questions ||
+      (Array.isArray(quizResults) ? quizResults : []);
+
+    questions.forEach((q: any) => {
+      // Only include wrong answers
+      if (!q.user_answer && !q.userAnswer) return;
+      const userAnswer = q.user_answer || q.userAnswer;
+      const correctAnswer = q.correct_answer || q.correctAnswer;
+      if (userAnswer === correctAnswer) return;
+
+      mistakeId++;
+      const quizScore = session.quiz_score ?? 50;
+      const confidence: "Low" | "Medium" | "High" =
+        quizScore >= 80 ? "High" : quizScore >= 50 ? "Medium" : "Low";
+
+      mistakes.push({
+        id: String(mistakeId),
+        question: q.question || `Question from Session ${sessionIdx + 1}`,
+        wrongAnswer: userAnswer,
+        correctAnswer: correctAnswer,
+        keyInsight: q.explanation || "",
+        confidenceLevel: confidence,
+        date: session.completed_at || "Completed",
+        skill: (Array.isArray(session.associated_skills) && session.associated_skills[0])
+          ? session.associated_skills[0]
+          : session.session_title || `Session ${sessionIdx + 1}`,
+      });
+    });
+  });
+
+  const filteredMistakes = filter === "All"
+    ? mistakes
     : mistakes.filter(m => m.confidenceLevel === filter);
 
   return (
@@ -173,30 +190,40 @@ export function MistakeBook() {
             Review and re-attempt questions you missed to strengthen your active recall.
           </p>
         </div>
-        
-        <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
-          {["All", "Low", "Medium", "High"].map((level) => (
-            <button
-              key={level}
-              onClick={() => setFilter(level as "All" | "Low" | "Medium" | "High")}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                filter === level 
-                  ? "bg-background text-foreground shadow-sm" 
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {level}
-            </button>
-          ))}
-        </div>
+
+        {mistakes.length > 0 && (
+          <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+            {["All", "Low", "Medium", "High"].map((level) => (
+              <button
+                key={level}
+                onClick={() => setFilter(level as "All" | "Low" | "Medium" | "High")}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  filter === level
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
         {filteredMistakes.map((mistake) => (
           <MistakeItem key={mistake.id} {...mistake} />
         ))}
-        
-        {filteredMistakes.length === 0 && (
+
+        {mistakes.length === 0 && (
+          <div className="text-center py-12 bg-muted/30 rounded-2xl border border-dashed border-border">
+            <CheckCircle2 className="mx-auto text-green-500 mb-3" size={32} />
+            <h3 className="text-foreground font-medium">No mistakes recorded yet</h3>
+            <p className="text-muted-foreground text-sm mt-1">Complete quizzes during sessions to track your mistakes here.</p>
+          </div>
+        )}
+
+        {mistakes.length > 0 && filteredMistakes.length === 0 && (
           <div className="text-center py-12 bg-muted/30 rounded-2xl border border-dashed border-border">
             <CheckCircle2 className="mx-auto text-green-500 mb-3" size={32} />
             <h3 className="text-foreground font-medium">No mistakes found!</h3>
