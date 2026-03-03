@@ -11,10 +11,7 @@ __pycache__/
 .claude
 .pytest_cache
 logs
-
-frontend/user_data/*
-
-pids/
-
-*.env
 notes
+gen_mentor.egg-info
+frontend/
+*.env
