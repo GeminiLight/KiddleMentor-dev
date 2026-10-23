@@ -1012,7 +1012,7 @@ What actually happens
 
 ## Links
 
-- 🌐 **Website**: https://www.tianfuwang.tech/gen-mentor
+- 🌐 **Website**: https://tianfu.wang/gen-mentor
 - 📄 **Paper**: https://arxiv.org/pdf/2501.15749
 - 🎬 **Demo**: https://gen-mentor.streamlit.app/
 - 🎥 **Video**: https://youtu.be/vTdtGZop-Zc
