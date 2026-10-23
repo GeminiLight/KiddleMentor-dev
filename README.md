@@ -5,7 +5,7 @@
   <p><b>LLM-powered & Goal-oriented Tutoring System</b></p>
 
   <p>
-    <a href="https://www.tianfuwang.tech/gen-mentor">Website</a> &nbsp;·&nbsp;
+    <a href="https://tianfu.wang/gen-mentor">Website</a> &nbsp;·&nbsp;
     <a href="https://arxiv.org/pdf/2501.15749">Paper</a> &nbsp;·&nbsp;
     <a href="https://gen-mentor.streamlit.app/">Demo</a> &nbsp;·&nbsp;
     <a href="https://youtu.be/vTdtGZop-Zc">Video</a>
@@ -16,7 +16,7 @@
 ---
 
 > [!IMPORTANT]
-> :sparkles: Welcome to visit the [GenMentor website](https://www.tianfuwang.tech/gen-mentor) to learn more about our work!
+> :sparkles: Welcome to visit the [GenMentor website](https://tianfu.wang/gen-mentor) to learn more about our work!
 
 This is the official code for our paper "*LLM-powered Multi-agent Framework for Goal-oriented Learning in Intelligent Tutoring System*", accepted by **WWW 2025 (Industry Track) as an Oral Presentation**.
 

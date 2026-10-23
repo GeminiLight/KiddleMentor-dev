@@ -7,6 +7,7 @@ from typing import Any
 
 # Suppress Pydantic V1 warnings for Python 3.13+
 import warnings
+
 warnings.filterwarnings("ignore", category=UserWarning, message=".*Pydantic V1 functionality.*")
 
 from rich.console import Console
@@ -14,7 +15,6 @@ from rich.json import JSON as RichJSON
 from rich.panel import Panel
 from rich.table import Table
 from rich_argparse import RichHelpFormatter
-
 
 console = Console()
 
@@ -45,11 +45,15 @@ def _create_llm(args: argparse.Namespace):
     # Use provided values or fall back to config
     model = args.model or config.agent_defaults.model
     provider = args.provider or config.get_provider_name(model)
-    temperature = args.temperature if hasattr(args, 'temperature') and args.temperature is not None else config.agent_defaults.temperature
+    temperature = (
+        args.temperature
+        if hasattr(args, "temperature") and args.temperature is not None
+        else config.agent_defaults.temperature
+    )
     base_url = args.base_url or config.get_api_base(model)
 
     # Extract model name (remove provider prefix if present)
-    model_name = model.split('/')[-1] if '/' in model else model
+    model_name = model.split("/")[-1] if "/" in model else model
 
     return LLMFactory.create(
         model=model_name,
@@ -139,6 +143,7 @@ def cmd_schedule_path(args: argparse.Namespace) -> int:
 # Agent Commands
 # ============================================================================
 
+
 def cmd_agent(args: argparse.Namespace) -> int:
     """Run a simple agent query."""
     from gen_mentor.config import load_config
@@ -157,7 +162,7 @@ def cmd_agent(args: argparse.Namespace) -> int:
         temperature = args.temperature if args.temperature is not None else config.agent_defaults.temperature
 
         # Extract model name (remove provider prefix if present)
-        model_name = model_str.split('/')[-1] if '/' in model_str else model_str
+        model_name = model_str.split("/")[-1] if "/" in model_str else model_str
 
         console.print(f"\n[bold cyan]Initializing agent...[/bold cyan]")
         console.print(f"[dim]Model: {model_name} ({provider})[/dim]")
@@ -186,10 +191,7 @@ def cmd_agent(args: argparse.Namespace) -> int:
         console.print(f"\n[bold green]Query:[/bold green] {args.message}\n")
 
         with console.status("[bold yellow]Thinking...[/bold yellow]"):
-            result = agent.invoke(
-                input_dict={},
-                task_prompt=args.message
-            )
+            result = agent.invoke(input_dict={}, task_prompt=args.message)
 
         console.print(f"[bold cyan]Response:[/bold cyan]")
         console.print(result)
@@ -200,6 +202,7 @@ def cmd_agent(args: argparse.Namespace) -> int:
     except Exception as e:
         console.print(f"\n[bold red]Error:[/bold red] {e}")
         import traceback
+
         if args.debug:
             traceback.print_exc()
         return 1
@@ -208,6 +211,7 @@ def cmd_agent(args: argparse.Namespace) -> int:
 # ============================================================================
 # Config Management Commands
 # ============================================================================
+
 
 def cmd_config_show(args: argparse.Namespace) -> int:
     """Show current configuration."""
@@ -417,6 +421,7 @@ def cmd_config_validate(args: argparse.Namespace) -> int:
 def cmd_onboard(args: argparse.Namespace) -> int:
     """Run interactive onboarding wizard."""
     from gen_mentor.cli.onboard import onboard
+
     try:
         onboard()
         return 0
@@ -436,7 +441,9 @@ def build_parser() -> argparse.ArgumentParser:
     def add_llm_options(subparser: argparse.ArgumentParser) -> None:
         subparser.add_argument("--provider", default=None, help="LLM provider (auto-detected from config)")
         subparser.add_argument("--model", default=None, help="LLM model name (uses config default if not specified)")
-        subparser.add_argument("--temperature", type=float, default=None, help="Sampling temperature (uses config default)")
+        subparser.add_argument(
+            "--temperature", type=float, default=None, help="Sampling temperature (uses config default)"
+        )
         subparser.add_argument("--base-url", default=None, help="Optional custom LLM base URL")
         subparser.add_argument("--api-key", default=None, help="Optional API key (uses config if not specified)")
 

@@ -12,11 +12,7 @@ class TestLLMOutput:
 
     def test_preprocess_response_text_only(self):
         """Test preprocessing response for text only."""
-        raw_output = {
-            "messages": [
-                {"role": "assistant", "content": "Hello, how can I help?"}
-            ]
-        }
+        raw_output = {"messages": [{"role": "assistant", "content": "Hello, how can I help?"}]}
 
         result = preprocess_response(
             raw_output,
@@ -30,11 +26,7 @@ class TestLLMOutput:
 
     def test_preprocess_response_json_output(self):
         """Test preprocessing response with JSON parsing."""
-        raw_output = {
-            "messages": [
-                {"role": "assistant", "content": '{"name": "Test", "value": 123}'}
-            ]
-        }
+        raw_output = {"messages": [{"role": "assistant", "content": '{"name": "Test", "value": 123}'}]}
 
         result = preprocess_response(
             raw_output,
@@ -111,12 +103,12 @@ class TestPreprocess:
 
     def test_extract_json_with_code_blocks(self):
         """Test extracting JSON from markdown code blocks."""
-        text = '''
+        text = """
         Here is the JSON:
         ```json
         {"name": "Test", "items": [1, 2, 3]}
         ```
-        '''
+        """
 
         result = extract_json_from_text(text)
 

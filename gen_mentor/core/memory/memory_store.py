@@ -79,7 +79,7 @@ class MemoryStore:
         """
         if self.history_file.exists():
             try:
-                with open(self.history_file, 'r', encoding='utf-8') as f:
+                with open(self.history_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             except (json.JSONDecodeError, IOError):
                 return []
@@ -91,7 +91,7 @@ class MemoryStore:
         Args:
             history: List of message dictionaries
         """
-        with open(self.history_file, 'w', encoding='utf-8') as f:
+        with open(self.history_file, "w", encoding="utf-8") as f:
             json.dump(history, f, indent=2, ensure_ascii=False)
 
     def append_history(self, role: str, content: str, metadata: Optional[dict] = None) -> None:
@@ -103,14 +103,10 @@ class MemoryStore:
             metadata: Optional metadata dict
         """
         history = self.read_history()
-        entry = {
-            "role": role,
-            "content": content,
-            "timestamp": datetime.now().isoformat()
-        }
+        entry = {"role": role, "content": content, "timestamp": datetime.now().isoformat()}
         if metadata:
             entry["metadata"] = metadata
-        
+
         history.append(entry)
         self.write_history(history)
 
@@ -136,13 +132,13 @@ class MemoryStore:
         """
         history = self.read_history()
         recent = history[-n:] if len(history) > n else history
-        
+
         lines = []
         for entry in recent:
             role = entry.get("role", "unknown").upper()
             content = entry.get("content", "")
             lines.append(f"**{role}**: {content}")
-        
+
         return "\n\n".join(lines)
 
     def search_history(self, query: str) -> list[dict[str, Any]]:
@@ -199,9 +195,9 @@ class LearnerMemoryStore(MemoryStore):
 
     def read_profile(self) -> dict[str, Any]:
         """Read learner profile."""
-        if hasattr(self, 'profile_file') and self.profile_file.exists():
+        if hasattr(self, "profile_file") and self.profile_file.exists():
             try:
-                with open(self.profile_file, 'r', encoding='utf-8') as f:
+                with open(self.profile_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             except json.JSONDecodeError:
                 return {}
@@ -209,15 +205,15 @@ class LearnerMemoryStore(MemoryStore):
 
     def write_profile(self, content: dict[str, Any]) -> None:
         """Write learner profile."""
-        if hasattr(self, 'profile_file'):
-            with open(self.profile_file, 'w', encoding='utf-8') as f:
+        if hasattr(self, "profile_file"):
+            with open(self.profile_file, "w", encoding="utf-8") as f:
                 json.dump(content, f, indent=2, ensure_ascii=False)
 
     def read_learning_goals(self) -> dict[str, Any]:
         """Read learning goals."""
-        if hasattr(self, 'learning_goal_file') and self.learning_goal_file.exists():
+        if hasattr(self, "learning_goal_file") and self.learning_goal_file.exists():
             try:
-                with open(self.learning_goal_file, 'r', encoding='utf-8') as f:
+                with open(self.learning_goal_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             except json.JSONDecodeError:
                 return {}
@@ -225,8 +221,8 @@ class LearnerMemoryStore(MemoryStore):
 
     def write_learning_goals(self, content: dict[str, Any]) -> None:
         """Write learning goals."""
-        if hasattr(self, 'learning_goal_file'):
-            with open(self.learning_goal_file, 'w', encoding='utf-8') as f:
+        if hasattr(self, "learning_goal_file"):
+            with open(self.learning_goal_file, "w", encoding="utf-8") as f:
                 json.dump(content, f, indent=2, ensure_ascii=False)
 
     def get_active_goal(self) -> Optional[dict[str, Any]]:
@@ -293,9 +289,9 @@ class LearnerMemoryStore(MemoryStore):
 
     def read_skill_gaps(self) -> dict[str, Any]:
         """Read all skill gaps (keyed by goal_id)."""
-        if hasattr(self, 'skill_gaps_file') and self.skill_gaps_file.exists():
+        if hasattr(self, "skill_gaps_file") and self.skill_gaps_file.exists():
             try:
-                with open(self.skill_gaps_file, 'r', encoding='utf-8') as f:
+                with open(self.skill_gaps_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             except json.JSONDecodeError:
                 return {}
@@ -303,8 +299,8 @@ class LearnerMemoryStore(MemoryStore):
 
     def write_skill_gaps(self, content: dict[str, Any]) -> None:
         """Write all skill gaps."""
-        if hasattr(self, 'skill_gaps_file'):
-            with open(self.skill_gaps_file, 'w', encoding='utf-8') as f:
+        if hasattr(self, "skill_gaps_file"):
+            with open(self.skill_gaps_file, "w", encoding="utf-8") as f:
                 json.dump(content, f, indent=2, ensure_ascii=False)
 
     def read_skill_gaps_for_goal(self, goal_id: str) -> dict[str, Any]:
@@ -359,9 +355,9 @@ class LearnerMemoryStore(MemoryStore):
 
     def read_mastery(self) -> dict[str, Any]:
         """Read learning mastery and progress."""
-        if hasattr(self, 'mastery_file') and self.mastery_file.exists():
+        if hasattr(self, "mastery_file") and self.mastery_file.exists():
             try:
-                with open(self.mastery_file, 'r', encoding='utf-8') as f:
+                with open(self.mastery_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             except json.JSONDecodeError:
                 return {}
@@ -369,42 +365,42 @@ class LearnerMemoryStore(MemoryStore):
 
     def write_mastery(self, content: dict[str, Any]) -> None:
         """Write learning mastery."""
-        if hasattr(self, 'mastery_file'):
-            with open(self.mastery_file, 'w', encoding='utf-8') as f:
+        if hasattr(self, "mastery_file"):
+            with open(self.mastery_file, "w", encoding="utf-8") as f:
                 json.dump(content, f, indent=2, ensure_ascii=False)
 
     def append_mastery_entry(self, entry: dict[str, Any]) -> None:
         """Append entry to mastery log."""
         existing = self.read_mastery()
-        if 'entries' not in existing:
-            existing['entries'] = []
+        if "entries" not in existing:
+            existing["entries"] = []
 
-        if 'timestamp' not in entry:
-            entry['timestamp'] = datetime.now().isoformat()
+        if "timestamp" not in entry:
+            entry["timestamp"] = datetime.now().isoformat()
 
-        existing['entries'].append(entry)
+        existing["entries"].append(entry)
         self.write_mastery(existing)
 
     def update_evaluations(self, evaluation: dict[str, Any]) -> None:
         """Update evaluations within mastery.json."""
         existing = self.read_mastery()
-        existing['last_evaluation'] = evaluation
-        
-        if 'evaluations_history' not in existing:
-            existing['evaluations_history'] = []
-            
+        existing["last_evaluation"] = evaluation
+
+        if "evaluations_history" not in existing:
+            existing["evaluations_history"] = []
+
         history_entry = evaluation.copy()
-        if 'timestamp' not in history_entry:
-            history_entry['timestamp'] = datetime.now().isoformat()
-            
-        existing['evaluations_history'].append(history_entry)
+        if "timestamp" not in history_entry:
+            history_entry["timestamp"] = datetime.now().isoformat()
+
+        existing["evaluations_history"].append(history_entry)
         self.write_mastery(existing)
 
     def read_learning_path(self) -> dict[str, Any]:
         """Read learning path."""
-        if hasattr(self, 'learning_path_file') and self.learning_path_file.exists():
+        if hasattr(self, "learning_path_file") and self.learning_path_file.exists():
             try:
-                with open(self.learning_path_file, 'r', encoding='utf-8') as f:
+                with open(self.learning_path_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             except json.JSONDecodeError:
                 return {}
@@ -412,8 +408,8 @@ class LearnerMemoryStore(MemoryStore):
 
     def write_learning_path(self, content: dict[str, Any]) -> None:
         """Write learning path."""
-        if hasattr(self, 'learning_path_file'):
-            with open(self.learning_path_file, 'w', encoding='utf-8') as f:
+        if hasattr(self, "learning_path_file"):
+            with open(self.learning_path_file, "w", encoding="utf-8") as f:
                 json.dump(content, f, indent=2, ensure_ascii=False)
 
     def get_learner_context(self) -> str:
@@ -426,7 +422,9 @@ class LearnerMemoryStore(MemoryStore):
 
         learning_goals = self.read_learning_goals()
         if learning_goals:
-            sections.append(f"## Learning Goals\n\n```json\n{json.dumps(learning_goals, indent=2, ensure_ascii=False)}\n```")
+            sections.append(
+                f"## Learning Goals\n\n```json\n{json.dumps(learning_goals, indent=2, ensure_ascii=False)}\n```"
+            )
 
         skill_gaps = self.read_skill_gaps()
         if skill_gaps:
@@ -434,7 +432,9 @@ class LearnerMemoryStore(MemoryStore):
 
         mastery = self.read_mastery()
         if mastery:
-            sections.append(f"## Learning Mastery & Performance\n\n```json\n{json.dumps(mastery, indent=2, ensure_ascii=False)}\n```")
+            sections.append(
+                f"## Learning Mastery & Performance\n\n```json\n{json.dumps(mastery, indent=2, ensure_ascii=False)}\n```"
+            )
 
         user_facts = self.read_long_term()
         if user_facts:

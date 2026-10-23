@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, field_validator
 # Quiz-related schemas (moved from content.py for better organization)
 class DocumentQuizPayload(BaseModel):
     """Payload for generating document quizzes."""
+
     learner_profile: Any = Field(..., description="Learner profile information")
     learning_document: Any = Field(..., description="Learning document to generate quiz from")
     single_choice_count: int = Field(default=0, description="Number of single choice questions")
@@ -34,6 +35,7 @@ class DocumentQuizPayload(BaseModel):
 # Performance evaluation schemas
 class PerformanceLevel(str, Enum):
     """Overall performance level categories."""
+
     excellent = "excellent"
     good = "good"
     satisfactory = "satisfactory"
@@ -42,6 +44,7 @@ class PerformanceLevel(str, Enum):
 
 class ProgressPace(str, Enum):
     """Learning progress pace."""
+
     ahead = "ahead"
     on_pace = "on_pace"
     behind = "behind"
@@ -49,6 +52,7 @@ class ProgressPace(str, Enum):
 
 class SkillLevel(str, Enum):
     """Skill proficiency levels."""
+
     unlearned = "unlearned"
     beginner = "beginner"
     intermediate = "intermediate"
@@ -57,6 +61,7 @@ class SkillLevel(str, Enum):
 
 class ConfidenceLevel(str, Enum):
     """Confidence in assessment."""
+
     low = "low"
     medium = "medium"
     high = "high"
@@ -64,6 +69,7 @@ class ConfidenceLevel(str, Enum):
 
 class Priority(str, Enum):
     """Recommendation priority."""
+
     high = "high"
     medium = "medium"
     low = "low"
@@ -71,6 +77,7 @@ class Priority(str, Enum):
 
 class ImprovementStatus(str, Enum):
     """Improvement from previous attempts."""
+
     improved = "improved"
     same = "same"
     declined = "declined"
@@ -79,6 +86,7 @@ class ImprovementStatus(str, Enum):
 
 class ProgressStatus(BaseModel):
     """Progress tracking status."""
+
     current_session: int = Field(..., description="Current session number")
     expected_session: int = Field(..., description="Expected session number")
     on_track: bool = Field(..., description="Whether learner is on track")
@@ -87,6 +95,7 @@ class ProgressStatus(BaseModel):
 
 class SkillEvaluation(BaseModel):
     """Evaluation of a specific skill."""
+
     skill_name: str = Field(..., description="Name of the skill")
     current_level: SkillLevel = Field(..., description="Current proficiency level")
     confidence: ConfidenceLevel = Field(..., description="Confidence in assessment")
@@ -96,6 +105,7 @@ class SkillEvaluation(BaseModel):
 
 class Recommendation(BaseModel):
     """Learning recommendation."""
+
     priority: Priority = Field(..., description="Priority level")
     action: str = Field(..., description="Recommended action")
     rationale: str = Field(..., description="Why this is recommended")
@@ -103,6 +113,7 @@ class Recommendation(BaseModel):
 
 class PerformanceEvaluation(BaseModel):
     """Overall performance evaluation."""
+
     overall_score: float = Field(..., ge=0, le=100, description="Overall performance score (0-100)")
     performance_level: PerformanceLevel = Field(..., description="Overall performance level")
     strengths: List[str] = Field(default_factory=list, description="Learner strengths")
@@ -115,6 +126,7 @@ class PerformanceEvaluation(BaseModel):
 
 class SkillMasteryEvaluation(BaseModel):
     """Detailed mastery evaluation for a specific skill."""
+
     skill_name: str = Field(..., description="Name of the skill")
     current_level: SkillLevel = Field(..., description="Current proficiency level")
     confidence: ConfidenceLevel = Field(..., description="Confidence in assessment")
@@ -131,6 +143,7 @@ class SkillMasteryEvaluation(BaseModel):
 
 class QuizResult(BaseModel):
     """Results from a quiz attempt."""
+
     quiz_id: str = Field(..., description="Quiz identifier")
     total_questions: int = Field(..., description="Total number of questions")
     correct_answers: int = Field(..., description="Number of correct answers")
@@ -141,6 +154,7 @@ class QuizResult(BaseModel):
 
 class SessionData(BaseModel):
     """Data from a learning session."""
+
     session_id: str = Field(..., description="Session identifier")
     duration: int = Field(..., description="Session duration in seconds")
     completed: bool = Field(..., description="Whether session was completed")

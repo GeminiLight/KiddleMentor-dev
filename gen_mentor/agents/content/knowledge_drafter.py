@@ -43,11 +43,15 @@ class SearchEnhancedKnowledgeDrafter(BaseAgent):
     name: str = "SearchEnhancedKnowledgeDrafter"
 
     def __init__(self, model: Any, *, search_rag_manager: Optional[SearchRagManager] = None, use_search: bool = True):
-        super().__init__(model=model, system_prompt=search_enhanced_knowledge_drafter_system_prompt, jsonalize_output=True)
+        super().__init__(
+            model=model, system_prompt=search_enhanced_knowledge_drafter_system_prompt, jsonalize_output=True
+        )
         if search_rag_manager is not None:
             self.search_rag_manager = search_rag_manager
         elif use_search:
-            self.search_rag_manager = SearchRagManager.from_config(default_config.model_dump() if hasattr(default_config, 'model_dump') else default_config)
+            self.search_rag_manager = SearchRagManager.from_config(
+                default_config.model_dump() if hasattr(default_config, "model_dump") else default_config
+            )
         else:
             self.search_rag_manager = None
         self.use_search = use_search
@@ -61,7 +65,7 @@ class SearchEnhancedKnowledgeDrafter(BaseAgent):
             session = data.get("learning_session") or {}
             session_title = str(session.get("title", "")).strip() or "learning_session"
             knowledge_point = data.get("knowledge_point") or {}
-            knowledge_point_name = str(knowledge_point.get('name', '')).strip()
+            knowledge_point_name = str(knowledge_point.get("name", "")).strip()
             query = f"{session_title} {knowledge_point_name}".strip()
             docs = self.search_rag_manager.invoke(query)
             context = format_docs(docs)
@@ -71,6 +75,7 @@ class SearchEnhancedKnowledgeDrafter(BaseAgent):
         raw_output = self.invoke(data, task_prompt=search_enhanced_knowledge_drafter_task_prompt)
         validated_output = KnowledgeDraft.model_validate(raw_output)
         return validated_output.model_dump()
+
 
 def draft_knowledge_point_with_llm(
     llm,
@@ -125,7 +130,10 @@ def draft_knowledge_points_with_llm(
     if isinstance(knowledge_points, dict) and "knowledge_points" in knowledge_points:
         knowledge_points = knowledge_points["knowledge_points"]
     if search_rag_manager is None and use_search:
-        search_rag_manager = SearchRagManager.from_config(default_config.model_dump() if hasattr(default_config, 'model_dump') else default_config)
+        search_rag_manager = SearchRagManager.from_config(
+            default_config.model_dump() if hasattr(default_config, "model_dump") else default_config
+        )
+
     def draft_one(kp):
         return draft_knowledge_point_with_llm(
             llm,

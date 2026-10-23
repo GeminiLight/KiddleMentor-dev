@@ -81,7 +81,7 @@ gen-mentor = "gen_mentor.cli.main:main"
 genmentor = "gen_mentor.cli.main:main"
 
 [project.urls]
-Homepage = "https://www.tianfuwang.tech/gen-mentor"
+Homepage = "https://tianfu.wang/gen-mentor"
 Documentation = "https://github.com/yourusername/gen-mentor/wiki"
 Repository = "https://github.com/yourusername/gen-mentor"
 "Bug Tracker" = "https://github.com/yourusername/gen-mentor/issues"

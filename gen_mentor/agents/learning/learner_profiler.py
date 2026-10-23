@@ -15,7 +15,6 @@ from gen_mentor.agents.learning.prompts.profiling import (
 )
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -25,6 +24,7 @@ class LearnerProfileInitializationPayload(BaseModel):
     learning_goal: str = Field(...)
     learner_information: Union[str, Dict[str, Any], Mapping[str, Any]]
     skill_gaps: Union[str, Dict[str, Any], Mapping[str, Any], List[Any]]
+
 
 class LearnerProfileUpdatePayload(BaseModel):
     """Payload for updating an existing learner profile (validated)."""
@@ -98,6 +98,7 @@ def update_learner_profile_with_llm(
         "session_information": session_information,
     }
     return learner_profiler.update_profile(payload_dict)
+
 
 if __name__ == "__main__":
     from gen_mentor.core.llm.factory import LLMFactory

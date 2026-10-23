@@ -46,7 +46,7 @@ class SerializableDataClass:
                 field_type = f.type
 
                 origin_type = get_origin(field_type)
-                
+
                 # Handle lists of dataclasses
                 if origin_type in (list, List) and is_dataclass(get_args(field_type)[0]):
                     inner_type = get_args(field_type)[0]
@@ -57,7 +57,7 @@ class SerializableDataClass:
                 # Handle primitive types
                 else:
                     init_kwargs[f.name] = field_value
-        
+
         return cls(**init_kwargs)
 
     def to_dict(self) -> Dict[str, Any]:

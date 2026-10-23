@@ -7,7 +7,8 @@ from typing import Any, Dict
 from unittest.mock import MagicMock
 
 import pytest
-from langchain_core.language_models.fake_chat_models import FakeChatModel
+from langchain_core.language_models.fake_chat_models import FakeListChatModel
+from langchain_core.tools import Tool
 from omegaconf import OmegaConf
 
 from gen_mentor.config import AppConfig, load_config_from_dict
@@ -46,17 +47,15 @@ def sample_config_dict() -> Dict[str, Any]:
         "providers": {
             "openai": {
                 "api_key": "sk-test-key",
-                "base_url": "https://api.openai.com/v1",
-                "model_patterns": ["gpt-*", "o1-*"],
+                "api_base": "https://api.openai.com/v1",
             },
             "deepseek": {
                 "api_key": "test-deepseek-key",
-                "base_url": "https://api.deepseek.com",
-                "model_patterns": ["deepseek-*"],
+                "api_base": "https://api.deepseek.com",
             },
         },
-        "searches": {
-            "default": "duckduckgo",
+        "search_defaults": {"provider": "duckduckgo"},
+        "search_providers": {
             "duckduckgo": {
                 "api_key": None,
                 "max_results": 10,
@@ -74,37 +73,36 @@ def sample_config(sample_config_dict) -> AppConfig:
 @pytest.fixture
 def mock_llm():
     """Mock LLM for testing without API calls."""
-    return FakeChatModel(responses=["Test response"])
+    return FakeListChatModel(responses=["Test response"])
 
 
 @pytest.fixture
 def mock_llm_json():
     """Mock LLM that returns JSON responses."""
-    return FakeChatModel(responses=['{"result": "test", "status": "success"}'])
+    return FakeListChatModel(responses=['{"result": "test", "status": "success"}'])
 
 
 @pytest.fixture
 def sample_learner_profile() -> Dict[str, Any]:
     """Sample learner profile for testing."""
     return {
-        "name": "Test Learner",
-        "learning_goal": "Learn Python programming",
-        "mastered_skills": [
-            {"skill_name": "Basic syntax", "proficiency": "intermediate"}
-        ],
-        "in_progress_skills": [
-            {"skill_name": "Object-oriented programming", "current_level": "beginner"}
-        ],
+        "learner_information": "Test Learner wants to learn Python programming",
         "cognitive_status": {
-            "attention_span": "medium",
-            "learning_speed": "fast",
-            "preferred_difficulty": "intermediate",
+            "overall_progress": 20,
+            "mastered_skills": [{"name": "Basic syntax", "proficiency_level": "intermediate"}],
+            "in_progress_skills": [
+                {
+                    "name": "Object-oriented programming",
+                    "current_proficiency_level": "beginner",
+                    "required_proficiency_level": "intermediate",
+                }
+            ],
         },
         "learning_preferences": {
-            "preferred_content_types": ["text", "code examples"],
-            "preferred_session_length": 30,
-            "preferred_pace": "moderate",
+            "content_style": "text and code examples",
+            "activity_type": "programming exercises",
         },
+        "behavioral_patterns": {"system_usage_frequency": "daily", "session_duration_engagement": "30 minutes"},
     }
 
 
@@ -118,6 +116,8 @@ def sample_skill_gap() -> Dict[str, Any]:
         "current_level": "beginner",
         "priority": "high",
         "estimated_time": "2 weeks",
+        "reason": "Needs practice defining functions",
+        "level_confidence": "high",
     }
 
 
@@ -132,9 +132,7 @@ def sample_learning_path() -> Dict[str, Any]:
                 "abstract": "Learn the basics of defining and calling functions in Python.",
                 "if_learned": False,
                 "associated_skills": ["Functions", "Parameters"],
-                "desired_outcome_when_completed": [
-                    {"name": "Functions", "level": "beginner"}
-                ],
+                "desired_outcome_when_completed": [{"name": "Functions", "level": "beginner"}],
             },
             {
                 "id": "Session 2",
@@ -142,9 +140,7 @@ def sample_learning_path() -> Dict[str, Any]:
                 "abstract": "Explore decorators, closures, and higher-order functions.",
                 "if_learned": False,
                 "associated_skills": ["Advanced Functions", "Decorators"],
-                "desired_outcome_when_completed": [
-                    {"name": "Advanced Functions", "level": "intermediate"}
-                ],
+                "desired_outcome_when_completed": [{"name": "Advanced Functions", "level": "intermediate"}],
             },
         ]
     }
@@ -163,7 +159,7 @@ def sample_quiz() -> Dict[str, Any]:
                     "A loop structure",
                     "A data type",
                 ],
-                "correct_answer": 0,
+                "correct_option": 0,
                 "explanation": "A function is a reusable block of code that performs a specific task.",
             }
         ],
@@ -197,6 +193,7 @@ def sample_session_data() -> Dict[str, Any]:
 def suppress_warnings():
     """Suppress warnings during tests."""
     import warnings
+
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -204,9 +201,7 @@ def suppress_warnings():
 @pytest.fixture
 def mock_file_tool():
     """Mock file operations tool."""
-    mock = MagicMock()
-    mock.run.return_value = "File content"
-    return mock
+    return Tool(name="read_file", description="Read a test file.", func=lambda path: "File content")
 
 
 @pytest.fixture

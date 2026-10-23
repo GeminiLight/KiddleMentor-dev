@@ -23,12 +23,15 @@ class SearcherFactory:
         p = (provider or "").strip().lower()
         if p in {"duckduckgo", "duck-duck-go"}:
             from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
+
             wrapper = DuckDuckGoSearchAPIWrapper(region="us-en", safesearch="moderate")
         elif p in {"serper", "serper.dev", "google-serper"}:
             from langchain_community.utilities import GoogleSerperAPIWrapper
+
             wrapper = GoogleSerperAPIWrapper()
         elif p in {"bing", "microsoft-bing"}:
             from langchain_community.utilities import BingSearchAPIWrapper
+
             bing_subscription_key = kwargs.get("bing_subscription_key", None)
             bing_search_url = kwargs.get("bing_search_url", None)
             assert bing_subscription_key is not None, "bing_subscription_key is required for BingSearchAPIWrapper"
@@ -36,9 +39,12 @@ class SearcherFactory:
             wrapper = BingSearchAPIWrapper(bing_subscription_key=bing_subscription_key, bing_search_url=bing_search_url)
         elif p in {"brave", "brave-search"}:
             from langchain_community.utilities import BraveSearchWrapper
+
             wrapper = BraveSearchWrapper()
         else:
-            raise ValueError("Unsupported search provider. Choose from {'bing', 'serper', 'duckduckgo', 'brave', 'searx', 'you'}.")
+            raise ValueError(
+                "Unsupported search provider. Choose from {'bing', 'serper', 'duckduckgo', 'brave', 'searx', 'you'}."
+            )
         return wrapper
 
 
@@ -51,14 +57,16 @@ class WebDocumentLoader:
             return []
         if loader_type == "docling":
             from langchain_docling import DoclingLoader
+
             loader = DoclingLoader(urls)
         elif loader_type == "web":
             from langchain_community.document_loaders import WebBaseLoader
             import bs4
+
             # bs4_strainer = bs4.SoupStrainer(class_=("post-title", "post-header", "post-content"))
             # loader = WebBaseLoader(urls, bs_kwargs={"parse_only": bs4_strainer},)
-            # 'verify':False, 
-            loader = WebBaseLoader(urls, requests_kwargs={'timeout':10})
+            # 'verify':False,
+            loader = WebBaseLoader(urls, requests_kwargs={"timeout": 10})
         try:
             documents = loader.load()
         except Exception as e:
@@ -71,21 +79,17 @@ class SearchRunner:
     """Manager to perform searches using different providers."""
 
     def __init__(
-            self, 
-            searcher: BaseModel,
-            loader_type: str = "web",
-            max_search_results: int = 5,
-            **kwargs: Any
-        ) -> None:
+        self, searcher: BaseModel, loader_type: str = "web", max_search_results: int = 5, **kwargs: Any
+    ) -> None:
         self.searcher = searcher
         self.loader_type = loader_type
         self.max_search_results = max_search_results
 
     @staticmethod
     def from_config(
-            config: Union[DictConfig, Dict[str, Any]],
-        ) -> "SearchRunner":
-  
+        config: Union[DictConfig, Dict[str, Any]],
+    ) -> "SearchRunner":
+
         config_dict = ensure_config_dict(config)
         searcher = SearcherFactory.create(
             provider=config_dict.get("search", {}).get("provider", "duckduckgo"),
@@ -113,7 +117,7 @@ class SearchRunner:
                     link=item.get("link", ""),
                     content=url_content_dict.get(item.get("link", ""), ""),
                     snippet=item.get("snippet", None),
-                    document=url_docs_dict.get(item.get("link", ""), None)
+                    document=url_docs_dict.get(item.get("link", ""), None),
                 )
             )
 

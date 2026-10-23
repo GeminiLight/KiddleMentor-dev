@@ -74,7 +74,7 @@ class TestBaseAgent:
         task_prompt = "Say hello to {name}."
         input_dict = {"name": "Bob"}
 
-        with patch.object(agent, '_agent') as mock_agent:
+        with patch.object(agent, "_agent") as mock_agent:
             mock_agent.invoke.return_value = {"messages": [{"content": "Hello Bob!"}]}
 
             result = agent.invoke(input_dict, task_prompt=task_prompt)
@@ -93,10 +93,8 @@ class TestBaseAgent:
         task_prompt = "Return JSON data."
         input_dict = {}
 
-        with patch.object(agent, '_agent') as mock_agent:
-            mock_agent.invoke.return_value = {
-                "messages": [{"content": '{"result": "test"}'}]
-            }
+        with patch.object(agent, "_agent") as mock_agent:
+            mock_agent.invoke.return_value = {"messages": [{"content": '{"result": "test"}'}]}
 
             result = agent.invoke(input_dict, task_prompt=task_prompt)
 

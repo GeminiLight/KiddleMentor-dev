@@ -36,17 +36,20 @@ def _resolve_path(path: str, workspace: Optional[Path] = None, allowed_dir: Opti
 # Input schemas
 class ReadFileInput(BaseModel):
     """Input schema for ReadFileTool."""
+
     path: str = Field(description="The file path to read (relative to workspace or absolute)")
 
 
 class WriteFileInput(BaseModel):
     """Input schema for WriteFileTool."""
+
     path: str = Field(description="The file path to write to")
     content: str = Field(description="The content to write to the file")
 
 
 class EditFileInput(BaseModel):
     """Input schema for EditFileTool."""
+
     path: str = Field(description="The file path to edit")
     old_text: str = Field(description="The exact text to find and replace")
     new_text: str = Field(description="The text to replace with")
@@ -54,16 +57,19 @@ class EditFileInput(BaseModel):
 
 class ListDirInput(BaseModel):
     """Input schema for ListDirTool."""
+
     path: str = Field(description="The directory path to list")
 
 
 class CreateDirInput(BaseModel):
     """Input schema for CreateDirTool."""
+
     path: str = Field(description="The directory path to create")
 
 
 class DeleteFileInput(BaseModel):
     """Input schema for DeleteFileTool."""
+
     path: str = Field(description="The file path to delete")
 
 
@@ -110,7 +116,9 @@ class WriteFileTool(BaseTool):
     """Tool to write content to a file."""
 
     name: str = "write_file"
-    description: str = "Write content to a file at the given path. Creates parent directories if needed. Overwrites existing files."
+    description: str = (
+        "Write content to a file at the given path. Creates parent directories if needed. Overwrites existing files."
+    )
     args_schema: Type[BaseModel] = WriteFileInput
 
     workspace: Optional[Path] = None
@@ -145,7 +153,9 @@ class EditFileTool(BaseTool):
     """Tool to edit a file by replacing text."""
 
     name: str = "edit_file"
-    description: str = "Edit a file by replacing old_text with new_text. The old_text must exist exactly in the file. If text appears multiple times, provide more context to make it unique."
+    description: str = (
+        "Edit a file by replacing old_text with new_text. The old_text must exist exactly in the file. If text appears multiple times, provide more context to make it unique."
+    )
     args_schema: Type[BaseModel] = EditFileInput
 
     workspace: Optional[Path] = None

@@ -62,7 +62,7 @@ class GroundTruthProfileProgressPayload(BaseModel):
 
 class GroundTruthProfileCreator(BaseAgent):
 
-    name: str = 'GroundTruthProfileCreator'
+    name: str = "GroundTruthProfileCreator"
 
     def __init__(self, model: Any):
         super().__init__(
@@ -92,6 +92,7 @@ class GroundTruthProfileCreator(BaseAgent):
         raw_output = self.invoke(payload, task_prompt=task_prompt)
         validated = parse_ground_truth_profile_result(raw_output)
         return validated.model_dump()
+
 
 def create_ground_truth_profile_with_llm(
     llm: Any,

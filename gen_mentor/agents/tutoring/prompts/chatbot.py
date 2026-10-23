@@ -10,8 +10,7 @@ Your purpose is to provide a supportive, adaptive, and goal-driven learning expe
 The learner profile that you are interacting with is as follows: (May be not provided here)
 """
 
-ai_tutor_chatbot_task_prompt = (
-	"""
+ai_tutor_chatbot_task_prompt = ("""
 You are the AI Tutor. Use the following information to provide a concise, helpful, and supportive reply.
 
 Learning Goal:
@@ -27,5 +26,4 @@ Conversation History:
 {messages}
 
 Reply to the learner now based on the latest user message. Do not include system text in your reply.
-"""
-).strip()
+""").strip()

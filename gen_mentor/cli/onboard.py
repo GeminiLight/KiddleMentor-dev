@@ -81,15 +81,13 @@ def select_onboarding_mode() -> str:
     """Select onboarding mode."""
     return questionary.select(
         "Choose setup mode:",
-        choices=[
-            "Quick Start (Recommended)",
-            "Advanced Setup",
-            "Exit"
-        ],
-        style=questionary.Style([
-            ("selected", "fg:cyan bold"),
-            ("pointer", "fg:cyan bold"),
-        ])
+        choices=["Quick Start (Recommended)", "Advanced Setup", "Exit"],
+        style=questionary.Style(
+            [
+                ("selected", "fg:cyan bold"),
+                ("pointer", "fg:cyan bold"),
+            ]
+        ),
     ).ask()
 
 
@@ -107,10 +105,12 @@ def select_llm_provider() -> str:
             "Ollama (Local models)",
             "Custom OpenAI-compatible API",
         ],
-        style=questionary.Style([
-            ("selected", "fg:cyan bold"),
-            ("pointer", "fg:cyan bold"),
-        ])
+        style=questionary.Style(
+            [
+                ("selected", "fg:cyan bold"),
+                ("pointer", "fg:cyan bold"),
+            ]
+        ),
     ).ask()
 
 
@@ -150,10 +150,7 @@ def get_api_key(provider: str) -> Optional[str]:
     # Check if already in environment
     existing_key = os.getenv(env_var)
     if existing_key:
-        use_existing = questionary.confirm(
-            f"Found {env_var} in environment. Use it?",
-            default=True
-        ).ask()
+        use_existing = questionary.confirm(f"Found {env_var} in environment. Use it?", default=True).ask()
         if use_existing:
             return None  # Use env var
 
@@ -167,13 +164,11 @@ def get_api_key(provider: str) -> Optional[str]:
             "Enter API key now (will be saved to config)",
             f"Set as environment variable ({env_var})",
             "Skip for now",
-        ]
+        ],
     ).ask()
 
     if choice.startswith("Enter API key"):
-        api_key = questionary.password(
-            f"Enter your {provider} API key:"
-        ).ask()
+        api_key = questionary.password(f"Enter your {provider} API key:").ask()
         return api_key
     elif choice.startswith("Set as environment"):
         console.print(f"\n[yellow]Please set the environment variable:[/yellow]")
@@ -187,18 +182,12 @@ def get_api_key(provider: str) -> Optional[str]:
 
 def get_custom_model(provider: str, default_model: str) -> str:
     """Get custom model name."""
-    use_default = questionary.confirm(
-        f"Use default model '{default_model}'?",
-        default=True
-    ).ask()
+    use_default = questionary.confirm(f"Use default model '{default_model}'?", default=True).ask()
 
     if use_default:
         return default_model
 
-    model = questionary.text(
-        "Enter model name:",
-        default=default_model
-    ).ask()
+    model = questionary.text("Enter model name:", default=default_model).ask()
     return model or default_model
 
 
@@ -209,23 +198,14 @@ def get_custom_base_url(provider: str, default_url: Optional[str]) -> Optional[s
         return None
 
     if default_url:
-        use_default = questionary.confirm(
-            f"Use default API endpoint '{default_url}'?",
-            default=True
-        ).ask()
+        use_default = questionary.confirm(f"Use default API endpoint '{default_url}'?", default=True).ask()
         if use_default:
             return default_url
 
-    use_custom = questionary.confirm(
-        "Use a custom API endpoint?",
-        default=False
-    ).ask()
+    use_custom = questionary.confirm("Use a custom API endpoint?", default=False).ask()
 
     if use_custom:
-        url = questionary.text(
-            "Enter API base URL:",
-            default=default_url or ""
-        ).ask()
+        url = questionary.text("Enter API base URL:", default=default_url or "").ask()
         return url or default_url
 
     return default_url
@@ -244,10 +224,12 @@ def select_search_provider() -> str:
             "You.com (Requires API key)",
             "None (Disable search)",
         ],
-        style=questionary.Style([
-            ("selected", "fg:cyan bold"),
-            ("pointer", "fg:cyan bold"),
-        ])
+        style=questionary.Style(
+            [
+                ("selected", "fg:cyan bold"),
+                ("pointer", "fg:cyan bold"),
+            ]
+        ),
     ).ask()
 
 
@@ -276,10 +258,12 @@ def select_embedding_provider() -> str:
             "Azure OpenAI (Requires API key)",
             "Ollama (Local models)",
         ],
-        style=questionary.Style([
-            ("selected", "fg:cyan bold"),
-            ("pointer", "fg:cyan bold"),
-        ])
+        style=questionary.Style(
+            [
+                ("selected", "fg:cyan bold"),
+                ("pointer", "fg:cyan bold"),
+            ]
+        ),
     ).ask()
 
 
@@ -307,26 +291,17 @@ def get_embedding_model_default(provider: str) -> str:
     return models.get(provider, "sentence-transformers/all-mpnet-base-v2")
 
 
-
 def configure_advanced_settings() -> dict:
     """Configure advanced settings."""
     console.print("\n[bold]Advanced Settings[/bold]")
 
     temperature = questionary.text(
-        "Temperature (0.0-1.0, lower = more deterministic):",
-        default="0.0",
-        validate=lambda x: 0.0 <= float(x) <= 1.0
+        "Temperature (0.0-1.0, lower = more deterministic):", default="0.0", validate=lambda x: 0.0 <= float(x) <= 1.0
     ).ask()
 
-    max_tokens = questionary.text(
-        "Max tokens per response:",
-        default="8192"
-    ).ask()
+    max_tokens = questionary.text("Max tokens per response:", default="8192").ask()
 
-    chunk_size = questionary.text(
-        "RAG chunk size:",
-        default="1000"
-    ).ask()
+    chunk_size = questionary.text("RAG chunk size:", default="1000").ask()
 
     return {
         "temperature": float(temperature),
@@ -360,10 +335,7 @@ def quick_start_setup() -> dict:
     search_provider = get_search_provider_id(search_choice)
 
     # Ask about enabling search
-    enable_search = questionary.confirm(
-        "Enable web search for external context retrieval?",
-        default=False
-    ).ask()
+    enable_search = questionary.confirm("Enable web search for external context retrieval?", default=False).ask()
 
     # Embedding provider
     console.print("\n[bold]Embedding Configuration[/bold]")
@@ -374,8 +346,7 @@ def quick_start_setup() -> dict:
 
     # Ask about vectordb
     enable_vectordb = questionary.confirm(
-        "Enable vector database for document storage and retrieval?",
-        default=False
+        "Enable vector database for document storage and retrieval?", default=False
     ).ask()
 
     if enable_vectordb:
@@ -518,8 +489,7 @@ def onboard():
     # Security warning
     print_security_warning()
     accept_risk = questionary.confirm(
-        "I understand and accept the security implications. Continue?",
-        default=False
+        "I understand and accept the security implications. Continue?", default=False
     ).ask()
 
     if not accept_risk:
@@ -533,11 +503,7 @@ def onboard():
 
         action = questionary.select(
             "Configuration already exists. What would you like to do?",
-            choices=[
-                "Keep existing configuration",
-                "Reconfigure (overwrites existing)",
-                "Exit"
-            ]
+            choices=["Keep existing configuration", "Reconfigure (overwrites existing)", "Exit"],
         ).ask()
 
         if action == "Keep existing configuration":
@@ -568,15 +534,14 @@ def onboard():
     console.print(f"  Provider: {setup_data['provider']}")
     console.print(f"  Model: {setup_data['model']}")
     console.print(f"  Temperature: {setup_data['temperature']}")
-    console.print(f"  Search: {setup_data['search_provider']} ({'Enabled' if setup_data.get('enable_search', False) else 'Disabled'})")
+    console.print(
+        f"  Search: {setup_data['search_provider']} ({'Enabled' if setup_data.get('enable_search', False) else 'Disabled'})"
+    )
     console.print(f"  Embedding: {setup_data['embedding_provider']} ({setup_data['embedding_model']})")
     console.print(f"  Vector DB: {'Enabled' if setup_data.get('enable_vectordb', False) else 'Disabled'}")
     console.print()
 
-    confirm = questionary.confirm(
-        "Save this configuration?",
-        default=True
-    ).ask()
+    confirm = questionary.confirm("Save this configuration?", default=True).ask()
 
     if not confirm:
         console.print("\n[yellow]Setup cancelled.[/yellow]")
@@ -586,7 +551,7 @@ def onboard():
     config_path = save_config(config_dict)
 
     # Show next steps
-    show_next_steps(config_path, setup_data['provider'])
+    show_next_steps(config_path, setup_data["provider"])
 
     console.print("[bold green]🎓 GenMentor setup complete! Happy learning! 🎓[/bold green]\n")
 

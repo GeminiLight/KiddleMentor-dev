@@ -6,9 +6,11 @@ from typing import Any, Mapping
 from pydantic import BaseModel, field_validator
 
 from gen_mentor.agents.base_agent import BaseAgent
-from gen_mentor.agents.content.prompts.document_integration import integrated_document_generator_system_prompt, integrated_document_generator_task_prompt
+from gen_mentor.agents.content.prompts.document_integration import (
+    integrated_document_generator_system_prompt,
+    integrated_document_generator_task_prompt,
+)
 from gen_mentor.schemas import DocumentStructure
-
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +34,7 @@ class IntegratedDocPayload(BaseModel):
             return v.strip()
         return v
 
+
 class LearningDocumentIntegrator(BaseAgent):
     name: str = "LearningDocumentIntegrator"
 
@@ -46,21 +49,32 @@ class LearningDocumentIntegrator(BaseAgent):
         return validated_output.model_dump()
 
 
-def integrate_learning_document_with_llm(llm, learner_profile, learning_path, learning_session, knowledge_points, knowledge_drafts, output_markdown=True, learning_goal=""):
-    logger.info(f'Integrating learning document with {len(knowledge_points)} knowledge points and {len(knowledge_drafts)} drafts...')
+def integrate_learning_document_with_llm(
+    llm,
+    learner_profile,
+    learning_path,
+    learning_session,
+    knowledge_points,
+    knowledge_drafts,
+    output_markdown=True,
+    learning_goal="",
+):
+    logger.info(
+        f"Integrating learning document with {len(knowledge_points)} knowledge points and {len(knowledge_drafts)} drafts..."
+    )
     input_dict = {
-        'learner_profile': learner_profile,
-        'learning_path': learning_path,
-        'learning_session': learning_session,
-        'knowledge_points': knowledge_points,
-        'knowledge_drafts': knowledge_drafts,
-        'learning_goal': learning_goal,
+        "learner_profile": learner_profile,
+        "learning_path": learning_path,
+        "learning_session": learning_session,
+        "knowledge_points": knowledge_points,
+        "knowledge_drafts": knowledge_drafts,
+        "learning_goal": learning_goal,
     }
     learning_document_integrator = LearningDocumentIntegrator(llm)
     document_structure = learning_document_integrator.integrate(input_dict)
     if not output_markdown:
         return document_structure
-    logger.info('Preparing markdown document...')
+    logger.info("Preparing markdown document...")
     return prepare_markdown_document(document_structure, knowledge_points, knowledge_drafts)
 
 
@@ -73,6 +87,7 @@ def prepare_markdown_document(document_structure, knowledge_points, knowledge_dr
     """
     import ast as _ast
     import json as _json
+
     if isinstance(knowledge_points, str):
         try:
             knowledge_points = _json.loads(knowledge_points)
@@ -106,18 +121,18 @@ def prepare_markdown_document(document_structure, knowledge_points, knowledge_dr
         knowledge_drafts = []
 
     part_titles = {
-        'foundational': "## Foundational Concepts",
-        'practical': "## Practical Applications",
-        'strategic': "## Strategic Insights",
+        "foundational": "## Foundational Concepts",
+        "practical": "## Practical Applications",
+        "strategic": "## Strategic Insights",
     }
 
-    title = document_structure.get('title', '') if isinstance(document_structure, dict) else ''
+    title = document_structure.get("title", "") if isinstance(document_structure, dict) else ""
     md = f"# {title}"
     md += f"\n\n{document_structure.get('overview','') if isinstance(document_structure, dict) else ''}"
     for k_type, header in part_titles.items():
         md += f"\n\n{header}\n"
         for idx, kp in enumerate(knowledge_points or []):
-            if not isinstance(kp, dict) or kp.get('type') != k_type:
+            if not isinstance(kp, dict) or kp.get("type") != k_type:
                 continue
             kd = (knowledge_drafts or [])[idx]
             if isinstance(kd, dict):

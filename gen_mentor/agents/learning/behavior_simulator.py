@@ -38,7 +38,7 @@ class LearnerInteractionPayload(BaseModel):
 
 class LearnerInteractionSimulator(BaseAgent):
 
-    name: str = 'LearnerInteractionSimulator'
+    name: str = "LearnerInteractionSimulator"
 
     def __init__(self, model: Any):
         super().__init__(

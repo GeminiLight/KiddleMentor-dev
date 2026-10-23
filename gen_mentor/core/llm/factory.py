@@ -6,6 +6,7 @@ from gen_mentor.utils.config import ensure_config_dict
 from langchain_core.language_models import BaseChatModel
 from langchain.chat_models import init_chat_model
 from dotenv import load_dotenv
+
 load_dotenv(override=True)
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ class LLMFactory:
         temperature: float = 0,
         base_url: Optional[str] = None,
         api_key: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> BaseChatModel:
         """Initialize LLM client with model parameters.
 
@@ -40,12 +41,7 @@ class LLMFactory:
             model = "claude-3-5-sonnet-20241022"
             model_provider = model_provider or "anthropic"
 
-        config_kwargs = {
-            "model": model,
-            "model_provider": model_provider,
-            "temperature": temperature,
-            **kwargs
-        }
+        config_kwargs = {"model": model, "model_provider": model_provider, "temperature": temperature, **kwargs}
 
         if base_url is not None:
             config_kwargs["base_url"] = base_url
@@ -79,4 +75,3 @@ class LLMFactory:
             # api_key=config.api_key,
             temperature=0,  # Always 0 for deterministic results
         )
-    

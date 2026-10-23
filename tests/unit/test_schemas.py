@@ -10,17 +10,14 @@ from gen_mentor.schemas import (
     DocumentQuiz,
     SingleChoiceQuestion,
     LearningContent,
-
     # Learning schemas
     SkillGap,
     LearnerProfile,
     MasteredSkill,
     RefinedLearningGoal,
-
     # Tutoring schemas
     TutorChatPayload,
     ChatMessage,
-
     # Assessment schemas
     PerformanceEvaluation,
     SkillMasteryEvaluation,
@@ -58,12 +55,12 @@ class TestContentSchemas:
         question = SingleChoiceQuestion(
             question="What is Python?",
             options=["A language", "A snake", "A tool", "A framework"],
-            correct_answer=0,
+            correct_option=0,
             explanation="Python is a programming language.",
         )
 
         assert len(question.options) == 4
-        assert question.correct_answer == 0
+        assert question.correct_option == 0
 
     def test_document_quiz_creation(self, sample_quiz):
         """Test creating a document quiz."""
@@ -87,32 +84,29 @@ class TestLearningSchemas:
     def test_mastered_skill_creation(self):
         """Test creating a mastered skill."""
         skill = MasteredSkill(
-            skill_name="Python Basics",
-            proficiency="intermediate",
+            name="Python Basics",
+            proficiency_level="intermediate",
         )
 
-        assert skill.skill_name == "Python Basics"
-        assert skill.proficiency == "intermediate"
+        assert skill.name == "Python Basics"
+        assert skill.proficiency_level == "intermediate"
 
     def test_learner_profile_creation(self, sample_learner_profile):
         """Test creating a learner profile."""
         profile = LearnerProfile.model_validate(sample_learner_profile)
 
-        assert profile.name == "Test Learner"
-        assert profile.learning_goal == "Learn Python programming"
-        assert len(profile.mastered_skills) == 1
+        assert "Test Learner" in profile.learner_information
+        assert "learn Python programming" in profile.learner_information
+        assert len(profile.cognitive_status.mastered_skills) == 1
 
     def test_refined_learning_goal(self):
         """Test refined learning goal."""
         goal = RefinedLearningGoal(
-            original_goal="Learn Python",
             refined_goal="Master Python fundamentals including data structures and OOP",
-            key_topics=["Variables", "Functions", "Classes"],
-            estimated_duration="3 months",
         )
 
         assert "fundamentals" in goal.refined_goal
-        assert len(goal.key_topics) == 3
+        assert goal.model_dump() == {"refined_goal": "Master Python fundamentals including data structures and OOP"}
 
 
 class TestTutoringSchemas:
@@ -212,8 +206,8 @@ class TestSchemaValidation:
         """Test invalid proficiency level."""
         with pytest.raises(ValidationError):
             MasteredSkill(
-                skill_name="Test",
-                proficiency="invalid_level",  # Invalid
+                name="Test",
+                proficiency_level="invalid_level",  # Invalid
             )
 
     def test_score_range_validation(self):

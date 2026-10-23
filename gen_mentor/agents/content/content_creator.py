@@ -56,7 +56,15 @@ class LearningContentCreator(BaseAgent):
         return validated_output.model_dump()
 
 
-def prepare_content_outline_with_llm(llm, learner_profile, learning_path, learning_session, learning_goal="", *, search_rag_manager: Optional[SearchRagManager] = None):
+def prepare_content_outline_with_llm(
+    llm,
+    learner_profile,
+    learning_path,
+    learning_session,
+    learning_goal="",
+    *,
+    search_rag_manager: Optional[SearchRagManager] = None,
+):
     creator = LearningContentCreator(llm, search_rag_manager=search_rag_manager)
     payload = {
         "learner_profile": learner_profile,
@@ -90,7 +98,10 @@ def create_learning_content_with_llm(
 
     if method_name == "genmentor":
         knowledge_points = explore_knowledge_points_with_llm(
-            llm, learner_profile, learning_path, learning_session,
+            llm,
+            learner_profile,
+            learning_path,
+            learning_session,
             learning_goal=learning_goal,
         )
         # Unwrap {"knowledge_points": [...]} to a plain list

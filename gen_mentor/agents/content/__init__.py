@@ -10,8 +10,9 @@ from .feedback_simulator import *
 __all__ = [
     "create_learning_content_with_llm",
     "schedule_learning_path_with_llm",
-    "explore_goal_knowledge_with_llm",
+    "explore_knowledge_points_with_llm",
     "integrate_learning_document_with_llm",
-    "draft_search_knowledge_with_llm",
-    "simulate_learner_feedback_with_llm",
+    "draft_knowledge_point_with_llm",
+    "draft_knowledge_points_with_llm",
+    "LearnerFeedbackSimulator",
 ]
