@@ -9,12 +9,14 @@ from pydantic import BaseModel, Field, field_validator
 
 class ChatMessage(BaseModel):
     """A single chat message in the conversation."""
+
     role: Literal["user", "assistant", "system"] = Field(..., description="Role of the message sender")
     content: str = Field(..., description="Content of the message")
 
 
 class TutorChatPayload(BaseModel):
     """Payload for tutor chatbot interactions."""
+
     learner_profile: Any = Field(default="", description="Learner profile information")
     messages: Any = Field(..., description="Conversation history")
     use_search: bool = Field(default=True, description="Whether to use web search for context")
@@ -34,6 +36,7 @@ class TutorChatPayload(BaseModel):
 
 class TutorResponse(BaseModel):
     """Response from the tutor chatbot."""
+
     response: str = Field(..., description="The tutor's response text")
     sources: Optional[List[str]] = Field(default=None, description="Sources used for the response")
     follow_up_questions: Optional[List[str]] = Field(default=None, description="Suggested follow-up questions")

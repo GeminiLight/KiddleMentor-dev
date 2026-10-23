@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, RootModel, field_validator
 # Enums
 class LevelRequired(str, Enum):
     """Required proficiency levels."""
+
     beginner = "beginner"
     intermediate = "intermediate"
     advanced = "advanced"
@@ -18,6 +19,7 @@ class LevelRequired(str, Enum):
 
 class LevelCurrent(str, Enum):
     """Current proficiency levels including unlearned."""
+
     unlearned = "unlearned"
     beginner = "beginner"
     intermediate = "intermediate"
@@ -26,6 +28,7 @@ class LevelCurrent(str, Enum):
 
 class Confidence(str, Enum):
     """Confidence levels."""
+
     low = "low"
     medium = "medium"
     high = "high"
@@ -34,12 +37,14 @@ class Confidence(str, Enum):
 # Skill Requirement Schemas
 class SkillRequirement(BaseModel):
     """A required skill with target level."""
+
     name: str = Field(..., description="Actionable, concise skill name.")
     required_level: LevelRequired
 
 
 class SkillRequirements(BaseModel):
     """Collection of skill requirements."""
+
     skill_requirements: List[SkillRequirement]
 
     @field_validator("skill_requirements")
@@ -59,6 +64,7 @@ class SkillRequirements(BaseModel):
 # Skill Gap Schemas
 class SkillGap(BaseModel):
     """A skill gap with current and required levels."""
+
     name: str
     is_gap: bool
     required_level: LevelRequired
@@ -93,6 +99,7 @@ class SkillGap(BaseModel):
 
 class SkillGaps(BaseModel):
     """Collection of skill gaps."""
+
     skill_gaps: List[SkillGap]
 
     @field_validator("skill_gaps")
@@ -111,24 +118,28 @@ class SkillGaps(BaseModel):
 
 class SkillGapsRoot(RootModel):
     """Root model for skill gaps list."""
+
     root: List[SkillGap]
 
 
 # Learning Goal Schemas
 class RefinedLearningGoal(BaseModel):
     """A refined learning goal."""
+
     refined_goal: str
 
 
 # Learner Profile Schemas
 class MasteredSkill(BaseModel):
     """A mastered skill."""
+
     name: str
     proficiency_level: LevelRequired
 
 
 class InProgressSkill(BaseModel):
     """A skill in progress."""
+
     name: str
     required_proficiency_level: LevelRequired
     current_proficiency_level: LevelCurrent
@@ -136,6 +147,7 @@ class InProgressSkill(BaseModel):
 
 class CognitiveStatus(BaseModel):
     """Cognitive status of a learner."""
+
     overall_progress: int = Field(..., ge=0, le=100)
     mastered_skills: List[MasteredSkill] = Field(default_factory=list)
     in_progress_skills: List[InProgressSkill] = Field(default_factory=list)
@@ -143,6 +155,7 @@ class CognitiveStatus(BaseModel):
 
 class LearningPreferences(BaseModel):
     """Learning preferences of a learner."""
+
     content_style: str
     activity_type: str
     additional_notes: str | None = None
@@ -150,6 +163,7 @@ class LearningPreferences(BaseModel):
 
 class BehavioralPatterns(BaseModel):
     """Behavioral patterns of a learner."""
+
     system_usage_frequency: str
     session_duration_engagement: str
     motivational_triggers: str | None = None
@@ -158,6 +172,7 @@ class BehavioralPatterns(BaseModel):
 
 class LearnerProfile(BaseModel):
     """Complete learner profile."""
+
     learner_information: str
     cognitive_status: CognitiveStatus
     learning_preferences: LearningPreferences
@@ -167,6 +182,7 @@ class LearnerProfile(BaseModel):
 # Learner Simulation Schemas
 class LearnerBehaviorLog(BaseModel):
     """Schema for a single session's learner interaction log."""
+
     session_number: int = Field(..., ge=1)
     interactions: List[Dict[str, Any]] = Field(default_factory=list)
     notes: Optional[str] = None
@@ -174,6 +190,7 @@ class LearnerBehaviorLog(BaseModel):
 
 class GroundTruthProfileResult(BaseModel):
     """Schema for ground-truth profile generation/progression output."""
+
     learner_profile: Dict[str, Any]
 
 

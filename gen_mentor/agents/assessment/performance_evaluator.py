@@ -99,10 +99,7 @@ def evaluate_skill_mastery_with_llm(
         "previous_attempts": previous_attempts or [],
     }
 
-    result = agent.invoke(
-        input_dict=input_dict,
-        task_prompt=SKILL_MASTERY_EVALUATION_PROMPT
-    )
+    result = agent.invoke(input_dict=input_dict, task_prompt=SKILL_MASTERY_EVALUATION_PROMPT)
 
     return result
 
@@ -143,10 +140,7 @@ def generate_performance_report_with_llm(
         "learning_goal": learning_goal,
     }
 
-    result = agent.invoke(
-        input_dict=input_dict,
-        task_prompt=PERFORMANCE_REPORT_PROMPT
-    )
+    result = agent.invoke(input_dict=input_dict, task_prompt=PERFORMANCE_REPORT_PROMPT)
 
     return result
 

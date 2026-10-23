@@ -51,6 +51,7 @@ def create_default_config_file() -> Path:
     if example_config_path.exists():
         # Copy example config as default
         import shutil
+
         shutil.copy(example_config_path, config_path)
         print(f"Created default configuration at: {config_path}")
     else:

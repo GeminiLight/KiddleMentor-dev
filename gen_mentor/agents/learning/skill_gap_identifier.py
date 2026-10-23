@@ -4,7 +4,10 @@ from collections.abc import Mapping
 from typing import Any, Dict, Optional, Tuple, TypeAlias
 from pydantic import BaseModel, Field
 from gen_mentor.agents.base_agent import BaseAgent
-from gen_mentor.agents.learning.prompts.skill_gap import skill_gap_identifier_system_prompt, skill_gap_identifier_task_prompt
+from gen_mentor.agents.learning.prompts.skill_gap import (
+    skill_gap_identifier_system_prompt,
+    skill_gap_identifier_task_prompt,
+)
 from gen_mentor.schemas import SkillRequirements, SkillGaps
 from .skill_mapper import SkillRequirementMapper
 
@@ -24,7 +27,10 @@ class SkillGapIdentifier(BaseAgent):
 
     name: str = "SkillGapIdentifier"
 
-    def __init__(self, model: Any, ) -> None:
+    def __init__(
+        self,
+        model: Any,
+    ) -> None:
         super().__init__(
             model=model,
             system_prompt=skill_gap_identifier_system_prompt,
@@ -41,6 +47,7 @@ class SkillGapIdentifier(BaseAgent):
         raw_output = self.invoke(payload_dict, task_prompt=task_prompt)
         validated = SkillGaps.model_validate(raw_output)
         return validated.model_dump()
+
 
 def identify_skill_gap_with_llm(
     llm: Any,
@@ -66,6 +73,7 @@ def identify_skill_gap_with_llm(
         },
     )
     return skill_gaps, effective_requirements
+
 
 if __name__ == "__main__":
     # python -m modules.skill_gap_identification.agents.skill_gap_identifier

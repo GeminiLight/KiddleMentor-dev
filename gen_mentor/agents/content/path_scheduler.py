@@ -10,7 +10,6 @@ from gen_mentor.agents.content.prompts.path_scheduling import (
     learning_path_scheduler_task_prompt_session,
 )
 
-
 JSONDict = Dict[str, Any]
 
 

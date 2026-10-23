@@ -21,7 +21,7 @@ class TestLLMFactory:
     def test_create_llm_with_api_key(self, sample_config):
         """Test creating LLM with API key from config."""
         with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
-            with patch('gen_mentor.core.llm.factory.ChatOpenAI') as mock_openai:
+            with patch("gen_mentor.core.llm.factory.ChatOpenAI") as mock_openai:
                 mock_openai.return_value = MagicMock()
 
                 factory = LLMFactory(config=sample_config)
@@ -32,7 +32,7 @@ class TestLLMFactory:
     def test_create_llm_deepseek(self, sample_config):
         """Test creating DeepSeek LLM."""
         with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "test-key"}):
-            with patch('gen_mentor.core.llm.factory.ChatOpenAI') as mock_chat:
+            with patch("gen_mentor.core.llm.factory.ChatOpenAI") as mock_chat:
                 mock_chat.return_value = MagicMock()
 
                 factory = LLMFactory(config=sample_config)
@@ -61,7 +61,7 @@ class TestLLMFactory:
     def test_default_model_creation(self, sample_config):
         """Test creating LLM with default model."""
         with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "test-key"}):
-            with patch('gen_mentor.core.llm.factory.ChatOpenAI') as mock_chat:
+            with patch("gen_mentor.core.llm.factory.ChatOpenAI") as mock_chat:
                 mock_chat.return_value = MagicMock()
 
                 factory = LLMFactory(config=sample_config)
@@ -72,7 +72,7 @@ class TestLLMFactory:
     def test_temperature_and_max_tokens(self, sample_config):
         """Test that temperature and max_tokens are passed correctly."""
         with patch.dict(os.environ, {"DEEPSEEK_API_KEY": "test-key"}):
-            with patch('gen_mentor.core.llm.factory.ChatOpenAI') as mock_chat:
+            with patch("gen_mentor.core.llm.factory.ChatOpenAI") as mock_chat:
                 mock_chat.return_value = MagicMock()
 
                 factory = LLMFactory(config=sample_config)

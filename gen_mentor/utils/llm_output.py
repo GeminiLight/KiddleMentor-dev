@@ -9,7 +9,7 @@ def convert_json_output(output: str) -> Dict[str, Any]:
 
     Args:
         output: The JSON output from the LLM
-        
+
     Returns:
         Structured JSON output
     """
@@ -25,26 +25,28 @@ def convert_json_output(output: str) -> Dict[str, Any]:
         return json.loads(output)
     except json.JSONDecodeError:
         # If parsing fails, try to extract JSON from the output string
-        start_idx = output.find('{')
-        end_idx = output.rfind('}') + 1
+        start_idx = output.find("{")
+        end_idx = output.rfind("}") + 1
         if start_idx != -1 and end_idx != 0:
             json_str = output[start_idx:end_idx]
             return json.loads(json_str)
         else:
             raise json.JSONDecodeError("No valid JSON found in response", output, 0)
 
+
 def get_text_from_response(response):
     """Extract text from the response object."""
-    if 'messages' in response:
-        return response['messages'][-1].content
-    if 'message' in response['choices'][0]:
-        return response['choices'][0]['message']['content']
-    return response['choices'][0]['text']
+    if "messages" in response:
+        return response["messages"][-1].content
+    if "message" in response["choices"][0]:
+        return response["choices"][0]["message"]["content"]
+    return response["choices"][0]["text"]
+
 
 def extract_think_and_result(info):
-    "Extract think and result content from the response info."""
+    "Extract think and result content from the response info." ""
     think_match = re.search(r"<think>(.*?)</think>", info, re.DOTALL)
-    think_content = think_match.group(1).strip() if think_match else ''
+    think_content = think_match.group(1).strip() if think_match else ""
     result_content = re.sub(r"<think>.*?</think>", "", info, flags=re.DOTALL).strip()
     return think_content, result_content
 
@@ -63,4 +65,3 @@ def preprocess_response(response, only_text=True, exclude_think=False, json_outp
             response = {"error": "Invalid JSON output", "raw_content": response}
             raise e
     return response
-

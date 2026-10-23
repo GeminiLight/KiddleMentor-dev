@@ -16,7 +16,7 @@ class TestLearningAgents:
     @pytest.mark.integration
     def test_identify_skill_gap(self, mock_llm_json, sample_learner_profile):
         """Test identifying skill gaps."""
-        with patch('gen_mentor.agents.learning.skill_gap_identifier.BaseAgent') as mock_agent_class:
+        with patch("gen_mentor.agents.learning.skill_gap_identifier.BaseAgent") as mock_agent_class:
             mock_agent = MagicMock()
             mock_agent.invoke.return_value = {
                 "skill_gaps": [
@@ -42,7 +42,7 @@ class TestLearningAgents:
     @pytest.mark.integration
     def test_refine_learning_goal(self, mock_llm_json):
         """Test refining learning goal."""
-        with patch('gen_mentor.agents.learning.goal_refiner.BaseAgent') as mock_agent_class:
+        with patch("gen_mentor.agents.learning.goal_refiner.BaseAgent") as mock_agent_class:
             mock_agent = MagicMock()
             mock_agent.invoke.return_value = {
                 "original_goal": "Learn Python",
@@ -65,7 +65,7 @@ class TestLearningAgents:
     @pytest.mark.integration
     def test_map_skill_requirements(self, mock_llm_json):
         """Test mapping skill requirements."""
-        with patch('gen_mentor.agents.learning.skill_mapper.BaseAgent') as mock_agent_class:
+        with patch("gen_mentor.agents.learning.skill_mapper.BaseAgent") as mock_agent_class:
             mock_agent = MagicMock()
             mock_agent.invoke.return_value = {
                 "skill_requirements": [

@@ -5,7 +5,6 @@ from langchain_core.language_models import BaseChatModel
 
 from gen_mentor.utils.llm_output import preprocess_response
 
-
 valid_agent_arg_list = [
     "middleware",
     "response_format",
@@ -17,19 +16,15 @@ valid_agent_arg_list = [
     "interrupt_after",
     "debug",
     "name",
-    "cache"
+    "cache",
 ]
 
 
 class BaseAgent:
 
     def __init__(
-            self,
-            model: BaseChatModel,
-            system_prompt: Optional[str] = None,
-            tools: Optional[list[Any]] = None,
-            **kwargs
-        ) -> None:
+        self, model: BaseChatModel, system_prompt: Optional[str] = None, tools: Optional[list[Any]] = None, **kwargs
+    ) -> None:
         """Initialize a base agent with JSON output and validation."""
         self._model = model
         self._system_prompt = system_prompt
@@ -60,11 +55,7 @@ class BaseAgent:
         assert task_prompt is not None, "Either self._task_prompt or task_prompt must be provided."
         task_prompt = task_prompt
         formatted_task = task_prompt.format(**variables)  # type: ignore[union-attr]
-        prompt = {
-            "messages": [
-                {"role": "user", "content": formatted_task}
-            ]
-        }
+        prompt = {"messages": [{"role": "user", "content": formatted_task}]}
         return prompt
 
     def invoke(self, input_dict: dict, task_prompt: Optional[str] = None) -> Any:

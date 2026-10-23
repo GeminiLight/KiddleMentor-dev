@@ -130,4 +130,3 @@ After each session, the profile should reflect a realistic progression that mimi
     }}
 }}
 """
-

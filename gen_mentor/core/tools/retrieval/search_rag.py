@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class SearchRagManager:
 
     def __init__(
-        self, 
+        self,
         embedder: Embeddings,
         text_splitter: Optional[TextSplitter] = None,
         vectorstore: Optional[VectorStore] = None,
@@ -98,7 +98,6 @@ class SearchRagManager:
             max_retrieval_results=config.get("rag", {}).get("num_retrieval_results", 5),
         )
 
-
     def search(self, query: str) -> List[SearchResult]:
         """Perform web search. Returns empty list if search is disabled."""
         if not self.search_runner:
@@ -175,13 +174,9 @@ def format_docs(docs: List[Document]) -> str:
     return "\n\n".join(formatted_chunks)
 
 
-
 if __name__ == "__main__":
     # python -m base.search_rag
-    embedder = EmbedderFactory.create(
-        model="sentence-transformers/all-mpnet-base-v2",
-        model_provider="huggingface"
-    )
+    embedder = EmbedderFactory.create(model="sentence-transformers/all-mpnet-base-v2", model_provider="huggingface")
 
     searcher = SearcherFactory.create(
         provider="duckduckgo",
@@ -215,6 +210,7 @@ if __name__ == "__main__":
     )
 
     from config import default_config
+
     rag_manager = SearchRagManager.from_config(default_config)
 
     results = rag_manager.search("LangChain community utilities")

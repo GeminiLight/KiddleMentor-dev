@@ -16,7 +16,7 @@ class TestContentAgents:
     @pytest.mark.integration
     def test_create_learning_content(self, mock_llm_json, sample_learner_profile):
         """Test creating learning content."""
-        with patch('gen_mentor.agents.content.content_creator.BaseAgent') as mock_agent_class:
+        with patch("gen_mentor.agents.content.content_creator.BaseAgent") as mock_agent_class:
             mock_agent = MagicMock()
             mock_agent.invoke.return_value = {
                 "title": "Introduction to Python",
@@ -42,7 +42,7 @@ class TestContentAgents:
     @pytest.mark.integration
     def test_schedule_learning_path(self, mock_llm_json, sample_learner_profile):
         """Test scheduling learning path."""
-        with patch('gen_mentor.agents.content.path_scheduler.BaseAgent') as mock_agent_class:
+        with patch("gen_mentor.agents.content.path_scheduler.BaseAgent") as mock_agent_class:
             mock_agent = MagicMock()
             mock_agent.invoke.return_value = {
                 "learning_path": [
@@ -73,7 +73,7 @@ class TestContentAgents:
     @pytest.mark.integration
     def test_explore_goal_knowledge(self, mock_llm_json):
         """Test exploring goal knowledge."""
-        with patch('gen_mentor.agents.content.knowledge_explorer.BaseAgent') as mock_agent_class:
+        with patch("gen_mentor.agents.content.knowledge_explorer.BaseAgent") as mock_agent_class:
             mock_agent = MagicMock()
             mock_agent.invoke.return_value = {
                 "knowledge_points": [

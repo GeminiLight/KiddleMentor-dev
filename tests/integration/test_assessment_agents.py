@@ -15,11 +15,9 @@ class TestAssessmentAgents:
     """Integration tests for assessment agents."""
 
     @pytest.mark.integration
-    def test_generate_document_quiz(
-        self, mock_llm_json, sample_learner_profile
-    ):
+    def test_generate_document_quiz(self, mock_llm_json, sample_learner_profile):
         """Test generating document quiz."""
-        with patch('gen_mentor.agents.assessment.quiz_generator.DocumentQuizGenerator') as mock_gen:
+        with patch("gen_mentor.agents.assessment.quiz_generator.DocumentQuizGenerator") as mock_gen:
             mock_instance = MagicMock()
             mock_instance.generate.return_value = {
                 "single_choice_questions": [
@@ -53,7 +51,7 @@ class TestAssessmentAgents:
         self, mock_llm_json, sample_learner_profile, sample_learning_path, sample_session_data
     ):
         """Test evaluating learner performance."""
-        with patch('gen_mentor.agents.assessment.performance_evaluator.BaseAgent') as mock_agent_class:
+        with patch("gen_mentor.agents.assessment.performance_evaluator.BaseAgent") as mock_agent_class:
             mock_agent = MagicMock()
             mock_agent.invoke.return_value = {
                 "overall_score": 85.0,
@@ -86,7 +84,7 @@ class TestAssessmentAgents:
     @pytest.mark.integration
     def test_evaluate_skill_mastery(self, mock_llm_json):
         """Test evaluating skill mastery."""
-        with patch('gen_mentor.agents.assessment.performance_evaluator.BaseAgent') as mock_agent_class:
+        with patch("gen_mentor.agents.assessment.performance_evaluator.BaseAgent") as mock_agent_class:
             mock_agent = MagicMock()
             mock_agent.invoke.return_value = {
                 "skill_name": "Python Functions",
@@ -117,7 +115,7 @@ class TestAssessmentAgents:
     @pytest.mark.integration
     def test_generate_performance_report(self, mock_llm_json, sample_learner_profile):
         """Test generating performance report."""
-        with patch('gen_mentor.agents.assessment.performance_evaluator.BaseAgent') as mock_agent_class:
+        with patch("gen_mentor.agents.assessment.performance_evaluator.BaseAgent") as mock_agent_class:
             mock_agent = MagicMock()
             mock_agent.invoke.return_value = "# Performance Report\n\nGreat progress!"
             mock_agent_class.return_value = mock_agent

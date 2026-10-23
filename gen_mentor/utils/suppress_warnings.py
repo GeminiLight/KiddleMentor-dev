@@ -15,13 +15,9 @@ def suppress_pydantic_warnings():
         "ignore",
         category=UserWarning,
         module="langchain_core._api.deprecation",
-        message=".*Pydantic V1 functionality.*"
+        message=".*Pydantic V1 functionality.*",
     )
-    warnings.filterwarnings(
-        "ignore",
-        category=UserWarning,
-        message=".*Pydantic V1.*"
-    )
+    warnings.filterwarnings("ignore", category=UserWarning, message=".*Pydantic V1.*")
 
 
 def suppress_all_deprecation_warnings():

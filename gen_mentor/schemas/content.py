@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, field_validator
 # Enums
 class Proficiency(str, Enum):
     """Proficiency levels for skills."""
+
     beginner = "beginner"
     intermediate = "intermediate"
     advanced = "advanced"
@@ -18,6 +19,7 @@ class Proficiency(str, Enum):
 
 class KnowledgeType(str, Enum):
     """Types of knowledge points."""
+
     foundational = "foundational"
     practical = "practical"
     strategic = "strategic"
@@ -26,12 +28,14 @@ class KnowledgeType(str, Enum):
 # Learning Path Schemas
 class DesiredOutcome(BaseModel):
     """Desired skill outcome for a session."""
+
     name: str = Field(..., description="Skill name")
     level: Proficiency = Field(..., description="Desired proficiency when completed")
 
 
 class SessionItem(BaseModel):
     """A single session in a learning path."""
+
     id: str = Field(..., description="Session identifier, e.g., 'Session 1'")
     title: str
     abstract: str
@@ -47,6 +51,7 @@ class SessionItem(BaseModel):
 
 class LearningPath(BaseModel):
     """Complete learning path with multiple sessions."""
+
     learning_path: List[SessionItem]
 
     @field_validator("learning_path")
@@ -60,23 +65,27 @@ class LearningPath(BaseModel):
 # Knowledge Schemas
 class KnowledgePoint(BaseModel):
     """A single knowledge point."""
+
     name: str
     type: KnowledgeType
 
 
 class KnowledgePoints(BaseModel):
     """Collection of knowledge points."""
+
     knowledge_points: List[KnowledgePoint]
 
 
 class KnowledgeDraft(BaseModel):
     """Draft knowledge content."""
+
     title: str
     content: str
 
 
 class DocumentStructure(BaseModel):
     """Structure of a learning document."""
+
     title: str
     overview: str
     summary: str
@@ -85,6 +94,7 @@ class DocumentStructure(BaseModel):
 # Quiz Schemas
 class SingleChoiceQuestion(BaseModel):
     """Single choice question."""
+
     question: str
     options: List[str]
     correct_option: int | str
@@ -93,6 +103,7 @@ class SingleChoiceQuestion(BaseModel):
 
 class MultipleChoiceQuestion(BaseModel):
     """Multiple choice question."""
+
     question: str
     options: List[str]
     correct_options: List[int | str]
@@ -101,6 +112,7 @@ class MultipleChoiceQuestion(BaseModel):
 
 class TrueFalseQuestion(BaseModel):
     """True/False question."""
+
     question: str
     correct_answer: bool
     explanation: str | None = None
@@ -108,6 +120,7 @@ class TrueFalseQuestion(BaseModel):
 
 class ShortAnswerQuestion(BaseModel):
     """Short answer question."""
+
     question: str
     expected_answer: str
     explanation: str | None = None
@@ -115,6 +128,7 @@ class ShortAnswerQuestion(BaseModel):
 
 class DocumentQuiz(BaseModel):
     """Complete quiz for a document."""
+
     single_choice_questions: List[SingleChoiceQuestion] = Field(default_factory=list)
     multiple_choice_questions: List[MultipleChoiceQuestion] = Field(default_factory=list)
     true_false_questions: List[TrueFalseQuestion] = Field(default_factory=list)
@@ -123,6 +137,7 @@ class DocumentQuiz(BaseModel):
 
 class QuizPair(BaseModel):
     """Simple question-answer pair."""
+
     question: str
     answer: str
 
@@ -130,18 +145,21 @@ class QuizPair(BaseModel):
 # Content Schemas
 class ContentSection(BaseModel):
     """A section in learning content."""
+
     title: str
     summary: str
 
 
 class ContentOutline(BaseModel):
     """Outline for learning content."""
+
     title: str
     sections: List[ContentSection] = Field(default_factory=list)
 
 
 class LearningContent(BaseModel):
     """Complete learning content with quizzes."""
+
     title: str
     overview: str
     content: str
@@ -152,6 +170,7 @@ class LearningContent(BaseModel):
 # Feedback Schemas
 class FeedbackDetail(BaseModel):
     """Detailed feedback category."""
+
     progression: str
     engagement: str
     personalization: str
@@ -159,6 +178,7 @@ class FeedbackDetail(BaseModel):
 
 class LearnerFeedback(BaseModel):
     """Learner feedback and suggestions."""
+
     feedback: FeedbackDetail
     suggestions: FeedbackDetail
 
@@ -189,9 +209,11 @@ from dataclasses import dataclass
 from typing import Optional
 from langchain_core.documents import Document
 
+
 @dataclass
 class SearchResult:
     """Search result from vector database or search engine."""
+
     title: str
     link: str
     snippet: Optional[str] = None

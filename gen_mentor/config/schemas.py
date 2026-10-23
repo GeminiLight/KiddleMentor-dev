@@ -8,6 +8,7 @@ from pathlib import Path
 @dataclass
 class ProviderConfig:
     """Configuration for a single LLM provider."""
+
     api_key: Optional[str] = None
     api_base: Optional[str] = None
     extra_headers: Optional[Dict[str, str]] = None
@@ -16,6 +17,7 @@ class ProviderConfig:
 @dataclass
 class ProvidersConfig:
     """Configuration for all LLM providers."""
+
     openai: ProviderConfig = field(default_factory=ProviderConfig)
     anthropic: ProviderConfig = field(default_factory=ProviderConfig)
     deepseek: ProviderConfig = field(default_factory=ProviderConfig)
@@ -29,6 +31,7 @@ class ProvidersConfig:
 @dataclass
 class AgentDefaults:
     """Default agent configuration."""
+
     model: str = "openai/gpt-5.1"
     temperature: float = 0.0
     max_tokens: int = 8192
@@ -39,6 +42,7 @@ class AgentDefaults:
 @dataclass
 class EmbeddingProviderConfig:
     """Configuration for a single embedding provider."""
+
     api_key: Optional[str] = None
     model_name: str = "sentence-transformers/all-mpnet-base-v2"
     api_base: Optional[str] = None
@@ -47,27 +51,30 @@ class EmbeddingProviderConfig:
 @dataclass
 class EmbeddingProvidersConfig:
     """Configuration for all embedding providers."""
-    huggingface: EmbeddingProviderConfig = field(default_factory=lambda: EmbeddingProviderConfig(
-        model_name="sentence-transformers/all-mpnet-base-v2"
-    ))
-    openai: EmbeddingProviderConfig = field(default_factory=lambda: EmbeddingProviderConfig(
-        model_name="text-embedding-3-small"
-    ))
-    cohere: EmbeddingProviderConfig = field(default_factory=lambda: EmbeddingProviderConfig(
-        model_name="embed-english-v3.0"
-    ))
-    azure: EmbeddingProviderConfig = field(default_factory=lambda: EmbeddingProviderConfig(
-        model_name="text-embedding-ada-002"
-    ))
-    ollama: EmbeddingProviderConfig = field(default_factory=lambda: EmbeddingProviderConfig(
-        model_name="nomic-embed-text",
-        api_base="http://localhost:11434"
-    ))
+
+    huggingface: EmbeddingProviderConfig = field(
+        default_factory=lambda: EmbeddingProviderConfig(model_name="sentence-transformers/all-mpnet-base-v2")
+    )
+    openai: EmbeddingProviderConfig = field(
+        default_factory=lambda: EmbeddingProviderConfig(model_name="text-embedding-3-small")
+    )
+    cohere: EmbeddingProviderConfig = field(
+        default_factory=lambda: EmbeddingProviderConfig(model_name="embed-english-v3.0")
+    )
+    azure: EmbeddingProviderConfig = field(
+        default_factory=lambda: EmbeddingProviderConfig(model_name="text-embedding-ada-002")
+    )
+    ollama: EmbeddingProviderConfig = field(
+        default_factory=lambda: EmbeddingProviderConfig(
+            model_name="nomic-embed-text", api_base="http://localhost:11434"
+        )
+    )
 
 
 @dataclass
 class EmbeddingDefaults:
     """Default embedding configuration."""
+
     provider: str = "huggingface"
     model_name: str = "sentence-transformers/all-mpnet-base-v2"
     dimension: int = 768
@@ -77,6 +84,7 @@ class EmbeddingDefaults:
 @dataclass
 class SearchProviderConfig:
     """Configuration for a single search provider."""
+
     api_key: Optional[str] = None
     max_results: int = 5
 
@@ -84,6 +92,7 @@ class SearchProviderConfig:
 @dataclass
 class SearchProvidersConfig:
     """Configuration for all search providers."""
+
     duckduckgo: SearchProviderConfig = field(default_factory=SearchProviderConfig)
     tavily: SearchProviderConfig = field(default_factory=SearchProviderConfig)
     serper: SearchProviderConfig = field(default_factory=SearchProviderConfig)
@@ -95,6 +104,7 @@ class SearchProvidersConfig:
 @dataclass
 class SearchDefaults:
     """Default search configuration."""
+
     provider: str = "duckduckgo"
     max_results: int = 5
     loader_type: str = "web"
@@ -104,6 +114,7 @@ class SearchDefaults:
 @dataclass
 class VectorstoreConfig:
     """Configuration for vector database storage."""
+
     persist_directory: str = "data/vectorstore"
     collection_name: str = "genmentor"
 
@@ -111,6 +122,7 @@ class VectorstoreConfig:
 @dataclass
 class StorageConfig:
     """Configuration for storage backend."""
+
     mode: str = "local"  # local | cloud
     local_upload_dir: str = "/tmp/uploads/"
     cloud_bucket: Optional[str] = None  # For cloud storage (e.g., S3 bucket name)
@@ -122,6 +134,7 @@ class StorageConfig:
 @dataclass
 class RAGConfig:
     """Configuration for Retrieval-Augmented Generation."""
+
     chunk_size: int = 1000
     num_retrieval_results: int = 5
     allow_parallel: bool = True
@@ -131,6 +144,7 @@ class RAGConfig:
 @dataclass
 class AppConfig:
     """Main application configuration."""
+
     environment: str = "dev"  # dev | staging | prod
     debug: bool = True
     log_level: str = "INFO"
@@ -247,7 +261,9 @@ class AppConfig:
         provider = self.get_provider(model)
         return provider.api_base if provider else None
 
-    def _match_search_provider(self, provider: Optional[str] = None) -> tuple[Optional[SearchProviderConfig], Optional[str]]:
+    def _match_search_provider(
+        self, provider: Optional[str] = None
+    ) -> tuple[Optional[SearchProviderConfig], Optional[str]]:
         """Match search provider config.
 
         Args:
@@ -315,7 +331,9 @@ class AppConfig:
 
         return True
 
-    def _match_embedding_provider(self, provider: Optional[str] = None) -> tuple[Optional[EmbeddingProviderConfig], Optional[str]]:
+    def _match_embedding_provider(
+        self, provider: Optional[str] = None
+    ) -> tuple[Optional[EmbeddingProviderConfig], Optional[str]]:
         """Match embedding provider config.
 
         Args:

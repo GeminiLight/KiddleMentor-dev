@@ -12,7 +12,7 @@ class TestTutoringAgents:
     @pytest.mark.integration
     def test_chat_with_tutor_basic(self, mock_llm, sample_learner_profile):
         """Test basic chatbot interaction."""
-        with patch('gen_mentor.agents.tutoring.chatbot.AITutorChatbot') as mock_chatbot_class:
+        with patch("gen_mentor.agents.tutoring.chatbot.AITutorChatbot") as mock_chatbot_class:
             mock_chatbot = MagicMock()
             mock_chatbot.chat.return_value = "Python is a programming language."
             mock_chatbot_class.return_value = mock_chatbot
@@ -32,16 +32,14 @@ class TestTutoringAgents:
     @pytest.mark.integration
     def test_chat_with_tutor_with_search(self, mock_llm, sample_learner_profile):
         """Test chatbot with search enabled."""
-        with patch('gen_mentor.agents.tutoring.chatbot.AITutorChatbot') as mock_chatbot_class:
+        with patch("gen_mentor.agents.tutoring.chatbot.AITutorChatbot") as mock_chatbot_class:
             mock_chatbot = MagicMock()
             mock_chatbot.chat.return_value = "Python is a high-level programming language..."
             mock_chatbot_class.return_value = mock_chatbot
 
             # Mock SearchRagManager
             mock_search_rag = MagicMock()
-            mock_search_rag.invoke.return_value = [
-                {"content": "Python documentation", "source": "python.org"}
-            ]
+            mock_search_rag.invoke.return_value = [{"content": "Python documentation", "source": "python.org"}]
 
             messages = [{"role": "user", "content": "Tell me about Python decorators"}]
 
@@ -59,7 +57,7 @@ class TestTutoringAgents:
     @pytest.mark.integration
     def test_chat_with_conversation_history(self, mock_llm, sample_learner_profile):
         """Test chatbot with conversation history."""
-        with patch('gen_mentor.agents.tutoring.chatbot.AITutorChatbot') as mock_chatbot_class:
+        with patch("gen_mentor.agents.tutoring.chatbot.AITutorChatbot") as mock_chatbot_class:
             mock_chatbot = MagicMock()
             mock_chatbot.chat.return_value = "Functions help organize code into reusable blocks."
             mock_chatbot_class.return_value = mock_chatbot

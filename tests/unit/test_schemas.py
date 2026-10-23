@@ -10,17 +10,14 @@ from gen_mentor.schemas import (
     DocumentQuiz,
     SingleChoiceQuestion,
     LearningContent,
-
     # Learning schemas
     SkillGap,
     LearnerProfile,
     MasteredSkill,
     RefinedLearningGoal,
-
     # Tutoring schemas
     TutorChatPayload,
     ChatMessage,
-
     # Assessment schemas
     PerformanceEvaluation,
     SkillMasteryEvaluation,

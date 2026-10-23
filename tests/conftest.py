@@ -89,12 +89,8 @@ def sample_learner_profile() -> Dict[str, Any]:
     return {
         "name": "Test Learner",
         "learning_goal": "Learn Python programming",
-        "mastered_skills": [
-            {"skill_name": "Basic syntax", "proficiency": "intermediate"}
-        ],
-        "in_progress_skills": [
-            {"skill_name": "Object-oriented programming", "current_level": "beginner"}
-        ],
+        "mastered_skills": [{"skill_name": "Basic syntax", "proficiency": "intermediate"}],
+        "in_progress_skills": [{"skill_name": "Object-oriented programming", "current_level": "beginner"}],
         "cognitive_status": {
             "attention_span": "medium",
             "learning_speed": "fast",
@@ -132,9 +128,7 @@ def sample_learning_path() -> Dict[str, Any]:
                 "abstract": "Learn the basics of defining and calling functions in Python.",
                 "if_learned": False,
                 "associated_skills": ["Functions", "Parameters"],
-                "desired_outcome_when_completed": [
-                    {"name": "Functions", "level": "beginner"}
-                ],
+                "desired_outcome_when_completed": [{"name": "Functions", "level": "beginner"}],
             },
             {
                 "id": "Session 2",
@@ -142,9 +136,7 @@ def sample_learning_path() -> Dict[str, Any]:
                 "abstract": "Explore decorators, closures, and higher-order functions.",
                 "if_learned": False,
                 "associated_skills": ["Advanced Functions", "Decorators"],
-                "desired_outcome_when_completed": [
-                    {"name": "Advanced Functions", "level": "intermediate"}
-                ],
+                "desired_outcome_when_completed": [{"name": "Advanced Functions", "level": "intermediate"}],
             },
         ]
     }
@@ -197,6 +189,7 @@ def sample_session_data() -> Dict[str, Any]:
 def suppress_warnings():
     """Suppress warnings during tests."""
     import warnings
+
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     warnings.filterwarnings("ignore", category=FutureWarning)
 

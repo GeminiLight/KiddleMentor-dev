@@ -5,6 +5,7 @@ import shutil
 import unittest
 from gen_mentor.core.memory.memory_store import MemoryStore, LearnerMemoryStore
 
+
 class TestMemoryStore(unittest.TestCase):
     def setUp(self):
         self.test_dir = Path(tempfile.mkdtemp())
@@ -63,9 +64,7 @@ class TestMemoryStore(unittest.TestCase):
         self.assertEqual(goals["goals"][1]["status"], "active")
 
         # Test Skill Gaps
-        store.write_skill_gaps_for_goal(goal_id, {
-            "skill_gaps": [{"name": "Testing", "is_gap": True}]
-        })
+        store.write_skill_gaps_for_goal(goal_id, {"skill_gaps": [{"name": "Testing", "is_gap": True}]})
         gaps = store.read_skill_gaps()
         self.assertIn(goal_id, gaps)
         self.assertEqual(len(gaps[goal_id]["skill_gaps"]), 1)
@@ -102,9 +101,7 @@ class TestMemoryStore(unittest.TestCase):
         self.assertTrue((learner_dir / "learning_path.json").exists())
 
         # Test goal-scoped learning path
-        store.write_learning_path_for_goal(goal_id, {
-            "learning_path": [{"id": "s1", "title": "Session 1"}]
-        })
+        store.write_learning_path_for_goal(goal_id, {"learning_path": [{"id": "s1", "title": "Session 1"}]})
         goal_path = store.read_learning_path_for_goal(goal_id)
         self.assertEqual(len(goal_path["learning_path"]), 1)
         self.assertEqual(goal_path["learning_path"][0]["title"], "Session 1")
@@ -121,6 +118,7 @@ class TestMemoryStore(unittest.TestCase):
         self.assertIn("Learning Mastery & Performance", context)
         self.assertIn("Learning Goals", context)
         self.assertIn("Skill Gaps", context)
+
 
 if __name__ == "__main__":
     unittest.main()

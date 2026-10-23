@@ -80,8 +80,14 @@ adaptive_learner_profiler_basic_system_prompt_requirements = """
 - The profile should include any information that may impact the learner's learning experience and progress.
 """
 
-adaptive_learner_profiler_direct_system_prompt = adaptive_learner_profiler_system_prompt_base + adaptive_learner_profiler_basic_system_prompt_requirements
-adaptive_learner_profiler_cot_system_prompt = adaptive_learner_profiler_system_prompt_base + adaptive_learner_profiler_basic_system_prompt_task_chain_of_thoughts + adaptive_learner_profiler_basic_system_prompt_requirements
+adaptive_learner_profiler_direct_system_prompt = (
+    adaptive_learner_profiler_system_prompt_base + adaptive_learner_profiler_basic_system_prompt_requirements
+)
+adaptive_learner_profiler_cot_system_prompt = (
+    adaptive_learner_profiler_system_prompt_base
+    + adaptive_learner_profiler_basic_system_prompt_task_chain_of_thoughts
+    + adaptive_learner_profiler_basic_system_prompt_requirements
+)
 adaptive_learner_profiler_system_prompt = adaptive_learner_profiler_cot_system_prompt
 
 
@@ -96,7 +102,9 @@ Generate an initial profile for the learner based on the provided details:
 
 LEARNER_PROFILE_OUTPUT_FORMAT
 """
-adaptive_learner_profiler_task_prompt_initialization = adaptive_learner_profiler_task_prompt_initialization.replace("LEARNER_PROFILE_OUTPUT_FORMAT", learner_profile_output_format)
+adaptive_learner_profiler_task_prompt_initialization = adaptive_learner_profiler_task_prompt_initialization.replace(
+    "LEARNER_PROFILE_OUTPUT_FORMAT", learner_profile_output_format
+)
 
 adaptive_learner_profiler_task_prompt_update = """
 Task B: Profile Update
@@ -121,4 +129,6 @@ Session Information: {{'id': 'Session 2', 'title': 'Intermediate Data Analysis T
 - If the required proficiency level has been fulfilled, move the skill to the mastered list.
     - If `if_learned` is True and the outcome level is equal or higher than the required level, Must move the skill to the mastered list!!!!!!
 """
-adaptive_learner_profiler_task_prompt_update = adaptive_learner_profiler_task_prompt_update.replace("LEARNER_PROFILE_OUTPUT_FORMAT", learner_profile_output_format)
+adaptive_learner_profiler_task_prompt_update = adaptive_learner_profiler_task_prompt_update.replace(
+    "LEARNER_PROFILE_OUTPUT_FORMAT", learner_profile_output_format
+)
