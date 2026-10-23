@@ -7,6 +7,13 @@ import re
 from pypinyin import lazy_pinyin
 import hashlib
 
+from gen_mentor.utils.llm_output import extract_json_from_text as extract_json_from_text
+
+
+def clean_text(text: str) -> str:
+    """Collapse whitespace while preserving the text's Unicode characters."""
+    return " ".join(text.split())
+
 
 def extract_text_from_pdf(file_path):
     assert file_path.endswith(".pdf"), "Invalid file format. Please provide a PDF file."

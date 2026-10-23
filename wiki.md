@@ -780,6 +780,19 @@ pytest --cov=gen_mentor --cov-report=html
 
 ### Writing Tests
 
+CI runs both test directories on Python 3.10, 3.11 and 3.12, followed by the
+existing Flake8 and Black checks. Keep fixtures aligned with the current
+`AppConfig` and Pydantic schemas: provider endpoints use `api_base`, search
+settings use `search_defaults` / `search_providers`, and mastered skills live
+under `cognitive_status`.
+
+For deterministic Agent integration tests, use LangChain's `FakeListChatModel`
+with schema-valid JSON responses. `FakeChatModel` always returns the literal
+`fake response`; it does not consume a supplied response list. Exercise the
+actual wrapper and response validation rather than patching an inherited
+`BaseAgent` class after its subclasses have already been defined. Model factory
+tests should patch `init_chat_model`, the boundary used by `LLMFactory.create`.
+
 ```python
 # tests/unit/test_my_module.py
 import pytest

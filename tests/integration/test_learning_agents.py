@@ -1,87 +1,55 @@
-"""Integration tests for learning agents."""
+"""Exercise learning wrappers, LangGraph invocation and schema validation offline."""
+
+import json
 
 import pytest
-from unittest.mock import MagicMock, patch
+from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from gen_mentor.agents.learning import (
     identify_skill_gap_with_llm,
     refine_learning_goal_with_llm,
-    map_skill_requirements_with_llm,
+    map_goal_to_skills_with_llm,
 )
 
 
+@pytest.mark.integration
 class TestLearningAgents:
-    """Integration tests for learning assessment agents."""
+    def test_identify_skill_gap(self, sample_skill_gap):
+        requirements = {"skill_requirements": [{"name": "Python Functions", "required_level": "intermediate"}]}
+        expected = {
+            "skill_gaps": [{k: v for k, v in sample_skill_gap.items() if k not in ("priority", "estimated_time")}]
+        }
+        llm = FakeListChatModel(responses=[json.dumps(expected)])
+        gaps, used_requirements = identify_skill_gap_with_llm(
+            llm=llm,
+            learning_goal="Master Python programming",
+            learner_information="Knows basic Python syntax",
+            skill_requirements=requirements,
+        )
+        assert gaps == expected
+        assert used_requirements == requirements
 
-    @pytest.mark.integration
-    def test_identify_skill_gap(self, mock_llm_json, sample_learner_profile):
-        """Test identifying skill gaps."""
-        with patch("gen_mentor.agents.learning.skill_gap_identifier.BaseAgent") as mock_agent_class:
-            mock_agent = MagicMock()
-            mock_agent.invoke.return_value = {
-                "skill_gaps": [
-                    {
-                        "name": "Python Functions",
-                        "is_gap": True,
-                        "required_level": "intermediate",
-                        "current_level": "beginner",
-                    }
-                ]
-            }
-            mock_agent_class.return_value = mock_agent
+    def test_refine_learning_goal(self):
+        expected = {"refined_goal": "Master Python fundamentals for data science"}
+        llm = FakeListChatModel(responses=[json.dumps(expected)])
+        result = refine_learning_goal_with_llm(
+            llm=llm,
+            learning_goal="Learn Python",
+            learner_information="For data science",
+        )
+        assert result == expected
 
-            result = identify_skill_gap_with_llm(
-                llm=mock_llm_json,
-                learner_profile=sample_learner_profile,
-                target_goal="Master Python programming",
-            )
+    def test_map_skill_requirements(self):
+        expected = {"skill_requirements": [{"name": "Python Basics", "required_level": "intermediate"}]}
+        llm = FakeListChatModel(responses=[json.dumps(expected)])
+        assert map_goal_to_skills_with_llm(llm=llm, learning_goal="Become a Python developer") == expected
 
-            assert result is not None
-            mock_agent.invoke.assert_called_once()
-
-    @pytest.mark.integration
-    def test_refine_learning_goal(self, mock_llm_json):
-        """Test refining learning goal."""
-        with patch("gen_mentor.agents.learning.goal_refiner.BaseAgent") as mock_agent_class:
-            mock_agent = MagicMock()
-            mock_agent.invoke.return_value = {
-                "original_goal": "Learn Python",
-                "refined_goal": "Master Python fundamentals including data structures",
-                "key_topics": ["Variables", "Functions", "Classes"],
-                "estimated_duration": "3 months",
-            }
-            mock_agent_class.return_value = mock_agent
-
-            result = refine_learning_goal_with_llm(
-                llm=mock_llm_json,
-                original_goal="Learn Python",
-                context="For data science",
-            )
-
-            assert result is not None
-            assert "refined_goal" in result
-            mock_agent.invoke.assert_called_once()
-
-    @pytest.mark.integration
-    def test_map_skill_requirements(self, mock_llm_json):
-        """Test mapping skill requirements."""
-        with patch("gen_mentor.agents.learning.skill_mapper.BaseAgent") as mock_agent_class:
-            mock_agent = MagicMock()
-            mock_agent.invoke.return_value = {
-                "skill_requirements": [
-                    {
-                        "skill_name": "Python Basics",
-                        "required_level": "intermediate",
-                        "prerequisites": ["Programming fundamentals"],
-                    }
-                ]
-            }
-            mock_agent_class.return_value = mock_agent
-
-            result = map_skill_requirements_with_llm(
-                llm=mock_llm_json,
-                learning_goal="Become a Python developer",
-            )
-
-            assert result is not None
-            mock_agent.invoke.assert_called_once()
+    def test_gap_identification_generates_requirements_when_omitted(self, sample_skill_gap):
+        requirements = {"skill_requirements": [{"name": "Python Functions", "required_level": "intermediate"}]}
+        expected = {
+            "skill_gaps": [{k: v for k, v in sample_skill_gap.items() if k not in ("priority", "estimated_time")}]
+        }
+        llm = FakeListChatModel(responses=[json.dumps(requirements), json.dumps(expected)])
+        gaps, used_requirements = identify_skill_gap_with_llm(llm, "Learn Python", "Knows syntax")
+        assert gaps == expected
+        assert used_requirements == requirements

@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from gen_mentor.agents.assessment import (
-    generate_document_quiz_with_llm,
+    generate_document_quizzes_with_llm,
     evaluate_learner_performance_with_llm,
     evaluate_skill_mastery_with_llm,
     generate_performance_report_with_llm,
@@ -24,7 +24,7 @@ class TestAssessmentAgents:
                     {
                         "question": "What is Python?",
                         "options": ["Language", "Snake", "Tool", "Framework"],
-                        "correct_answer": 0,
+                        "correct_option": 0,
                         "explanation": "Python is a programming language",
                     }
                 ],
@@ -36,7 +36,7 @@ class TestAssessmentAgents:
 
             learning_document = {"title": "Python Intro", "content": "Python is..."}
 
-            result = generate_document_quiz_with_llm(
+            result = generate_document_quizzes_with_llm(
                 llm=mock_llm_json,
                 learner_profile=sample_learner_profile,
                 learning_document=learning_document,

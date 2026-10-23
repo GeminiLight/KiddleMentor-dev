@@ -1,9 +1,21 @@
 import re
 import json
-from typing import Dict, Any
+from typing import Any
 
 
-def convert_json_output(output: str) -> Dict[str, Any]:
+def extract_json_from_text(text: str):
+    """Return the first valid JSON object or array embedded in model output."""
+    decoder = json.JSONDecoder()
+    for match in re.finditer(r"[\[{]", text):
+        try:
+            value, _ = decoder.raw_decode(text, match.start())
+        except json.JSONDecodeError:
+            continue
+        return value
+    return None
+
+
+def convert_json_output(output: str) -> Any:
     """
     Convert raw JSON output from the LLM into structured format.
 
@@ -25,22 +37,35 @@ def convert_json_output(output: str) -> Dict[str, Any]:
         return json.loads(output)
     except json.JSONDecodeError:
         # If parsing fails, try to extract JSON from the output string
-        start_idx = output.find("{")
-        end_idx = output.rfind("}") + 1
-        if start_idx != -1 and end_idx != 0:
-            json_str = output[start_idx:end_idx]
-            return json.loads(json_str)
-        else:
-            raise json.JSONDecodeError("No valid JSON found in response", output, 0)
+        extracted = extract_json_from_text(output)
+        if extracted is not None:
+            return extracted
+        raise json.JSONDecodeError("No valid JSON found in response", output, 0)
 
 
 def get_text_from_response(response):
     """Extract text from the response object."""
     if "messages" in response:
-        return response["messages"][-1].content
-    if "message" in response["choices"][0]:
-        return response["choices"][0]["message"]["content"]
-    return response["choices"][0]["text"]
+        messages = response["messages"]
+        if not messages:
+            raise ValueError("Response messages are empty")
+        message = messages[-1]
+        content = message["content"] if isinstance(message, dict) else message.content
+    else:
+        choices = response.get("choices", [])
+        if not choices:
+            raise ValueError("Response choices are empty")
+        choice = choices[0]
+        content = choice["message"]["content"] if "message" in choice else choice["text"]
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "".join(
+            block if isinstance(block, str) else block.get("text", "")
+            for block in content
+            if isinstance(block, str) or isinstance(block, dict) and block.get("type") == "text"
+        )
+    raise TypeError("Response content must be text or a list of content blocks")
 
 
 def extract_think_and_result(info):

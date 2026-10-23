@@ -43,6 +43,14 @@ class SessionItem(BaseModel):
     associated_skills: List[str] = Field(default_factory=list)
     desired_outcome_when_completed: List[DesiredOutcome] = Field(default_factory=list)
 
+    @field_validator("id")
+    @classmethod
+    def require_session_id(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Session identifier must not be empty")
+        return value
+
     @field_validator("associated_skills")
     @classmethod
     def ensure_nonempty_strings(cls, v: List[str]) -> List[str]:

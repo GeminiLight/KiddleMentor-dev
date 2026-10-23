@@ -109,14 +109,15 @@ class TestAppConfig:
 
         openai = sample_config.providers.openai
         assert openai.api_key == "sk-test-key"
-        assert "gpt-*" in openai.model_patterns
+        assert sample_config.get_provider_name("gpt-4") == "openai"
+        assert sample_config.get_api_base("gpt-4") == "https://api.openai.com/v1"
 
     def test_search_config(self, sample_config):
         """Test search configuration."""
-        assert sample_config.searches.default == "duckduckgo"
-        assert sample_config.searches.duckduckgo.max_results == 10
+        assert sample_config.search_defaults.provider == "duckduckgo"
+        assert sample_config.search_providers.duckduckgo.max_results == 10
 
     def test_workspace_config(self, sample_config):
         """Test workspace configuration."""
         # Default workspace should be set
-        assert sample_config.workspace is not None
+        assert sample_config.agent_defaults.workspace == "~/.gen-mentor/workspace"

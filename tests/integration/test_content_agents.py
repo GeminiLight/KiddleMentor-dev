@@ -1,96 +1,57 @@
-"""Integration tests for content agents."""
+"""Exercise current content wrappers with deterministic local model responses."""
+
+import json
 
 import pytest
-from unittest.mock import MagicMock, patch
+from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from gen_mentor.agents.content import (
     create_learning_content_with_llm,
     schedule_learning_path_with_llm,
-    explore_goal_knowledge_with_llm,
+    explore_knowledge_points_with_llm,
 )
 
 
+@pytest.mark.integration
 class TestContentAgents:
-    """Integration tests for content generation agents."""
+    def test_create_learning_content(self, sample_learner_profile, sample_learning_path, sample_quiz):
+        outputs = [
+            {"knowledge_points": [{"name": "Variables", "type": "foundational"}]},
+            {"title": "Variables", "content": "Variables store data values. Example: x = 5."},
+            {"title": "Introduction to Python", "overview": "Learn variables", "summary": "Practice assigning values"},
+            sample_quiz,
+        ]
+        llm = FakeListChatModel(responses=[json.dumps(output) for output in outputs])
+        result = create_learning_content_with_llm(
+            llm=llm,
+            learner_profile=sample_learner_profile,
+            learning_path=sample_learning_path,
+            learning_session=sample_learning_path["learning_path"][0],
+            allow_parallel=False,
+            use_search=False,
+        )
+        assert "Introduction to Python" in result["document"]
+        assert "Variables store data values" in result["document"]
+        assert result["quizzes"] == sample_quiz
 
-    @pytest.mark.integration
-    def test_create_learning_content(self, mock_llm_json, sample_learner_profile):
-        """Test creating learning content."""
-        with patch("gen_mentor.agents.content.content_creator.BaseAgent") as mock_agent_class:
-            mock_agent = MagicMock()
-            mock_agent.invoke.return_value = {
-                "title": "Introduction to Python",
-                "sections": [
-                    {
-                        "heading": "Variables",
-                        "content": "Variables store data values.",
-                        "code_examples": ["x = 5"],
-                    }
-                ],
-            }
-            mock_agent_class.return_value = mock_agent
+    def test_schedule_learning_path(self, sample_learner_profile, sample_learning_path):
+        llm = FakeListChatModel(responses=[json.dumps(sample_learning_path)])
+        result = schedule_learning_path_with_llm(
+            llm=llm,
+            learner_profile=sample_learner_profile,
+            session_count=2,
+            learning_goal="Learn Python",
+        )
+        assert result == sample_learning_path
 
-            result = create_learning_content_with_llm(
-                llm=mock_llm_json,
-                learner_profile=sample_learner_profile,
-                topic="Python Variables",
-            )
-
-            assert result is not None
-            mock_agent.invoke.assert_called_once()
-
-    @pytest.mark.integration
-    def test_schedule_learning_path(self, mock_llm_json, sample_learner_profile):
-        """Test scheduling learning path."""
-        with patch("gen_mentor.agents.content.path_scheduler.BaseAgent") as mock_agent_class:
-            mock_agent = MagicMock()
-            mock_agent.invoke.return_value = {
-                "learning_path": [
-                    {
-                        "id": "Session 1",
-                        "title": "Python Basics",
-                        "abstract": "Learn Python basics",
-                        "if_learned": False,
-                        "associated_skills": ["Variables"],
-                        "desired_outcome_when_completed": [],
-                    }
-                ]
-            }
-            mock_agent_class.return_value = mock_agent
-
-            skill_gaps = [{"name": "Python", "is_gap": True}]
-
-            result = schedule_learning_path_with_llm(
-                llm=mock_llm_json,
-                learner_profile=sample_learner_profile,
-                skill_gaps=skill_gaps,
-            )
-
-            assert result is not None
-            assert "learning_path" in result
-            mock_agent.invoke.assert_called_once()
-
-    @pytest.mark.integration
-    def test_explore_goal_knowledge(self, mock_llm_json):
-        """Test exploring goal knowledge."""
-        with patch("gen_mentor.agents.content.knowledge_explorer.BaseAgent") as mock_agent_class:
-            mock_agent = MagicMock()
-            mock_agent.invoke.return_value = {
-                "knowledge_points": [
-                    {
-                        "topic": "Variables",
-                        "description": "Variables store values",
-                        "importance": "high",
-                    }
-                ]
-            }
-            mock_agent_class.return_value = mock_agent
-
-            result = explore_goal_knowledge_with_llm(
-                llm=mock_llm_json,
-                learning_goal="Learn Python",
-                current_skills=["Basic syntax"],
-            )
-
-            assert result is not None
-            mock_agent.invoke.assert_called_once()
+    def test_explore_goal_knowledge(self, sample_learner_profile, sample_learning_path):
+        expected = {"knowledge_points": [{"name": "Variables", "type": "foundational"}]}
+        llm = FakeListChatModel(responses=[json.dumps(expected)])
+        result = explore_knowledge_points_with_llm(
+            llm=llm,
+            learner_profile=sample_learner_profile,
+            learning_path=sample_learning_path,
+            learning_session=sample_learning_path["learning_path"][0],
+            learning_goal="Learn Python",
+        )
+        assert result == expected
